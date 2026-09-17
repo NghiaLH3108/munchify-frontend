@@ -128,6 +128,18 @@ lib/
 
 - **Screen: Analytics Dashboard:** Metric cards (Today's Sales, Orders count, Average Bill value), Bar chart for top-selling items, Payment method breakdown.
 
+### Feature 7: AI Demand Forecasting & Low-Stock Alerts (Inventory / Web Admin)
+* **Architectural Layers:**
+* `Domain`: `ForecastEntity`, `GetStockForecastUseCase`, `GenerateDraftImportUseCase`. 
+* `Data`: `ForecastModel`, `ForecastRemoteDataSource` (`GET /api/inventory/forecasting`). 
+* `Presentation`: `ForecastNotifier` / `ForecastBloc`, `StockWarningCard`, `ForecastScreen`.
+* **UI/UX & Screen Flow:**
+* **Alert Badges (POS & Inventory):** Prominent warning chips displayed next to stock quantities: Red (`Risk of stockout within 24–48h`), Orange (`Below minimum threshold`), Green (`Safe stock level`). 
+* **Forecast Dashboard Table:**
+* Lists products requiring restocking, including: Current stock, Daily consumption rate ($V_{avg}$), Projected days remaining, and Suggested import quantity ($\text{SuggestedQty}$). 
+* Input field allowing managers to quickly adjust quantities before approval. 
+* **"Create Auto-Import Order" CTA:** One-click action to transfer the list of low-stock items to the Stock Import screen (`StockImportDetailScreen`) in `DRAFT` status, with the corresponding supplier automatically pre-filled for Admin review and approval.
+
 ---
 
 ## 5. UI/UX & Design Rules for F&B POS
