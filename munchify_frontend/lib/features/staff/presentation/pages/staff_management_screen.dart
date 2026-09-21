@@ -142,7 +142,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                     return SingleChildScrollView(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _buildPageTitleBar(context),
                           const SizedBox(height: 20),
@@ -381,43 +381,41 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   // PAGE TITLE BAR + FILTER + ACTION
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildPageTitleBar(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 16,
-          runSpacing: 12,
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 550),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quản lý Nhân sự & Phân quyền',
-                    style: AppTypography.plusJakarta(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: ColorPalette.onSurfaceDark,
-                    ),
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 768;
+            final titleWidget = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quản lý Nhân sự & Phân quyền',
+                  style: AppTypography.plusJakarta(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: ColorPalette.onSurfaceDark,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Phân quyền tài khoản, cấu hình thông tin nhân sự và giám sát trạng thái hoạt động.',
-                    style: AppTypography.inter(
-                      fontSize: 13,
-                      color: ColorPalette.textMuted,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Phân quyền tài khoản, cấu hình thông tin nhân sự và giám sát trạng thái hoạt động.',
+                  style: AppTypography.inter(
+                    fontSize: 13,
+                    color: ColorPalette.textMuted,
                   ),
-                ],
-              ),
-            ),
-            Row(
+                ),
+              ],
+            );
+
+            final actionsWidget = Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.sync_rounded, size: 16, color: ColorPalette.tertiary),
                     const SizedBox(width: 6),
@@ -445,15 +443,40 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                   ),
                 ),
               ],
-            ),
-          ],
+            );
+
+            if (isWide) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: titleWidget),
+                  const SizedBox(width: 16),
+                  actionsWidget,
+                ],
+              );
+            } else {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  titleWidget,
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: actionsWidget,
+                  ),
+                ],
+              );
+            }
+          },
         ),
         const SizedBox(height: 18),
         // Filter toolbar
         _buildFilterToolbar(context),
       ],
-    );
-  }
+    ),
+  );
+}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // KPI METRIC CARDS (mockup style: white, icon box, border subtle)
