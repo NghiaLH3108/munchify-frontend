@@ -169,7 +169,7 @@ class AppTheme {
       ),
 
       // ─── Cards ────────────────────────────────────────────────────────────
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: ColorPalette.surface,
         elevation: 2,
         shadowColor: ColorPalette.shadowLight,
