@@ -31,11 +31,9 @@ class AppTheme {
         onSecondary: ColorPalette.warmDarkGrey,
         secondaryContainer: Color(0xFFFFECB3),
         onSecondaryContainer: Color(0xFF4A3000),
-        background: ColorPalette.background,
-        onBackground: ColorPalette.onBackground,
         surface: ColorPalette.surface,
         onSurface: ColorPalette.onSurface,
-        surfaceVariant: ColorPalette.surfaceVariant,
+        surfaceContainerHighest: ColorPalette.surfaceVariant,
         error: ColorPalette.error,
         onError: ColorPalette.onError,
         outline: ColorPalette.border,
@@ -169,7 +167,7 @@ class AppTheme {
       ),
 
       // ─── Cards ────────────────────────────────────────────────────────────
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: ColorPalette.surface,
         elevation: 2,
         shadowColor: ColorPalette.shadowLight,
@@ -211,7 +209,7 @@ class AppTheme {
       // ─── Navigation Bar (bottom nav) ──────────────────────────────────────
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: ColorPalette.surface,
-        indicatorColor: ColorPalette.appetizingOrange.withOpacity(0.15),
+        indicatorColor: ColorPalette.appetizingOrange.withValues(alpha: 0.15),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return AppTypography.labelSmall.copyWith(

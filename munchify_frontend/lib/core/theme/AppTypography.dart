@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'ColorPalette.dart';
 
@@ -176,4 +177,90 @@ class AppTypography {
     letterSpacing: 0.5,
     height: 1.2,
   );
+
+  // ─── Dashboard Styles (Admin Web) ─────────────────────────────────────
+
+  /// Dashboard page headline — bold, larger for section titles.
+  static const TextStyle dashboardHeadline = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    color: ColorPalette.textPrimary,
+    letterSpacing: -0.25,
+    height: 1.4,
+  );
+
+  /// Dashboard subtitle / description text.
+  static const TextStyle dashboardSubtitle = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: ColorPalette.textMuted,
+    height: 1.5,
+  );
+
+  /// Table column header — uppercase, tracking wider, muted.
+  static const TextStyle tableHeader = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: ColorPalette.textMuted,
+    letterSpacing: 0.5,
+    height: 1.4,
+  );
+
+  /// KPI metric value — large, bold number display.
+  static const TextStyle metricValue = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+    color: ColorPalette.textPrimary,
+    height: 1.2,
+  );
+
+  /// KPI metric label — small, uppercase, muted.
+  static const TextStyle metricLabel = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: ColorPalette.textMuted,
+    letterSpacing: 0.5,
+    height: 1.4,
+  );
+
+  // ─── Google Fonts Helpers for HTML Mockup Fidelity ────────────────────────
+
+  /// Plus Jakarta Sans font generator (used in HTML for headlines & currency).
+  static TextStyle plusJakarta({
+    double fontSize = 16,
+    FontWeight fontWeight = FontWeight.w600,
+    Color color = ColorPalette.textPrimary,
+    double? height,
+    double? letterSpacing,
+  }) {
+    return GoogleFonts.plusJakartaSans(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
+
+  /// Inter font generator (used in HTML for body, labels, table data).
+  static TextStyle inter({
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.w400,
+    Color color = ColorPalette.textPrimary,
+    double? height,
+    double? letterSpacing,
+  }) {
+    return GoogleFonts.inter(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
 }

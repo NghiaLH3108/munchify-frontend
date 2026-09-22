@@ -8,6 +8,7 @@ class ApiEndpoints {
   // ─── Authentication ────────────────────────────────────────────────────────
   static const String login = '/api/auth/login';
   static const String me = '/api/auth/me';
+  static const String users = '/api/users';
 
   // ─── Catalog ───────────────────────────────────────────────────────────────
   static const String categories = '/api/categories';
