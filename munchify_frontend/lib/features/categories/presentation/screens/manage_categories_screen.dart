@@ -9,7 +9,12 @@ import '../widgets/category_form_dialog.dart';
 import '../widgets/delete_confirm_dialog.dart';
 
 class ManageCategoriesScreen extends StatefulWidget {
-  const ManageCategoriesScreen({Key? key}) : super(key: key);
+  final bool embedInShell;
+
+  const ManageCategoriesScreen({
+    Key? key,
+    this.embedInShell = false,
+  }) : super(key: key);
 
   @override
   State<ManageCategoriesScreen> createState() => _ManageCategoriesScreenState();
@@ -98,7 +103,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
+      appBar: widget.embedInShell ? null : AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         bottom: PreferredSize(
@@ -299,11 +304,13 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                         return Column(
                           children: [
                             Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
-                                  child: DataTable(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                                      child: DataTable(
                                     headingRowColor: MaterialStateProperty.all(const Color(0xFFF8FAFC)),
                                     dataRowMinHeight: 64,
                                     dataRowMaxHeight: 64,
@@ -415,8 +422,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                                     }).toList(),
                                   ),
                                 ),
-                              ),
-                            ),
+                              );
+                            }),
+                          ),
                             // Footer pagination area
                             Container(
                               padding: const EdgeInsets.all(16),

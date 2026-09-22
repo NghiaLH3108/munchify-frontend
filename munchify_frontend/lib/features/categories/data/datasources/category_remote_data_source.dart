@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/DioClient.dart';
 import '../../../../core/constants/ApiEndpoints.dart';
 import '../models/category_model.dart';
 
@@ -25,9 +25,9 @@ abstract class CategoryRemoteDataSource {
 }
 
 class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
-  final Dio dio;
+  final DioClient dioClient;
 
-  CategoryRemoteDataSourceImpl({required this.dio});
+  CategoryRemoteDataSourceImpl({required this.dioClient});
 
   @override
   Future<List<CategoryModel>> getCategories({
@@ -38,12 +38,12 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   }) async {
     final queryParameters = {
       'searchTerm': searchTerm,
-      if (isActive != null) 'isActive': isActive,
+      'isActive': ?isActive,
       'page': page,
       'pageSize': pageSize,
     };
 
-    final response = await dio.get(
+    final response = await dioClient.dio.get(
       ApiEndpoints.categories,
       queryParameters: queryParameters,
     );
@@ -52,25 +52,17 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
       final items = response.data['data']['items'] as List;
       return items.map((e) => CategoryModel.fromJson(e)).toList();
     } else {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        error: response.data?['message'] ?? 'Failed to fetch categories',
-      );
+      throw Exception(response.data?['message'] ?? 'Failed to fetch categories');
     }
   }
 
   @override
   Future<CategoryModel> getCategoryById(int id) async {
-    final response = await dio.get('${ApiEndpoints.categories}/$id');
+    final response = await dioClient.dio.get('${ApiEndpoints.categories}/$id');
     if (response.data != null && response.data['success'] == true) {
       return CategoryModel.fromJson(response.data['data']);
     } else {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        error: response.data?['message'] ?? 'Failed to fetch category',
-      );
+      throw Exception(response.data?['message'] ?? 'Failed to fetch category');
     }
   }
 
@@ -80,7 +72,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
     String? description,
     required bool isActive,
   }) async {
-    final response = await dio.post(
+    final response = await dioClient.dio.post(
       ApiEndpoints.categories,
       data: {
         'categoryName': categoryName,
@@ -91,11 +83,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
     if (response.data != null && response.data['success'] == true) {
       return CategoryModel.fromJson(response.data['data']);
     } else {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        error: response.data?['message'] ?? 'Failed to create category',
-      );
+      throw Exception(response.data?['message'] ?? 'Failed to create category');
     }
   }
 
@@ -106,7 +94,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
     String? description,
     required bool isActive,
   }) async {
-    final response = await dio.put(
+    final response = await dioClient.dio.put(
       '${ApiEndpoints.categories}/$id',
       data: {
         'categoryName': categoryName,
@@ -117,25 +105,17 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
     if (response.data != null && response.data['success'] == true) {
       return CategoryModel.fromJson(response.data['data']);
     } else {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        error: response.data?['message'] ?? 'Failed to update category',
-      );
+      throw Exception(response.data?['message'] ?? 'Failed to update category');
     }
   }
 
   @override
   Future<bool> deleteCategory(int id) async {
-    final response = await dio.delete('${ApiEndpoints.categories}/$id');
+    final response = await dioClient.dio.delete('${ApiEndpoints.categories}/$id');
     if (response.data != null && response.data['success'] == true) {
       return true;
     } else {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        error: response.data?['message'] ?? 'Failed to delete category',
-      );
+      throw Exception(response.data?['message'] ?? 'Failed to delete category');
     }
   }
 }

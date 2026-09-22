@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../staff/presentation/pages/staff_management_screen.dart';
+import '../../../categories/presentation/screens/manage_categories_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
@@ -38,7 +40,7 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
       case 'orders':
         return 'Đơn hàng';
       case 'menu':
-        return 'Quản lý Thực đơn';
+        return 'Quản lý danh mục';
       case 'combos':
         return 'Combo sản phẩm';
       case 'inventory':
@@ -76,19 +78,13 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         child: Row(
           children: [
             // Fixed Left Sidebar for Desktop
-            if (isDesktop)
-              SizedBox(
-                width: 256,
-                child: _buildSidebarContent(),
-              ),
+            if (isDesktop) SizedBox(width: 256, child: _buildSidebarContent()),
             // Main Canvas Area
             Expanded(
               child: Column(
                 children: [
                   _buildTopStickyHeader(context, isDesktop),
-                  Expanded(
-                    child: _buildActiveView(),
-                  ),
+                  Expanded(child: _buildActiveView()),
                 ],
               ),
             ),
@@ -115,7 +111,10 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                 children: [
                   // Brand Header
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 8.0,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -132,8 +131,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.lunch_dining_rounded,
-                              color: Colors.white, size: 24),
+                          child: const Icon(
+                            Icons.lunch_dining_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -178,12 +180,17 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   const SizedBox(height: 12),
                   // Store Open Status Card
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: ColorPalette.borderSubtle.withValues(alpha: 0.15),
+                        color: ColorPalette.borderSubtle.withValues(
+                          alpha: 0.15,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -230,7 +237,9 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Chức năng Bán hàng tại quầy (POS) sẵn sàng mở.'),
+                            content: Text(
+                              'Chức năng Bán hàng tại quầy (POS) sẵn sàng mở.',
+                            ),
                             duration: Duration(seconds: 2),
                           ),
                         );
@@ -241,7 +250,9 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                         backgroundColor: ColorPalette.primaryContainer,
                         foregroundColor: Colors.white,
                         elevation: 1,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         textStyle: AppTypography.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -266,7 +277,7 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   _buildSidebarItem(
                     key: 'menu',
                     icon: Icons.restaurant_menu_rounded,
-                    title: 'Quản lý Thực đơn',
+                    title: 'Quản lý danh mục',
                   ),
                   _buildSidebarItem(
                     key: 'combos',
@@ -337,8 +348,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.storefront_rounded,
-                              size: 20, color: ColorPalette.primaryLight),
+                          const Icon(
+                            Icons.storefront_rounded,
+                            size: 20,
+                            color: ColorPalette.primaryLight,
+                          ),
                           const SizedBox(width: 8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,16 +378,25 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                           ),
                         ],
                       ),
-                      const Icon(Icons.unfold_more_rounded,
-                          size: 16, color: ColorPalette.surfaceDim),
+                      const Icon(
+                        Icons.unfold_more_rounded,
+                        size: 16,
+                        color: ColorPalette.surfaceDim,
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
                 // Secondary Settings Links
-                _buildSidebarFooterLink(Icons.settings_outlined, 'Cài đặt cửa hàng'),
+                _buildSidebarFooterLink(
+                  Icons.settings_outlined,
+                  'Cài đặt cửa hàng',
+                ),
                 const SizedBox(height: 4),
-                _buildSidebarFooterLink(Icons.help_outline_rounded, 'Trợ giúp & HDSD'),
+                _buildSidebarFooterLink(
+                  Icons.help_outline_rounded,
+                  'Trợ giúp & HDSD',
+                ),
               ],
             ),
           ),
@@ -405,7 +428,9 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? ColorPalette.primaryContainer : Colors.transparent,
+            color: isSelected
+                ? ColorPalette.primaryContainer
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -428,11 +453,16 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
               ),
               if (badge != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: badgeColor ?? ColorPalette.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
-                    border: badgeBorder != null ? Border.all(color: badgeBorder) : null,
+                    border: badgeBorder != null
+                        ? Border.all(color: badgeBorder)
+                        : null,
                   ),
                   child: Text(
                     badge,
@@ -504,7 +534,10 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
           // Drawer toggle button on tablet/mobile
           if (!isDesktop) ...[
             IconButton(
-              icon: const Icon(Icons.menu_rounded, color: ColorPalette.onSurfaceDark),
+              icon: const Icon(
+                Icons.menu_rounded,
+                color: ColorPalette.onSurfaceDark,
+              ),
               onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
             const SizedBox(width: 8),
@@ -522,7 +555,13 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6),
-                child: Text('/', style: TextStyle(color: ColorPalette.borderSubtle, fontSize: 13)),
+                child: Text(
+                  '/',
+                  style: TextStyle(
+                    color: ColorPalette.borderSubtle,
+                    fontSize: 13,
+                  ),
+                ),
               ),
               Text(
                 _currentTabTitle,
@@ -550,14 +589,24 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   children: [
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.search_rounded, size: 18, color: ColorPalette.textMuted),
+                      child: Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: ColorPalette.textMuted,
+                      ),
                     ),
                     Expanded(
                       child: TextField(
-                        style: AppTypography.inter(fontSize: 12, color: ColorPalette.onSurfaceDark),
+                        style: AppTypography.inter(
+                          fontSize: 12,
+                          color: ColorPalette.onSurfaceDark,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Tìm nhanh... (Ctrl+K)',
-                          hintStyle: AppTypography.inter(fontSize: 12, color: ColorPalette.textMuted),
+                          hintStyle: AppTypography.inter(
+                            fontSize: 12,
+                            color: ColorPalette.textMuted,
+                          ),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.only(bottom: 12),
                         ),
@@ -589,7 +638,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.apartment_rounded, size: 16, color: ColorPalette.primaryContainer),
+                          const Icon(
+                            Icons.apartment_rounded,
+                            size: 16,
+                            color: ColorPalette.primaryContainer,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Tất cả chi nhánh',
@@ -600,7 +653,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: ColorPalette.textMuted),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 16,
+                            color: ColorPalette.textMuted,
+                          ),
                         ],
                       ),
                     ),
@@ -617,7 +674,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_today_rounded, size: 13, color: ColorPalette.secondary),
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 13,
+                            color: ColorPalette.secondary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             '21/09/2026',
@@ -628,7 +689,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Container(width: 1, height: 14, color: ColorPalette.borderSubtle),
+                          Container(
+                            width: 1,
+                            height: 14,
+                            color: ColorPalette.borderSubtle,
+                          ),
                           const SizedBox(width: 4),
                           _buildDateSubPill('today', 'Hôm nay'),
                           _buildDateSubPill('7days', '7 ngày'),
@@ -639,18 +704,36 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     // Export CTA
                     OutlinedButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.ios_share_rounded, size: 14, color: ColorPalette.tertiary),
+                      icon: const Icon(
+                        Icons.ios_share_rounded,
+                        size: 14,
+                        color: ColorPalette.tertiary,
+                      ),
                       label: const Text('Xuất Excel'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: ColorPalette.onSurfaceDark,
-                        side: const BorderSide(color: ColorPalette.borderSubtle),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        textStyle: AppTypography.inter(fontSize: 11, fontWeight: FontWeight.w600),
+                        side: const BorderSide(
+                          color: ColorPalette.borderSubtle,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        textStyle: AppTypography.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(width: 1, height: 20, color: ColorPalette.borderSubtle),
+                    Container(
+                      width: 1,
+                      height: 20,
+                      color: ColorPalette.borderSubtle,
+                    ),
                     const SizedBox(width: 4),
                   ],
                   // Notification Bell with Red Badge
@@ -658,7 +741,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     children: [
                       IconButton(
                         onPressed: () {},
-                        icon: const Icon(Icons.notifications_outlined, size: 22, color: ColorPalette.textMuted),
+                        icon: const Icon(
+                          Icons.notifications_outlined,
+                          size: 22,
+                          color: ColorPalette.textMuted,
+                        ),
                         tooltip: 'Thông báo',
                       ),
                       Positioned(
@@ -753,7 +840,9 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
           style: AppTypography.inter(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? ColorPalette.primaryContainer : ColorPalette.textMuted,
+            color: isSelected
+                ? ColorPalette.primaryContainer
+                : ColorPalette.textMuted,
           ),
         ),
       ),
@@ -767,6 +856,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
     switch (_currentTab) {
       case 'dashboard':
         return const AnalyticsDashboardView();
+      case 'menu':
+        return const ManageCategoriesScreen(embedInShell: true);
       case 'staff':
         return const StaffManagementScreen(embedInShell: true);
       default:
@@ -789,18 +880,27 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     color: ColorPalette.primaryFixed.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.construction_rounded,
-                      size: 36, color: ColorPalette.primaryContainer),
+                  child: const Icon(
+                    Icons.construction_rounded,
+                    size: 36,
+                    color: ColorPalette.primaryContainer,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   _currentTabTitle,
-                  style: AppTypography.plusJakarta(fontSize: 18, fontWeight: FontWeight.w700),
+                  style: AppTypography.plusJakarta(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Phân hệ này đang được hoàn thiện theo lộ trình sprint tiếp theo.',
-                  style: AppTypography.inter(fontSize: 13, color: ColorPalette.textMuted),
+                  style: AppTypography.inter(
+                    fontSize: 13,
+                    color: ColorPalette.textMuted,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -808,7 +908,9 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ColorPalette.primaryContainer,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: const Text('Quay lại Quản lý Nhân viên'),
                 ),

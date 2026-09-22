@@ -21,12 +21,10 @@ void main() {
   // 1. Khởi tạo các dependencies (sau này có thể chuyển sang get_it)
   const secureStorage = FlutterSecureStorage();
   final dioClient = DioClient(secureStorage: secureStorage);
-  dioClient.dio.options.baseUrl =
-      'http://localhost:5194'; // For testing / local dev
 
   // Category dependencies
   final categoryRemoteDataSource = CategoryRemoteDataSourceImpl(
-    dio: dioClient.dio,
+    dioClient: dioClient,
   );
   final categoryRepository = CategoryRepositoryImpl(
     remoteDataSource: categoryRemoteDataSource,
