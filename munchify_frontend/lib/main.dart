@@ -3,7 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'core/network/DioClient.dart';
+import 'core/theme/AppTheme.dart';
 import 'features/admin/presentation/pages/admin_shell_screen.dart';
+import 'features/categories/data/datasources/category_remote_data_source.dart';
+import 'features/categories/data/repositories/category_repository_impl.dart';
+import 'features/categories/domain/usecases/manage_category_usecases.dart';
+import 'features/categories/presentation/bloc/category_bloc.dart';
 import 'features/staff/data/datasources/staff_remote_data_source.dart';
 import 'features/staff/data/repositories/staff_repository_impl.dart';
 import 'features/staff/domain/usecases/create_staff_usecase.dart';
@@ -12,39 +17,67 @@ import 'features/staff/domain/usecases/toggle_staff_status_usecase.dart';
 import 'features/staff/domain/usecases/update_staff_usecase.dart';
 import 'features/staff/presentation/bloc/staff_bloc.dart';
 
-import 'core/theme/AppTheme.dart';
-
 void main() {
-  runApp(const MyApp());
+  // 1. Khởi tạo các dependencies (sau này có thể chuyển sang get_it)
+  const secureStorage = FlutterSecureStorage();
+  final dioClient = DioClient(secureStorage: secureStorage);
+  dioClient.dio.options.baseUrl =
+      'http://localhost:5194'; // For testing / local dev
+
+  // Category dependencies
+  final categoryRemoteDataSource = CategoryRemoteDataSourceImpl(
+    dio: dioClient.dio,
+  );
+  final categoryRepository = CategoryRepositoryImpl(
+    remoteDataSource: categoryRemoteDataSource,
+  );
+  final getCategoriesUseCase = GetCategoriesUseCase(categoryRepository);
+  final createCategoryUseCase = CreateCategoryUseCase(categoryRepository);
+  final updateCategoryUseCase = UpdateCategoryUseCase(categoryRepository);
+  final deleteCategoryUseCase = DeleteCategoryUseCase(categoryRepository);
+
+  // Staff dependencies
+  final staffRemoteDataSource = StaffRemoteDataSourceImpl(dioClient: dioClient);
+  final staffRepository = StaffRepositoryImpl(
+    remoteDataSource: staffRemoteDataSource,
+  );
+
+  runApp(
+    MyApp(
+      categoryBloc: CategoryBloc(
+        getCategories: getCategoriesUseCase,
+        createCategory: createCategoryUseCase,
+        updateCategory: updateCategoryUseCase,
+        deleteCategory: deleteCategoryUseCase,
+      ),
+      staffBloc: StaffBloc(
+        getStaffList: GetStaffListUseCase(staffRepository),
+        createStaff: CreateStaffUseCase(staffRepository),
+        updateStaff: UpdateStaffUseCase(staffRepository),
+        toggleStaffStatus: ToggleStaffStatusUseCase(staffRepository),
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final CategoryBloc categoryBloc;
+  final StaffBloc staffBloc;
+
+  const MyApp({super.key, required this.categoryBloc, required this.staffBloc});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Munchify POS - Admin Executive Analytics Dashboard',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: Builder(
-        builder: (context) {
-          final dioClient = DioClient(secureStorage: const FlutterSecureStorage());
-          dioClient.dio.options.baseUrl = 'http://localhost:5194'; // For testing / local dev
-
-          final remoteDataSource = StaffRemoteDataSourceImpl(dioClient: dioClient);
-          final repository = StaffRepositoryImpl(remoteDataSource: remoteDataSource);
-
-          return BlocProvider(
-            create: (_) => StaffBloc(
-              getStaffList: GetStaffListUseCase(repository),
-              createStaff: CreateStaffUseCase(repository),
-              updateStaff: UpdateStaffUseCase(repository),
-              toggleStaffStatus: ToggleStaffStatusUseCase(repository),
-            ),
-            child: const AdminShellScreen(initialTab: 'staff'),
-          );
-        },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: categoryBloc),
+        BlocProvider.value(value: staffBloc),
+      ],
+      child: MaterialApp(
+        title: 'Munchify POS',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const AdminShellScreen(initialTab: 'staff'),
       ),
     );
   }
