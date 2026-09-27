@@ -17,6 +17,14 @@ import 'features/staff/domain/usecases/toggle_staff_status_usecase.dart';
 import 'features/staff/domain/usecases/update_staff_usecase.dart';
 import 'features/staff/presentation/bloc/staff_bloc.dart';
 
+// POS Imports
+import 'features/pos/data/datasources/pos_remote_data_source.dart';
+import 'features/pos/data/repositories/pos_repository_impl.dart';
+import 'features/pos/domain/usecases/get_products_usecase.dart';
+import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
+import 'features/pos/presentation/bloc/pos_catalog_event.dart';
+import 'features/pos/presentation/screens/pos_home_screen.dart';
+
 void main() {
   // 1. Khởi tạo các dependencies (sau này có thể chuyển sang get_it)
   const secureStorage = FlutterSecureStorage();
@@ -40,6 +48,11 @@ void main() {
     remoteDataSource: staffRemoteDataSource,
   );
 
+  // POS dependencies
+  final posRemoteDataSource = PosRemoteDataSourceImpl(dio: dioClient.dio); 
+  final posRepository = PosRepositoryImpl(remoteDataSource: posRemoteDataSource);
+  final getProductsUseCase = GetProductsUseCase(posRepository);
+
   runApp(
     MyApp(
       categoryBloc: CategoryBloc(
@@ -54,6 +67,10 @@ void main() {
         updateStaff: UpdateStaffUseCase(staffRepository),
         toggleStaffStatus: ToggleStaffStatusUseCase(staffRepository),
       ),
+      posCatalogBloc: PosCatalogBloc(
+        getProductsUseCase: getProductsUseCase,
+        repository: posRepository,
+      )..add(LoadCatalogEvent()), // Tự động load dữ liệu khi mở app
     ),
   );
 }
@@ -61,8 +78,14 @@ void main() {
 class MyApp extends StatelessWidget {
   final CategoryBloc categoryBloc;
   final StaffBloc staffBloc;
+  final PosCatalogBloc posCatalogBloc;
 
-  const MyApp({super.key, required this.categoryBloc, required this.staffBloc});
+  const MyApp({
+    super.key, 
+    required this.categoryBloc, 
+    required this.staffBloc,
+    required this.posCatalogBloc,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +93,13 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider.value(value: categoryBloc),
         BlocProvider.value(value: staffBloc),
+        BlocProvider.value(value: posCatalogBloc),
       ],
       child: MaterialApp(
         title: 'Munchify POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const AdminShellScreen(initialTab: 'staff'),
+        home: const PosHomeScreen(), // Đổi sang màn hình POS
       ),
     );
   }
