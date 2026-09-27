@@ -12,6 +12,7 @@ class ApiEndpoints {
   // ─── Catalog ───────────────────────────────────────────────────────────────
   static const String categories = '/api/categories';
   static const String products = '/api/products';
+  static const String productsForStock = '/api/products/for-stock';
   static const String units = '/api/units';
 
   // ─── Orders & POS ─────────────────────────────────────────────────────────
