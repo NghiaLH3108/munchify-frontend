@@ -16,6 +16,13 @@ import 'features/staff/domain/usecases/get_staff_list_usecase.dart';
 import 'features/staff/domain/usecases/toggle_staff_status_usecase.dart';
 import 'features/staff/domain/usecases/update_staff_usecase.dart';
 import 'features/staff/presentation/bloc/staff_bloc.dart';
+import 'features/inventory/data/datasources/inventory_remote_datasource.dart';
+import 'features/inventory/data/repositories/inventory_repository_impl.dart';
+import 'features/inventory/domain/usecases/get_stock_movements_usecase.dart';
+import 'features/inventory/domain/usecases/adjust_stock_usecase.dart';
+import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
+import 'core/network/NetworkInfo.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 // POS Imports
 import 'features/pos/data/datasources/pos_remote_data_source.dart';
@@ -53,6 +60,16 @@ void main() {
   final posRepository = PosRepositoryImpl(remoteDataSource: posRemoteDataSource);
   final getProductsUseCase = GetProductsUseCase(posRepository);
 
+  // Inventory dependencies
+  final networkInfo = NetworkInfoImpl(InternetConnection());
+  final inventoryRemoteDataSource = InventoryRemoteDataSourceImpl(dioClient: dioClient);
+  final inventoryRepository = InventoryRepositoryImpl(
+    remoteDataSource: inventoryRemoteDataSource,
+    networkInfo: networkInfo,
+  );
+  final getStockMovementsUseCase = GetStockMovementsUseCase(inventoryRepository);
+  final adjustStockUseCase = AdjustStockUseCase(inventoryRepository);
+
   runApp(
     MyApp(
       categoryBloc: CategoryBloc(
@@ -71,6 +88,10 @@ void main() {
         getProductsUseCase: getProductsUseCase,
         repository: posRepository,
       )..add(LoadCatalogEvent()), // Tự động load dữ liệu khi mở app
+      stockMovementBloc: StockMovementBloc(
+        getStockMovementsUseCase: getStockMovementsUseCase,
+        adjustStockUseCase: adjustStockUseCase,
+      ),
     ),
   );
 }
@@ -79,12 +100,14 @@ class MyApp extends StatelessWidget {
   final CategoryBloc categoryBloc;
   final StaffBloc staffBloc;
   final PosCatalogBloc posCatalogBloc;
+  final StockMovementBloc stockMovementBloc;
 
   const MyApp({
     super.key, 
     required this.categoryBloc, 
     required this.staffBloc,
     required this.posCatalogBloc,
+    required this.stockMovementBloc,
   });
 
   @override
@@ -94,6 +117,7 @@ class MyApp extends StatelessWidget {
         BlocProvider.value(value: categoryBloc),
         BlocProvider.value(value: staffBloc),
         BlocProvider.value(value: posCatalogBloc),
+        BlocProvider.value(value: stockMovementBloc),
       ],
       child: MaterialApp(
         title: 'Munchify POS',
