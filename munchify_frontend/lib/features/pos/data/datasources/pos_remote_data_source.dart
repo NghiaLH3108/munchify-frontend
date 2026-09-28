@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
-import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/constants/ApiEndpoints.dart';
 import '../models/category_model.dart';
 import '../models/product_model.dart';
+
+import '../../../../core/network/DioClient.dart';
 
 abstract class PosRemoteDataSource {
   Future<List<CategoryModel>> getCategories();
@@ -9,13 +11,13 @@ abstract class PosRemoteDataSource {
 }
 
 class PosRemoteDataSourceImpl implements PosRemoteDataSource {
-  final Dio dio;
+  final DioClient dioClient;
 
-  PosRemoteDataSourceImpl({required this.dio});
+  PosRemoteDataSourceImpl({required this.dioClient});
 
   @override
   Future<List<CategoryModel>> getCategories() async {
-    final response = await dio.get(ApiEndpoints.categories);
+    final response = await dioClient.dio.get(ApiEndpoints.categories);
     final responseData = response.data['data'] ?? response.data;
     List dataList = [];
     if (responseData is List) {
@@ -28,7 +30,7 @@ class PosRemoteDataSourceImpl implements PosRemoteDataSource {
 
   @override
   Future<List<ProductModel>> getProducts({String? searchTerm, int? categoryId}) async {
-    final response = await dio.get(
+    final response = await dioClient.dio.get(
       ApiEndpoints.products,
       queryParameters: {
         if (searchTerm != null && searchTerm.isNotEmpty) 'searchTerm': searchTerm,

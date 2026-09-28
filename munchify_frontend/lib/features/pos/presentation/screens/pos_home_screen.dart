@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../bloc/pos_catalog_bloc.dart';
 import '../bloc/pos_catalog_event.dart';
@@ -53,7 +52,6 @@ class _PosHomeScreenState extends State<PosHomeScreen> {
           return const Center(child: Text('Đang khởi tạo...'));
         },
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -460,18 +458,4 @@ class _PosHomeScreenState extends State<PosHomeScreen> {
   }
 
 
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: const Color(0xFFE65100),
-      unselectedItemColor: Colors.grey,
-      currentIndex: 0,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Đơn hàng'),
-        BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Số hóa đơn'),
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Báo cáo ca'),
-        BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Cài đặt'),
-      ],
-    );
-  }
 }

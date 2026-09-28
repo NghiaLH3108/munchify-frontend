@@ -10,7 +10,12 @@ import '../widgets/import_detail_modal.dart';
 import '../../../../../core/theme/ColorPalette.dart';
 
 class InventoryScreen extends StatefulWidget {
-  const InventoryScreen({super.key});
+  final bool embedInShell;
+  
+  const InventoryScreen({
+    super.key,
+    this.embedInShell = false,
+  });
 
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
@@ -29,6 +34,35 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bodyContent = BlocConsumer<StockImportBloc, StockImportState>(
+      listener: (context, state) {
+        if (state is StockImportActionSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+          );
+        } else if (state is StockImportError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state is StockImportLoading || state is StockImportInitial) {
+          return const Center(child: CircularProgressIndicator(color: ColorPalette.appetizingOrange));
+        } else if (state is StockImportsLoaded) {
+          return _buildContent(state.imports);
+        }
+        return const Center(child: Text("Có lỗi xảy ra hoặc chưa có dữ liệu"));
+      },
+    );
+
+    if (widget.embedInShell) {
+      return Scaffold(
+        backgroundColor: ColorPalette.webBgAdmin,
+        body: bodyContent,
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -64,27 +98,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           )
         ],
       ),
-      body: BlocConsumer<StockImportBloc, StockImportState>(
-        listener: (context, state) {
-          if (state is StockImportActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.green),
-            );
-          } else if (state is StockImportError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is StockImportLoading || state is StockImportInitial) {
-            return const Center(child: CircularProgressIndicator(color: ColorPalette.appetizingOrange));
-          } else if (state is StockImportsLoaded) {
-            return _buildContent(state.imports);
-          }
-          return const Center(child: Text("Có lỗi xảy ra hoặc chưa có dữ liệu"));
-        },
-      ),
+      body: bodyContent,
     );
   }
 
