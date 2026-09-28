@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 import 'core/network/DioClient.dart';
+import 'core/network/NetworkInfo.dart';
 import 'core/theme/AppTheme.dart';
 import 'features/admin/presentation/pages/admin_shell_screen.dart';
 import 'features/categories/data/datasources/category_remote_data_source.dart';
@@ -21,8 +23,8 @@ import 'features/inventory/data/repositories/inventory_repository_impl.dart';
 import 'features/inventory/domain/usecases/get_stock_movements_usecase.dart';
 import 'features/inventory/domain/usecases/adjust_stock_usecase.dart';
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
-import 'core/network/NetworkInfo.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
+import 'features/inventory/presentation/screens/inventory_screen.dart';
 
 // POS Imports
 import 'features/pos/data/datasources/pos_remote_data_source.dart';
@@ -32,8 +34,14 @@ import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_event.dart';
 import 'features/pos/presentation/screens/pos_home_screen.dart';
 
-void main() {
-  // 1. Khởi tạo các dependencies (sau này có thể chuyển sang get_it)
+import 'injection_container.dart' as di;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await di.init();
+
+  // 1. Khởi tạo các dependencies
   const secureStorage = FlutterSecureStorage();
   final dioClient = DioClient(secureStorage: secureStorage);
 
@@ -87,7 +95,7 @@ void main() {
       posCatalogBloc: PosCatalogBloc(
         getProductsUseCase: getProductsUseCase,
         repository: posRepository,
-      )..add(LoadCatalogEvent()), // Tự động load dữ liệu khi mở app
+      )..add(LoadCatalogEvent()),
       stockMovementBloc: StockMovementBloc(
         getStockMovementsUseCase: getStockMovementsUseCase,
         adjustStockUseCase: adjustStockUseCase,
@@ -118,6 +126,9 @@ class MyApp extends StatelessWidget {
         BlocProvider.value(value: staffBloc),
         BlocProvider.value(value: posCatalogBloc),
         BlocProvider.value(value: stockMovementBloc),
+        BlocProvider<StockImportBloc>(
+          create: (_) => di.sl<StockImportBloc>(),
+        ),
       ],
       child: MaterialApp(
         title: 'Munchify POS',
