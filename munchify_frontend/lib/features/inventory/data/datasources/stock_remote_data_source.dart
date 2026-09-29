@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:munchify_frontend/core/network/DioClient.dart';
 import '../../../../core/constants/ApiEndpoints.dart';
 import '../models/stock_import_model.dart';
 
@@ -11,26 +12,26 @@ abstract class StockRemoteDataSource {
 }
 
 class StockRemoteDataSourceImpl implements StockRemoteDataSource {
-  final Dio dio;
+  final DioClient dio; 
 
   StockRemoteDataSourceImpl({required this.dio});
 
   @override
   Future<List<StockImportModel>> getStockImports() async {
-    final response = await dio.get(ApiEndpoints.stockImports);
+    final response = await dio.dio.get(ApiEndpoints.stockImports);
     final data = response.data['data'] as List;
     return data.map((json) => StockImportModel.fromJson(json)).toList();
   }
 
   @override
   Future<StockImportModel> getStockImportById(int id) async {
-    final response = await dio.get('${ApiEndpoints.stockImports}/$id');
+    final response = await dio.dio.get('${ApiEndpoints.stockImports}/$id');
     return StockImportModel.fromJson(response.data['data']);
   }
 
   @override
   Future<int> createDraftImport(int supplierId, String? notes, List<Map<String, dynamic>> items) async {
-    final response = await dio.post(ApiEndpoints.stockImports, data: {
+    final response = await dio.dio.post(ApiEndpoints.stockImports, data: {
       'supplierId': supplierId,
       'notes': notes,
       'items': items,
@@ -40,13 +41,14 @@ class StockRemoteDataSourceImpl implements StockRemoteDataSource {
 
   @override
   Future<bool> completeImport(int id) async {
-    final response = await dio.put('${ApiEndpoints.stockImports}/$id/complete');
+    final response = await dio.dio.put('${ApiEndpoints.stockImports}/$id/complete');
     return response.data['data'] as bool;
   }
 
   @override
   Future<bool> cancelImport(int id) async {
-    final response = await dio.delete('${ApiEndpoints.stockImports}/$id');
+    final response = await dio.dio.delete('${ApiEndpoints.stockImports}/$id');
     return response.data['data'] as bool;
   }
 }
+
