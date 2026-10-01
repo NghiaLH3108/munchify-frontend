@@ -7,6 +7,7 @@ import '../../../categories/presentation/screens/manage_categories_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../inventory/presentation/screens/stock_movement_history_screen.dart';
+import '../../../units/presentation/screens/manage_units_screen.dart';
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
@@ -53,6 +54,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'Khách hàng thân thiết';
       case 'promotions':
         return 'Khuyến mãi';
+      case 'units':
+        return 'Đơn vị tính';
       case 'staff':
         return 'Nhân viên & Quyền';
       case 'reports':
@@ -280,6 +283,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'menu',
                     icon: Icons.restaurant_menu_rounded,
                     title: 'Quản lý danh mục',
+                  ),
+                  _buildSidebarItem(
+                    key: 'units',
+                    icon: Icons.straighten_rounded,
+                    title: 'Đơn vị tính',
                   ),
                   _buildSidebarItem(
                     key: 'combos',
@@ -860,6 +868,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const AnalyticsDashboardView();
       case 'menu':
         return const ManageCategoriesScreen(embedInShell: true);
+      case 'units':
+        return const ManageUnitsScreen(embedInShell: true);
       case 'staff':
         return const StaffManagementScreen(embedInShell: true);
       case 'inventory':
