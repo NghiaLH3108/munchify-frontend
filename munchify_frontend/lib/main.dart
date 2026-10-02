@@ -34,6 +34,13 @@ import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_event.dart';
 import 'features/pos/presentation/screens/pos_home_screen.dart';
 
+// Customer Imports
+import 'features/customers/data/datasources/customer_remote_data_source.dart';
+import 'features/customers/data/repositories/customer_repository_impl.dart';
+import 'features/customers/domain/usecases/search_customer_usecase.dart';
+import 'features/customers/domain/usecases/create_customer_usecase.dart';
+import 'features/customers/presentation/bloc/customer_bloc.dart';
+
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -78,6 +85,12 @@ void main() async {
   final getStockMovementsUseCase = GetStockMovementsUseCase(inventoryRepository);
   final adjustStockUseCase = AdjustStockUseCase(inventoryRepository);
 
+  // Customer dependencies
+  final customerRemoteDataSource = CustomerRemoteDataSourceImpl(dioClient: dioClient);
+  final customerRepository = CustomerRepositoryImpl(remoteDataSource: customerRemoteDataSource);
+  final searchCustomerUseCase = SearchCustomerUseCase(customerRepository);
+  final createCustomerUseCase = CreateCustomerUseCase(customerRepository);
+
   runApp(
     MyApp(
       categoryBloc: CategoryBloc(
@@ -100,6 +113,10 @@ void main() async {
         getStockMovementsUseCase: getStockMovementsUseCase,
         adjustStockUseCase: adjustStockUseCase,
       ),
+      customerBloc: CustomerBloc(
+        searchCustomer: searchCustomerUseCase,
+        createCustomer: createCustomerUseCase,
+      ),
     ),
   );
 }
@@ -109,6 +126,7 @@ class MyApp extends StatelessWidget {
   final StaffBloc staffBloc;
   final PosCatalogBloc posCatalogBloc;
   final StockMovementBloc stockMovementBloc;
+  final CustomerBloc customerBloc;
 
   const MyApp({
     super.key, 
@@ -116,6 +134,7 @@ class MyApp extends StatelessWidget {
     required this.staffBloc,
     required this.posCatalogBloc,
     required this.stockMovementBloc,
+    required this.customerBloc,
   });
 
   @override
@@ -126,6 +145,7 @@ class MyApp extends StatelessWidget {
         BlocProvider.value(value: staffBloc),
         BlocProvider.value(value: posCatalogBloc),
         BlocProvider.value(value: stockMovementBloc),
+        BlocProvider.value(value: customerBloc),
         BlocProvider<StockImportBloc>(
           create: (_) => di.sl<StockImportBloc>(),
         ),

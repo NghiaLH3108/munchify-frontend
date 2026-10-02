@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
+import '../../../customers/presentation/bloc/customer_bloc.dart';
+import '../../../customers/presentation/bloc/customer_state.dart';
 
 class CartSummaryBottomBar extends StatelessWidget {
   const CartSummaryBottomBar({Key? key}) : super(key: key);
@@ -63,12 +67,22 @@ class CartSummaryBottomBar extends StatelessWidget {
                     currencyFormat.format(105000),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  Row(
-                    children: const [
-                      Icon(Icons.verified_user_outlined, size: 12, color: Colors.green),
-                      SizedBox(width: 4),
-                      Text('Nguyễn Văn A (+1 điểm)', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ],
+                  BlocBuilder<CustomerBloc, CustomerState>(
+                    builder: (context, customerState) {
+                      if (customerState is CustomerSelected) {
+                        return Row(
+                          children: [
+                            const Icon(Icons.verified_user_outlined, size: 12, color: Colors.green),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${customerState.customer.customerName} (${customerState.customer.loyaltyPoints} điểm)',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        );
+                      }
+                      return const Text('Khách lẻ', style: TextStyle(color: Colors.grey, fontSize: 12));
+                    },
                   ),
                 ],
               ),
