@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// App-wide configuration constants for Munchify POS.
 /// Add all magic values and hard-coded config here — never inline them elsewhere.
 class AppConstants {
@@ -13,8 +15,11 @@ class AppConstants {
   /// Web / Windows Desktop: https://localhost:<port_backend>
   /// Android Emulator: https://10.0.2.2:<port_backend>
 
-  // static const String baseUrl = 'http://10.0.2.2:7173';
-  static const String baseUrl = 'http://localhost:5194';
+  static String get baseUrl {
+    if (kIsWeb) return 'http://localhost:5194';
+    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:5194';
+    return 'http://localhost:5194';
+  }
 
   // ─── HTTP Timeouts (milliseconds) ─────────────────────────────────────────
   static const int connectTimeoutMs = 15000;

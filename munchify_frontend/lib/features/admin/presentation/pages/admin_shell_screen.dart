@@ -8,6 +8,7 @@ import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../inventory/presentation/screens/stock_movement_history_screen.dart';
 import '../../../units/presentation/screens/manage_units_screen.dart';
+import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
@@ -874,6 +875,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const StaffManagementScreen(embedInShell: true);
       case 'inventory':
         return const InventoryScreen(embedInShell: true);
+      case 'loyalty':
+        return const AdminCustomerManagementScreen();
       default:
         // Placeholder for other tabs with clean informative card
         return Center(
