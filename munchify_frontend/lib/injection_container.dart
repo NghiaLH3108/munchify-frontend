@@ -13,6 +13,13 @@ import 'features/categories/domain/repositories/category_repository.dart';
 import 'features/categories/domain/usecases/manage_category_usecases.dart';
 import 'features/categories/presentation/bloc/category_bloc.dart';
 
+// Units
+import 'features/units/data/datasources/unit_remote_data_source.dart';
+import 'features/units/data/repositories/unit_repository_impl.dart';
+import 'features/units/domain/repositories/unit_repository.dart';
+import 'features/units/domain/usecases/manage_unit_usecases.dart';
+import 'features/units/presentation/bloc/unit_bloc.dart';
+
 // Staff
 import 'features/staff/data/datasources/staff_remote_data_source.dart';
 import 'features/staff/data/repositories/staff_repository_impl.dart';
@@ -69,6 +76,15 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => UnitBloc(
+      getUnits: sl(),
+      createUnit: sl(),
+      updateUnit: sl(),
+      deleteUnit: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => StaffBloc(
       getStaffList: sl(),
       createStaff: sl(),
@@ -106,6 +122,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
 
+  // Unit
+  sl.registerLazySingleton(() => GetUnitsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateUnitUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateUnitUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteUnitUseCase(sl()));
+
   // Staff
   sl.registerLazySingleton(() => GetStaffListUseCase(sl()));
   sl.registerLazySingleton(() => CreateStaffUseCase(sl()));
@@ -128,6 +150,10 @@ Future<void> init() async {
   
   sl.registerLazySingleton<CategoryRepository>(
     () => CategoryRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<UnitRepository>(
+    () => UnitRepositoryImpl(remoteDataSource: sl()),
   );
 
   sl.registerLazySingleton<StaffRepository>(
@@ -154,6 +180,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<CategoryRemoteDataSource>(
     () => CategoryRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<UnitRemoteDataSource>(
+    () => UnitRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<StaffRemoteDataSource>(

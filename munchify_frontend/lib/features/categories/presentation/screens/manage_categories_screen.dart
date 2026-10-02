@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -15,10 +16,7 @@ import '../widgets/delete_confirm_dialog.dart';
 class ManageCategoriesScreen extends StatefulWidget {
   final bool embedInShell;
 
-  const ManageCategoriesScreen({
-    super.key,
-    this.embedInShell = false,
-  });
+  const ManageCategoriesScreen({super.key, this.embedInShell = false});
 
   @override
   State<ManageCategoriesScreen> createState() => _ManageCategoriesScreenState();
@@ -45,12 +43,14 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   }
 
   void _loadData() {
-    context.read<CategoryBloc>().add(LoadCategoriesEvent(
-          searchTerm: '', // Local search used for immediate response
-          isActive: _selectedStatus,
-          page: _currentPage,
-          pageSize: _pageSize,
-        ));
+    context.read<CategoryBloc>().add(
+      LoadCategoriesEvent(
+        searchTerm: '', // Local search used for immediate response
+        isActive: _selectedStatus,
+        page: _currentPage,
+        pageSize: _pageSize,
+      ),
+    );
   }
 
   void _onStatusFilterChanged(bool? status) {
@@ -70,15 +70,22 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
 
     if (result != null) {
       if (!mounted) return;
-      context.read<CategoryBloc>().add(CreateCategoryEvent(
-            categoryName: result['categoryName'],
-            description: result['description'],
-            isActive: result['isActive'],
-          ));
+      context.read<CategoryBloc>().add(
+        CreateCategoryEvent(
+          categoryName: result['categoryName'],
+          description: result['description'],
+          isActive: result['isActive'],
+        ),
+      );
     }
   }
 
-  void _showEditCategory(int id, String name, String? desc, bool isActive) async {
+  void _showEditCategory(
+    int id,
+    String name,
+    String? desc,
+    bool isActive,
+  ) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
@@ -92,12 +99,14 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
 
     if (result != null) {
       if (!mounted) return;
-      context.read<CategoryBloc>().add(UpdateCategoryEvent(
-            id: id,
-            categoryName: result['categoryName'],
-            description: result['description'],
-            isActive: result['isActive'],
-          ));
+      context.read<CategoryBloc>().add(
+        UpdateCategoryEvent(
+          id: id,
+          categoryName: result['categoryName'],
+          description: result['description'],
+          isActive: result['isActive'],
+        ),
+      );
     }
   }
 
@@ -114,12 +123,14 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   }
 
   void _toggleCategoryStatus(CategoryEntity cat) {
-    context.read<CategoryBloc>().add(UpdateCategoryEvent(
-          id: cat.id,
-          categoryName: cat.categoryName,
-          description: cat.description,
-          isActive: !cat.isActive,
-        ));
+    context.read<CategoryBloc>().add(
+      UpdateCategoryEvent(
+        id: cat.id,
+        categoryName: cat.categoryName,
+        description: cat.description,
+        isActive: !cat.isActive,
+      ),
+    );
   }
 
   String _getInitials(String name) {
@@ -140,14 +151,25 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(state.successMessage!, style: const TextStyle(fontSize: 13))),
+                  Expanded(
+                    child: Text(
+                      state.successMessage!,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
                 ],
               ),
               backgroundColor: ColorPalette.success,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               margin: const EdgeInsets.all(16),
             ),
           );
@@ -160,21 +182,34 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(state.message, style: const TextStyle(fontSize: 13))),
+                  Expanded(
+                    child: Text(
+                      state.message,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
                 ],
               ),
               backgroundColor: ColorPalette.error,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               margin: const EdgeInsets.all(16),
             ),
           );
         }
       },
       buildWhen: (previous, current) =>
-          current is CategoryLoading || current is CategoryLoaded || current is CategoryError,
+          current is CategoryLoading ||
+          current is CategoryLoaded ||
+          current is CategoryError,
       builder: (context, state) {
         if (state is CategoryLoading && state is! CategoryLoaded) {
           return Center(
@@ -190,7 +225,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('Đang đồng bộ danh mục...', style: AppTypography.dashboardSubtitle),
+                Text(
+                  'Đang đồng bộ danh mục...',
+                  style: AppTypography.dashboardSubtitle,
+                ),
               ],
             ),
           );
@@ -199,9 +237,16 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: ColorPalette.error),
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: ColorPalette.error,
+                ),
                 const SizedBox(height: 16),
-                Text('Đã xảy ra lỗi: ${state.message}', style: const TextStyle(color: ColorPalette.error)),
+                Text(
+                  'Đã xảy ra lỗi: ${state.message}',
+                  style: const TextStyle(color: ColorPalette.error),
+                ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _loadData,
@@ -212,7 +257,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           );
         } else if (state is CategoryLoaded) {
           final allItems = state.categories;
-          
+
           final filteredItems = allItems.where((cat) {
             if (_searchQuery.isEmpty) return true;
             final q = _searchQuery.toLowerCase();
@@ -289,8 +334,11 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                   color: ColorPalette.appetizingOrange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.lunch_dining_rounded,
-                    color: ColorPalette.appetizingOrange, size: 22),
+                child: const Icon(
+                  Icons.lunch_dining_rounded,
+                  color: ColorPalette.appetizingOrange,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -306,23 +354,36 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                 const SizedBox(width: 10),
                 Row(
                   children: [
-                    const Icon(Icons.chevron_right_rounded,
-                        size: 18, color: ColorPalette.textMuted),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: ColorPalette.textMuted,
+                    ),
                     const SizedBox(width: 4),
-                    Text('Trang chủ',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: ColorPalette.textMuted,
-                          decoration: TextDecoration.none,
-                        )),
+                    Text(
+                      'Trang chủ',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: ColorPalette.textMuted,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: Text('/', style: TextStyle(color: ColorPalette.textMuted, fontSize: 12)),
+                      child: Text(
+                        '/',
+                        style: TextStyle(
+                          color: ColorPalette.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                    Text('Danh mục',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: ColorPalette.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        )),
+                    Text(
+                      'Danh mục',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: ColorPalette.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -339,26 +400,46 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                           width: 240,
                           height: 38,
                           child: TextField(
-                            onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                            onChanged: (val) =>
+                                setState(() => _searchQuery = val.trim()),
                             style: const TextStyle(fontSize: 13),
                             decoration: InputDecoration(
                               hintText: 'Tìm nhanh... (Ctrl+K)',
-                              hintStyle: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
-                              prefixIcon: const Icon(Icons.search_rounded, size: 18, color: ColorPalette.textMuted),
+                              hintStyle: const TextStyle(
+                                fontSize: 12,
+                                color: ColorPalette.textMuted,
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.search_rounded,
+                                size: 18,
+                                color: ColorPalette.textMuted,
+                              ),
                               filled: true,
-                              fillColor: ColorPalette.webBgAdmin.withValues(alpha: 0.7),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              fillColor: ColorPalette.webBgAdmin.withValues(
+                                alpha: 0.7,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: ColorPalette.borderSubtle),
+                                borderSide: const BorderSide(
+                                  color: ColorPalette.borderSubtle,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: ColorPalette.borderSubtle),
+                                borderSide: const BorderSide(
+                                  color: ColorPalette.borderSubtle,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: ColorPalette.appetizingOrange, width: 1.5),
+                                borderSide: const BorderSide(
+                                  color: ColorPalette.appetizingOrange,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                           ),
@@ -367,7 +448,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                       ],
                       if (!isVeryNarrow) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: ColorPalette.success.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(20),
@@ -379,14 +463,19 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                                 width: 7,
                                 height: 7,
                                 decoration: const BoxDecoration(
-                                    color: ColorPalette.success, shape: BoxShape.circle),
+                                  color: ColorPalette.success,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                               const SizedBox(width: 6),
-                              const Text('Online',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: ColorPalette.success)),
+                              const Text(
+                                'Online',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorPalette.success,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -394,16 +483,25 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                       ],
                       IconButton(
                         onPressed: _loadData,
-                        icon: const Icon(Icons.refresh_rounded, size: 20, color: ColorPalette.textMuted),
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          size: 20,
+                          color: ColorPalette.textMuted,
+                        ),
                         tooltip: 'Tải lại danh sách',
                         style: IconButton.styleFrom(
                           backgroundColor: ColorPalette.webBgAdmin,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: ColorPalette.borderSubtle),
                           borderRadius: BorderRadius.circular(10),
@@ -412,12 +510,16 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                           children: [
                             const CircleAvatar(
                               radius: 14,
-                              backgroundColor: ColorPalette.surfaceContainerHigh,
-                              child: Text('AD',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorPalette.appetizingOrange)),
+                              backgroundColor:
+                                  ColorPalette.surfaceContainerHigh,
+                              child: Text(
+                                'AD',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorPalette.appetizingOrange,
+                                ),
+                              ),
                             ),
                             if (!isVeryNarrow) ...[
                               const SizedBox(width: 8),
@@ -425,21 +527,30 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Admin',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: ColorPalette.textPrimary)),
-                                  Text('Quản trị',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color: ColorPalette.appetizingOrange)),
+                                  Text(
+                                    'Admin',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: ColorPalette.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Quản trị',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: ColorPalette.appetizingOrange,
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(width: 6),
-                              const Icon(Icons.keyboard_arrow_down_rounded,
-                                  size: 16, color: ColorPalette.textMuted),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 16,
+                                color: ColorPalette.textMuted,
+                              ),
                             ],
                           ],
                         ),
@@ -495,7 +606,11 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.sync_rounded, size: 16, color: ColorPalette.tertiary),
+                      const Icon(
+                        Icons.sync_rounded,
+                        size: 16,
+                        color: ColorPalette.tertiary,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Đồng bộ lúc ${DateFormat('HH:mm:ss').format(DateTime.now())}',
@@ -510,14 +625,22 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                   ElevatedButton.icon(
                     onPressed: _showAddCategory,
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('+ Thêm Danh mục'),
+                    label: const Text('Thêm Danh mục'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorPalette.primaryContainer,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      textStyle: AppTypography.inter(fontSize: 13, fontWeight: FontWeight.w700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      textStyle: AppTypography.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -562,15 +685,20 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     final total = catList.length;
     final active = catList.where((c) => c.isActive).length;
     final locked = total - active;
-    final totalProducts = catList.fold<int>(0, (sum, item) => sum + item.productCount);
+    final totalProducts = catList.fold<int>(
+      0,
+      (sum, item) => sum + item.productCount,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount =
-            constraints.maxWidth > 1050 ? 4 : (constraints.maxWidth > 550 ? 2 : 1);
+        final crossAxisCount = constraints.maxWidth > 1050
+            ? 4
+            : (constraints.maxWidth > 550 ? 2 : 1);
         final gap = 16.0;
         final cardWidth =
-            (constraints.maxWidth - ((crossAxisCount - 1) * gap)) / crossAxisCount;
+            (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
+            crossAxisCount;
         return Wrap(
           spacing: gap,
           runSpacing: gap,
@@ -587,7 +715,8 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             _buildMetricCard(
               title: 'ĐANG KINH DOANH',
               value: active.toString(),
-              subtitle: '${((active / (total == 0 ? 1 : total)) * 100).round()}% tổng danh mục',
+              subtitle:
+                  '${((active / (total == 0 ? 1 : total)) * 100).round()}% tổng danh mục',
               icon: Icons.storefront_rounded,
               iconColor: ColorPalette.tertiary,
               iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
@@ -654,10 +783,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               left: 0,
               top: 0,
               bottom: 0,
-              child: Container(
-                width: 4,
-                color: ColorPalette.warningTangerine,
-              ),
+              child: Container(width: 4, color: ColorPalette.warningTangerine),
             ),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -708,15 +834,25 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                 Container(
                   padding: const EdgeInsets.only(top: 12),
                   decoration: const BoxDecoration(
-                    border: Border(top: BorderSide(color: ColorPalette.borderSubtle)),
+                    border: Border(
+                      top: BorderSide(color: ColorPalette.borderSubtle),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(subtitle, style: AppTypography.dashboardSubtitle.copyWith(fontSize: 11)),
+                      Text(
+                        subtitle,
+                        style: AppTypography.dashboardSubtitle.copyWith(
+                          fontSize: 11,
+                        ),
+                      ),
                       if (trendValue != null)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: trendPositive
                                 ? ColorPalette.success.withValues(alpha: 0.08)
@@ -727,9 +863,13 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                trendPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                                trendPositive
+                                    ? Icons.trending_up_rounded
+                                    : Icons.trending_down_rounded,
                                 size: 14,
-                                color: trendPositive ? ColorPalette.success : ColorPalette.error,
+                                color: trendPositive
+                                    ? ColorPalette.success
+                                    : ColorPalette.error,
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -737,14 +877,20 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: trendPositive ? ColorPalette.success : ColorPalette.error,
+                                  color: trendPositive
+                                      ? ColorPalette.success
+                                      : ColorPalette.error,
                                 ),
                               ),
                             ],
                           ),
                         ),
                       if (isWarning)
-                        const Icon(Icons.warning_amber_rounded, size: 16, color: ColorPalette.warning),
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: ColorPalette.warning,
+                        ),
                     ],
                   ),
                 ),
@@ -773,10 +919,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           return isWide
               ? Row(
                   children: [
-                    Expanded(
-                      flex: 3,
-                      child: _buildSearchInputField(),
-                    ),
+                    Expanded(flex: 3, child: _buildSearchInputField()),
                     const SizedBox(width: 16),
                     _buildPillFilters(),
                   ],
@@ -807,8 +950,15 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
         style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(
           hintText: 'Tìm theo tên danh mục, mô tả...',
-          hintStyle: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
-          prefixIcon: const Icon(Icons.search_rounded, size: 18, color: ColorPalette.textMuted),
+          hintStyle: const TextStyle(
+            fontSize: 12,
+            color: ColorPalette.textMuted,
+          ),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            size: 18,
+            color: ColorPalette.textMuted,
+          ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear_rounded, size: 16),
@@ -820,7 +970,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               : null,
           filled: true,
           fillColor: ColorPalette.webBgAdmin.withValues(alpha: 0.6),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 8,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide.none,
@@ -831,7 +984,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: ColorPalette.appetizingOrange, width: 1.5),
+            borderSide: const BorderSide(
+              color: ColorPalette.appetizingOrange,
+              width: 1.5,
+            ),
           ),
         ),
       ),
@@ -855,15 +1011,15 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
         _buildPillFilter(
           label: 'Hoạt động',
           isActive: _selectedStatus == true,
-          onTap: () => _onStatusFilterChanged(
-              _selectedStatus == true ? null : true),
+          onTap: () =>
+              _onStatusFilterChanged(_selectedStatus == true ? null : true),
           activeColor: ColorPalette.success,
         ),
         _buildPillFilter(
           label: 'Ngừng hoạt động',
           isActive: _selectedStatus == false,
-          onTap: () => _onStatusFilterChanged(
-              _selectedStatus == false ? null : false),
+          onTap: () =>
+              _onStatusFilterChanged(_selectedStatus == false ? null : false),
           activeColor: ColorPalette.error,
         ),
       ],
@@ -896,9 +1052,11 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon,
-                  size: 14,
-                  color: isActive ? Colors.white : ColorPalette.textMuted),
+              Icon(
+                icon,
+                size: 14,
+                color: isActive ? Colors.white : ColorPalette.textMuted,
+              ),
               const SizedBox(width: 5),
             ],
             Text(
@@ -918,7 +1076,11 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   // ═══════════════════════════════════════════════════════════════════════════
   // DATA TABLE / CARD
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildTableCard(BuildContext context, List<CategoryEntity> items, bool isListEnd) {
+  Widget _buildTableCard(
+    BuildContext context,
+    List<CategoryEntity> items,
+    bool isListEnd,
+  ) {
     if (items.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
@@ -930,9 +1092,16 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.category_outlined, size: 60, color: ColorPalette.textMuted.withValues(alpha: 0.5)),
+              Icon(
+                Icons.category_outlined,
+                size: 60,
+                color: ColorPalette.textMuted.withValues(alpha: 0.5),
+              ),
               const SizedBox(height: 16),
-              const Text('Chưa có danh mục nào phù hợp', style: TextStyle(color: ColorPalette.textMuted, fontSize: 16)),
+              const Text(
+                'Chưa có danh mục nào phù hợp',
+                style: TextStyle(color: ColorPalette.textMuted, fontSize: 16),
+              ),
             ],
           ),
         ),
@@ -978,7 +1147,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                         ),
                         const SizedBox(width: 10),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: ColorPalette.primaryFixed,
                             borderRadius: BorderRadius.circular(20),
@@ -997,7 +1169,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Hiển thị trang $_currentPage.',
-                      style: AppTypography.inter(fontSize: 12, color: ColorPalette.textMuted),
+                      style: AppTypography.inter(
+                        fontSize: 12,
+                        color: ColorPalette.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -1050,8 +1225,13 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                       children: [
                         _buildProportionalTableHeader(),
                         ...items.asMap().entries.map((e) {
-                          final index = e.key + 1 + ((_currentPage - 1) * _pageSize);
-                          return _buildProportionalTableRow(context, e.value, index);
+                          final index =
+                              e.key + 1 + ((_currentPage - 1) * _pageSize);
+                          return _buildProportionalTableRow(
+                            context,
+                            e.value,
+                            index,
+                          );
                         }),
                       ],
                     ),
@@ -1075,33 +1255,68 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: ColorPalette.webBgAdmin.withValues(alpha: 0.8),
-        border: const Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
+        border: const Border(
+          bottom: BorderSide(color: ColorPalette.borderSubtle),
+        ),
       ),
       child: const Row(
         children: [
-          SizedBox(width: 44, child: Text('#', style: AppTypography.tableHeader)),
+          SizedBox(
+            width: 44,
+            child: Text('#', style: AppTypography.tableHeader),
+          ),
           SizedBox(width: 12),
-          Expanded(flex: 3, child: Text('TÊN DANH MỤC', style: AppTypography.tableHeader)),
-          Expanded(flex: 4, child: Text('MÔ TẢ', style: AppTypography.tableHeader)),
-          Expanded(flex: 2, child: Text('SẢN PHẨM', style: AppTypography.tableHeader)),
-          Expanded(flex: 2, child: Text('TRẠNG THÁI', style: AppTypography.tableHeader)),
-          SizedBox(width: 90, child: Text('THAO TÁC', textAlign: TextAlign.right, style: AppTypography.tableHeader)),
+          Expanded(
+            flex: 3,
+            child: Text('TÊN DANH MỤC', style: AppTypography.tableHeader),
+          ),
+          Expanded(
+            flex: 4,
+            child: Text('MÔ TẢ', style: AppTypography.tableHeader),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text('SẢN PHẨM', style: AppTypography.tableHeader),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text('TRẠNG THÁI', style: AppTypography.tableHeader),
+          ),
+          SizedBox(
+            width: 90,
+            child: Text(
+              'THAO TÁC',
+              textAlign: TextAlign.right,
+              style: AppTypography.tableHeader,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildProportionalTableRow(BuildContext context, CategoryEntity cat, int index) {
+  Widget _buildProportionalTableRow(
+    BuildContext context,
+    CategoryEntity cat,
+    int index,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showEditCategory(cat.id, cat.categoryName, cat.description, cat.isActive),
+        onTap: () => _showEditCategory(
+          cat.id,
+          cat.categoryName,
+          cat.description,
+          cat.isActive,
+        ),
         hoverColor: ColorPalette.webBgAdmin.withValues(alpha: 0.4),
         child: Container(
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: ColorPalette.borderSubtle, width: 0.5)),
+            border: Border(
+              bottom: BorderSide(color: ColorPalette.borderSubtle, width: 0.5),
+            ),
           ),
           child: Row(
             children: [
@@ -1165,7 +1380,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                 flex: 4,
                 child: Text(
                   cat.description ?? '—',
-                  style: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: ColorPalette.textMuted,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -1173,11 +1391,19 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                 flex: 2,
                 child: Row(
                   children: [
-                    const Icon(Icons.fastfood_rounded, size: 14, color: ColorPalette.textMuted),
+                    const Icon(
+                      Icons.fastfood_rounded,
+                      size: 14,
+                      color: ColorPalette.textMuted,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       '${cat.productCount} món',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorPalette.textPrimary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: ColorPalette.textPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -1192,16 +1418,25 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     children: [
                       Switch(
                         value: cat.isActive,
-                        activeTrackColor: ColorPalette.success.withValues(alpha: 0.3),
+                        activeTrackColor: ColorPalette.success.withValues(
+                          alpha: 0.3,
+                        ),
                         activeThumbColor: ColorPalette.success,
-                        inactiveTrackColor: ColorPalette.error.withValues(alpha: 0.15),
-                        inactiveThumbColor: ColorPalette.error.withValues(alpha: 0.6),
+                        inactiveTrackColor: ColorPalette.error.withValues(
+                          alpha: 0.15,
+                        ),
+                        inactiveThumbColor: ColorPalette.error.withValues(
+                          alpha: 0.6,
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         onChanged: (val) => _toggleCategoryStatus(cat),
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: cat.isActive
                               ? ColorPalette.success.withValues(alpha: 0.08)
@@ -1213,7 +1448,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: cat.isActive ? ColorPalette.success : ColorPalette.error,
+                            color: cat.isActive
+                                ? ColorPalette.success
+                                : ColorPalette.error,
                           ),
                         ),
                       ),
@@ -1233,23 +1470,38 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                         color: ColorPalette.appetizingOrange,
                         tooltip: 'Chỉnh sửa',
                         style: IconButton.styleFrom(
-                          backgroundColor: ColorPalette.appetizingOrange.withValues(alpha: 0.08),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          backgroundColor: ColorPalette.appetizingOrange
+                              .withValues(alpha: 0.08),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           minimumSize: const Size(34, 34),
                         ),
-                        onPressed: () => _showEditCategory(cat.id, cat.categoryName, cat.description, cat.isActive),
+                        onPressed: () => _showEditCategory(
+                          cat.id,
+                          cat.categoryName,
+                          cat.description,
+                          cat.isActive,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                        ),
                         color: ColorPalette.dangerCrimson,
                         tooltip: 'Xóa',
                         style: IconButton.styleFrom(
-                          backgroundColor: ColorPalette.dangerCrimson.withValues(alpha: 0.08),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          backgroundColor: ColorPalette.dangerCrimson
+                              .withValues(alpha: 0.08),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           minimumSize: const Size(34, 34),
                         ),
-                        onPressed: () => _showDeleteConfirm(cat.id, cat.categoryName),
+                        onPressed: () =>
+                            _showDeleteConfirm(cat.id, cat.categoryName),
                       ),
                     ],
                   ),
@@ -1291,7 +1543,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           child: Icon(
             icon,
             size: 16,
-            color: isSelected ? ColorPalette.appetizingOrange : ColorPalette.textMuted,
+            color: isSelected
+                ? ColorPalette.appetizingOrange
+                : ColorPalette.textMuted,
           ),
         ),
       ),
@@ -1308,7 +1562,8 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               : (constraints.maxWidth > 700 ? 2 : 1);
           final gap = 16.0;
           final cardWidth =
-              (constraints.maxWidth - ((crossAxisCount - 1) * gap)) / crossAxisCount;
+              (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
+              crossAxisCount;
 
           return Wrap(
             spacing: gap,
@@ -1326,7 +1581,11 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context, CategoryEntity cat, int index) {
+  Widget _buildCategoryCard(
+    BuildContext context,
+    CategoryEntity cat,
+    int index,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: ColorPalette.surface,
@@ -1376,7 +1635,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     const SizedBox(height: 2),
                     Text(
                       '${cat.productCount} sản phẩm',
-                      style: AppTypography.dashboardSubtitle.copyWith(fontSize: 12),
+                      style: AppTypography.dashboardSubtitle.copyWith(
+                        fontSize: 12,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -1388,16 +1649,28 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                    constraints: const BoxConstraints(
+                      minWidth: 30,
+                      minHeight: 30,
+                    ),
                     color: ColorPalette.appetizingOrange,
-                    onPressed: () => _showEditCategory(cat.id, cat.categoryName, cat.description, cat.isActive),
+                    onPressed: () => _showEditCategory(
+                      cat.id,
+                      cat.categoryName,
+                      cat.description,
+                      cat.isActive,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline_rounded, size: 16),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                    constraints: const BoxConstraints(
+                      minWidth: 30,
+                      minHeight: 30,
+                    ),
                     color: ColorPalette.dangerCrimson,
-                    onPressed: () => _showDeleteConfirm(cat.id, cat.categoryName),
+                    onPressed: () =>
+                        _showDeleteConfirm(cat.id, cat.categoryName),
                   ),
                 ],
               ),
@@ -1430,10 +1703,16 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                 children: [
                   Switch(
                     value: cat.isActive,
-                    activeTrackColor: ColorPalette.success.withValues(alpha: 0.3),
+                    activeTrackColor: ColorPalette.success.withValues(
+                      alpha: 0.3,
+                    ),
                     activeThumbColor: ColorPalette.success,
-                    inactiveTrackColor: ColorPalette.error.withValues(alpha: 0.15),
-                    inactiveThumbColor: ColorPalette.error.withValues(alpha: 0.6),
+                    inactiveTrackColor: ColorPalette.error.withValues(
+                      alpha: 0.15,
+                    ),
+                    inactiveThumbColor: ColorPalette.error.withValues(
+                      alpha: 0.6,
+                    ),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     onChanged: (val) => _toggleCategoryStatus(cat),
                   ),
@@ -1443,7 +1722,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: cat.isActive ? ColorPalette.success : ColorPalette.error,
+                      color: cat.isActive
+                          ? ColorPalette.success
+                          : ColorPalette.error,
                     ),
                   ),
                 ],
@@ -1451,7 +1732,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               if (cat.createdAt != null)
                 Text(
                   'Tạo lúc: ${DateFormat('dd/MM/yyyy').format(cat.createdAt!)}',
-                  style: const TextStyle(fontSize: 10, color: ColorPalette.textMuted),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: ColorPalette.textMuted,
+                  ),
                 ),
             ],
           ),
@@ -1488,7 +1772,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: ColorPalette.appetizingOrange,
                     borderRadius: BorderRadius.circular(8),
@@ -1496,9 +1783,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                   child: Text(
                     '$_currentPage',
                     style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -1540,21 +1828,33 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (!iconRight)
-              Icon(icon, size: 16,
-                  color: enabled ? ColorPalette.textPrimary : ColorPalette.textMuted),
+              Icon(
+                icon,
+                size: 16,
+                color: enabled
+                    ? ColorPalette.textPrimary
+                    : ColorPalette.textMuted,
+              ),
             if (!iconRight) const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: enabled ? ColorPalette.textPrimary : ColorPalette.textMuted,
+                color: enabled
+                    ? ColorPalette.textPrimary
+                    : ColorPalette.textMuted,
               ),
             ),
             if (iconRight) const SizedBox(width: 4),
             if (iconRight)
-              Icon(icon, size: 16,
-                  color: enabled ? ColorPalette.textPrimary : ColorPalette.textMuted),
+              Icon(
+                icon,
+                size: 16,
+                color: enabled
+                    ? ColorPalette.textPrimary
+                    : ColorPalette.textMuted,
+              ),
           ],
         ),
       ),
