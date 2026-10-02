@@ -222,7 +222,13 @@ class _PosHomeScreenState extends State<PosHomeScreen> {
                         children: const [
                           Icon(Icons.phone, size: 16, color: Color(0xFFE65100)),
                           SizedBox(width: 8),
-                          Text('Nhập SĐT khách (Tích điểm)...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          Expanded(
+                            child: Text(
+                              'Nhập SĐT khách (Tích điểm)...',
+                              style: TextStyle(color: Colors.grey, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),

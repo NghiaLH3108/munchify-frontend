@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/Failures.dart';
 import '../entities/customer_entity.dart';
+import '../entities/customer_point_history_entity.dart';
+import '../../../../core/utils/PagedResult.dart';
 
 abstract class CustomerRepository {
   Future<Either<Failure, CustomerEntity>> searchByPhone(String phone);
@@ -8,4 +10,6 @@ abstract class CustomerRepository {
     required String customerName,
     required String phone,
   });
+  Future<Either<Failure, PagedResult<CustomerEntity>>> getAllCustomers(int pageIndex, int pageSize, String? searchKeyword);
+  Future<Either<Failure, PagedResult<CustomerPointHistoryEntity>>> getCustomerHistory(int customerId, int pageIndex, int pageSize);
 }

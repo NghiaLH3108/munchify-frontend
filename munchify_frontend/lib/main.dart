@@ -39,7 +39,10 @@ import 'features/customers/data/datasources/customer_remote_data_source.dart';
 import 'features/customers/data/repositories/customer_repository_impl.dart';
 import 'features/customers/domain/usecases/search_customer_usecase.dart';
 import 'features/customers/domain/usecases/create_customer_usecase.dart';
+import 'features/customers/domain/usecases/get_customers_usecase.dart';
+import 'features/customers/domain/usecases/get_customer_point_history_usecase.dart';
 import 'features/customers/presentation/bloc/customer_bloc.dart';
+import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
 
 import 'injection_container.dart' as di;
 
@@ -90,6 +93,8 @@ void main() async {
   final customerRepository = CustomerRepositoryImpl(remoteDataSource: customerRemoteDataSource);
   final searchCustomerUseCase = SearchCustomerUseCase(customerRepository);
   final createCustomerUseCase = CreateCustomerUseCase(customerRepository);
+  final getCustomersUseCase = GetCustomersUseCase(customerRepository);
+  final getCustomerPointHistoryUseCase = GetCustomerPointHistoryUseCase(customerRepository);
 
   runApp(
     MyApp(
@@ -117,6 +122,10 @@ void main() async {
         searchCustomer: searchCustomerUseCase,
         createCustomer: createCustomerUseCase,
       ),
+      adminCustomerBloc: AdminCustomerBloc(
+        getCustomersUseCase: getCustomersUseCase,
+        getCustomerPointHistoryUseCase: getCustomerPointHistoryUseCase,
+      ),
     ),
   );
 }
@@ -127,6 +136,7 @@ class MyApp extends StatelessWidget {
   final PosCatalogBloc posCatalogBloc;
   final StockMovementBloc stockMovementBloc;
   final CustomerBloc customerBloc;
+  final AdminCustomerBloc adminCustomerBloc;
 
   const MyApp({
     super.key, 
@@ -135,6 +145,7 @@ class MyApp extends StatelessWidget {
     required this.posCatalogBloc,
     required this.stockMovementBloc,
     required this.customerBloc,
+    required this.adminCustomerBloc,
   });
 
   @override
@@ -146,6 +157,7 @@ class MyApp extends StatelessWidget {
         BlocProvider.value(value: posCatalogBloc),
         BlocProvider.value(value: stockMovementBloc),
         BlocProvider.value(value: customerBloc),
+        BlocProvider.value(value: adminCustomerBloc),
         BlocProvider<StockImportBloc>(
           create: (_) => di.sl<StockImportBloc>(),
         ),
@@ -154,7 +166,8 @@ class MyApp extends StatelessWidget {
         title: 'Munchify POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const PosHomeScreen(), // Đổi sang màn hình POS
+         home: const AdminShellScreen(initialTab: 'loyalty'), // Đổi sang Web Admin
+//            home: const PosHomeScreen(),
       ),
     );
   }
