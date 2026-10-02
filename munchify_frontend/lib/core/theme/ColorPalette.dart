@@ -66,4 +66,59 @@ class ColorPalette {
   // ─── Overlay & Shadow ─────────────────────────────────────────────────────
   static const Color scrim = Color(0x80000000);
   static const Color shadowLight = Color(0x1A000000);
+
+  // ─── Admin Web Dashboard (Mockup-aligned) ─────────────────────────────
+  /// Cool grey background for admin web layout (#F3F4F6).
+  static const Color webBgAdmin = Color(0xFFF3F4F6);
+
+  /// Subtle border for card edges and dividers (#E2E8F0).
+  static const Color borderSubtle = Color(0xFFE2E8F0);
+
+  /// Muted text for secondary labels and hints (#64748B).
+  static const Color textMuted = Color(0xFF64748B);
+
+  /// Dark surface for sidebar background (#263143).
+  static const Color inverseSurface = Color(0xFF263143);
+
+  /// Elevated surface container for header backgrounds (#DEE8FF).
+  static const Color surfaceContainerHigh = Color(0xFFDEE8FF);
+
+  /// Primary-fixed tinted background for accent areas (#FFDBCF).
+  static const Color primaryFixed = Color(0xFFFFDBCF);
+
+  /// Primary container (button and card accent in HTML: #cd4700).
+  static const Color primaryContainer = Color(0xFFCD4700);
+
+  /// Primary light accent (#FF833A).
+  static const Color primaryLight = Color(0xFFFF833A);
+
+  /// Secondary color (#865300).
+  static const Color secondary = Color(0xFF865300);
+
+  /// Secondary container (#FDA625).
+  static const Color secondaryContainer = Color(0xFFFDA625);
+
+  /// Tertiary green (#186A22).
+  static const Color tertiary = Color(0xFF186A22);
+
+  /// Tertiary container green (#358438).
+  static const Color tertiaryContainer = Color(0xFF358438);
+
+  /// Tangerine warning (#F57C00).
+  static const Color warningTangerine = Color(0xFFF57C00);
+
+  /// Crimson danger (#D32F2F).
+  static const Color dangerCrimson = Color(0xFFD32F2F);
+
+  /// Surface dim text (#CFDAF2).
+  static const Color surfaceDim = Color(0xFFCFDAF2);
+
+  /// Pure white surface (#FFFFFF).
+  static const Color surfaceWhite = Color(0xFFFFFFFF);
+
+  /// On surface dark (#111C2D).
+  static const Color onSurfaceDark = Color(0xFF111C2D);
+
+  /// Deep purple accent for admin badges.
+  static const Color adminPurple = Color(0xFF7C3AED);
 }

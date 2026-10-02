@@ -8,10 +8,12 @@ class ApiEndpoints {
   // ─── Authentication ────────────────────────────────────────────────────────
   static const String login = '/api/auth/login';
   static const String me = '/api/auth/me';
+  static const String users = '/api/users';
 
   // ─── Catalog ───────────────────────────────────────────────────────────────
   static const String categories = '/api/categories';
   static const String products = '/api/products';
+  static const String productsForStock = '/api/products/for-stock';
   static const String units = '/api/units';
 
   // ─── Orders & POS ─────────────────────────────────────────────────────────
@@ -26,6 +28,7 @@ class ApiEndpoints {
   // ─── Inventory & Stock ────────────────────────────────────────────────────
   static const String stockImports = '/api/stock-imports';
   static const String stockMovements = '/api/stock-movements';
+  static const String adjustStock = '/api/stock-movements';
   static const String suppliers = '/api/suppliers';
 
   // ─── AI Forecasting ───────────────────────────────────────────────────────

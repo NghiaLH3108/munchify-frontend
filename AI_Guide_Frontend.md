@@ -304,3 +304,40 @@ AI agents generating navigation guards or permission checks MUST reference this 
 5. **Code Generation:** Models requiring JSON parsing must use `@JsonSerializable()` annotations and follow the generated `.g.dart` pattern.
 
 6. **API Endpoints:** Always reference `ApiEndpoints.*` constants. Never hardcode URL strings in DataSource classes.
+
+---
+
+## 9. Platform & Use Case Mapping (Từ Backlog)
+
+Để đảm bảo phạm vi công việc, các chức năng (Use Cases) sau đây được phân bổ rõ ràng cho 2 nền tảng:
+
+### Nền tảng App (Staff)
+Bao gồm các Use Case tối ưu cho trải nghiệm di động tại quầy:
+- **UC 1:** Login/Logout
+- **UC 2:** Forget Password
+- **UC 7:** Browse Product for Staff
+- **UC 9:** Browse Combo for Staff
+- **UC 12:** Manage Customer for Staff
+- **UC 14:** Order at Counter
+- **UC 15:** Make Payment
+- **UC 18:** Record Damaged/Expired Goods
+- **UC 19:** Low Stock Warning
+
+### Nền tảng Web (Admin)
+Bao gồm các Use Case tối ưu cho quản trị, Dashboard và thao tác dữ liệu phức tạp:
+- **UC 1:** Login/Logout
+- **UC 2:** Forget Password
+- **UC 3:** Manage Staff
+- **UC 4:** Manage Category
+- **UC 5:** Manage Selling Unit
+- **UC 6:** Manage Product for Admin
+- **UC 8:** Manage Combo for Admin
+- **UC 10:** Manage Supplier
+- **UC 11:** Manage Stock Import
+- **UC 13:** View Customer for Admin
+- **UC 17:** Manage Stock Movement
+- **UC 18:** Record Damaged/Expired Goods
+- **UC 19:** Low Stock Warning
+- **UC 20:** Demand Forecast
+- **UC 21:** Manage Promotion
+- **UC 22:** Analytics & Reports
