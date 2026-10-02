@@ -10,6 +10,11 @@ import '../../domain/entities/product_entity.dart';
 import '../widgets/cart_summary_bottom_bar.dart';
 import '../widgets/combo_grid_item.dart';
 import '../widgets/product_grid_item.dart';
+import '../../../customers/presentation/bloc/customer_bloc.dart';
+import '../../../customers/presentation/bloc/customer_state.dart';
+import '../../../customers/presentation/widgets/customer_lookup_bottom_sheet.dart';
+import '../../../customers/presentation/widgets/add_customer_bottom_sheet.dart';
+import '../../../customers/presentation/widgets/customer_loyalty_card.dart';
 
 class PosHomeScreen extends StatefulWidget {
   const PosHomeScreen({Key? key}) : super(key: key);
@@ -193,41 +198,58 @@ class _PosHomeScreenState extends State<PosHomeScreen> {
 
   Widget _buildCustomerRowSliver() {
     return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.shade200),
+      child: BlocBuilder<CustomerBloc, CustomerState>(
+        builder: (context, customerState) {
+          if (customerState is CustomerSelected) {
+            return const CustomerLoyaltyCard();
+          }
+          // Default: show phone lookup + add customer button
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => CustomerLookupBottomSheet.show(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.phone, size: 16, color: Color(0xFFE65100)),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Nhập SĐT khách (Tích điểm)...',
+                              style: TextStyle(color: Colors.grey, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.phone, size: 16, color: Color(0xFFE65100)),
-                    SizedBox(width: 8),
-                    Text('Nhập SĐT khách (Tích điểm)...', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                  ],
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () => AddCustomerBottomSheet.show(context),
+                  icon: const Icon(Icons.person_add, size: 16),
+                  label: const Text('Thêm khách'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFA000), // Amber
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                  ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(width: 8),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.person_add, size: 16),
-              label: const Text('Thêm khách'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFA000), // Amber
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                elevation: 0,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

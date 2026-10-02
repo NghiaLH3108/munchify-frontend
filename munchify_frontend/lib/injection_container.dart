@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'core/constants/AppConstants.dart';
+
 
 import 'features/inventory/data/datasources/stock_remote_data_source.dart';
 import 'features/inventory/data/repositories/stock_repository_impl.dart';
@@ -49,6 +51,6 @@ Future<void> init() async {
   /// ==============================
   // Dio
   sl.registerLazySingleton(
-    () => Dio(BaseOptions(baseUrl: 'https://localhost:7173')),
+    () => Dio(BaseOptions(baseUrl: AppConstants.baseUrl)),
   );
 }
