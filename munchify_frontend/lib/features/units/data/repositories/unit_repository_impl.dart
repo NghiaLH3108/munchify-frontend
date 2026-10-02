@@ -26,8 +26,9 @@ class UnitRepositoryImpl implements UnitRepository {
       );
       return Right(result);
     } on DioException catch (e) {
+      final serverMsg = e.response?.data is Map ? e.response?.data['message'] as String? : null;
       return Left(ServerFailure(
-          message: e.error?.toString() ?? e.message ?? 'Lỗi kết nối máy chủ'));
+          message: serverMsg ?? e.message ?? 'Lỗi kết nối máy chủ'));
     } catch (e) {
       return Left(UnexpectedFailure(message: e.toString()));
     }
@@ -39,8 +40,9 @@ class UnitRepositoryImpl implements UnitRepository {
       final result = await remoteDataSource.getUnitById(id);
       return Right(result);
     } on DioException catch (e) {
+      final serverMsg = e.response?.data is Map ? e.response?.data['message'] as String? : null;
       return Left(ServerFailure(
-          message: e.error?.toString() ?? e.message ?? 'Lỗi kết nối máy chủ'));
+          message: serverMsg ?? e.message ?? 'Lỗi kết nối máy chủ'));
     } catch (e) {
       return Left(UnexpectedFailure(message: e.toString()));
     }
@@ -60,8 +62,9 @@ class UnitRepositoryImpl implements UnitRepository {
       );
       return Right(result);
     } on DioException catch (e) {
+      final serverMsg = e.response?.data is Map ? e.response?.data['message'] as String? : null;
       return Left(ServerFailure(
-          message: e.error?.toString() ?? e.message ?? 'Lỗi kết nối máy chủ'));
+          message: serverMsg ?? e.message ?? 'Lỗi kết nối máy chủ'));
     } catch (e) {
       return Left(UnexpectedFailure(message: e.toString()));
     }
@@ -83,8 +86,9 @@ class UnitRepositoryImpl implements UnitRepository {
       );
       return Right(result);
     } on DioException catch (e) {
+      final serverMsg = e.response?.data is Map ? e.response?.data['message'] as String? : null;
       return Left(ServerFailure(
-          message: e.error?.toString() ?? e.message ?? 'Lỗi kết nối máy chủ'));
+          message: serverMsg ?? e.message ?? 'Lỗi kết nối máy chủ'));
     } catch (e) {
       return Left(UnexpectedFailure(message: e.toString()));
     }
@@ -96,8 +100,9 @@ class UnitRepositoryImpl implements UnitRepository {
       final result = await remoteDataSource.deleteUnit(id);
       return Right(result);
     } on DioException catch (e) {
+      final serverMsg = e.response?.data is Map ? e.response?.data['message'] as String? : null;
       return Left(ServerFailure(
-          message: e.error?.toString() ?? e.message ?? 'Lỗi kết nối máy chủ'));
+          message: serverMsg ?? e.message ?? 'Lỗi kết nối máy chủ'));
     } catch (e) {
       return Left(UnexpectedFailure(message: e.toString()));
     }
