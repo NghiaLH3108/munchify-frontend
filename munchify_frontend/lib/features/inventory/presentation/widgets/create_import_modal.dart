@@ -85,6 +85,7 @@ class _CreateImportModalState extends State<CreateImportModal> {
           'unitName': product['unitName'] ?? product['unit'] ?? 'Item',
           'quantity': 1,
           'importPrice': product['costPrice'] ?? product['price'] ?? 0,
+          'expiryDate': null,
         });
       }
     });
@@ -263,6 +264,14 @@ class _CreateImportModalState extends State<CreateImportModal> {
       return;
     }
 
+    bool hasMissingExpiryDate = _selectedItems.any((item) => item['expiryDate'] == null);
+    if (hasMissingExpiryDate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn Hạn Sử Dụng (HSD) cho tất cả sản phẩm!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     context.read<StockImportBloc>().add(
       CreateDraftImportEvent(
         supplierId: _selectedSupplierId!,
@@ -271,6 +280,7 @@ class _CreateImportModalState extends State<CreateImportModal> {
           'productId': item['productId'],
           'quantity': item['quantity'],
           'importPrice': item['importPrice'],
+          'expiryDate': (item['expiryDate'] as DateTime).toIso8601String(),
         }).toList(),
       ),
     );
@@ -465,6 +475,7 @@ class _CreateImportModalState extends State<CreateImportModal> {
                                 Expanded(flex: 2, child: Center(child: Text('Đơn vị', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                                 Expanded(flex: 2, child: Center(child: Text('Số lượng', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                                 Expanded(flex: 3, child: Align(alignment: Alignment.centerRight, child: Text('Giá nhập (đ)', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
+                                Expanded(flex: 2, child: Align(alignment: Alignment.center, child: Text('HSD', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13)))),
                                 Expanded(flex: 3, child: Align(alignment: Alignment.centerRight, child: Text('Thành tiền (đ)', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                                 Expanded(flex: 1, child: Align(alignment: Alignment.center, child: Text('Xóa', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                               ],
@@ -582,6 +593,39 @@ class _CreateImportModalState extends State<CreateImportModal> {
                                         },
                                       ),
                                     )
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Center(
+                                      child: OutlinedButton(
+                                        onPressed: () async {
+                                          final DateTime? picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: item['expiryDate'] ?? DateTime.now().add(const Duration(days: 30)),
+                                            firstDate: DateTime.now(),
+                                            lastDate: DateTime(2030),
+                                          );
+                                          if (picked != null) {
+                                            setState(() {
+                                              item['expiryDate'] = picked;
+                                            });
+                                          }
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                                          side: BorderSide(color: item['expiryDate'] == null ? Colors.red : Colors.grey.shade300),
+                                        ),
+                                        child: Text(
+                                          item['expiryDate'] == null 
+                                              ? 'Chọn HSD' 
+                                              : DateFormat('dd/MM/yyyy').format(item['expiryDate']),
+                                          style: TextStyle(
+                                            color: item['expiryDate'] == null ? Colors.red : Colors.black87,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                   Expanded(
                                     flex: 3, 

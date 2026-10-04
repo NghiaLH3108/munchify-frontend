@@ -51,12 +51,25 @@ import 'features/inventory/domain/usecases/get_stock_movements_usecase.dart';
 import 'features/inventory/domain/usecases/adjust_stock_usecase.dart';
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 
+import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
+import 'features/inventory/domain/usecases/get_pending_records_usecase.dart';
+import 'features/inventory/domain/usecases/get_ai_expiry_summary_usecase.dart';
+import 'features/inventory/domain/usecases/approve_record_usecase.dart';
+
 final sl = GetIt.instance; // sl = Service Locator
 
 Future<void> init() async {
   /// ==============================
   /// BLoC
   /// ==============================
+  sl.registerFactory(
+    () => AiExpiryBloc(
+      getPendingRecordsUseCase: sl(),
+      getAiExpirySummaryUseCase: sl(),
+      approveRecordUseCase: sl(),
+    ),
+  );
+
   sl.registerFactory(
     () => StockImportBloc(
       getStockImportsUseCase: sl(),
@@ -110,6 +123,11 @@ Future<void> init() async {
   /// ==============================
   /// Use Cases
   /// ==============================
+  // AI Expiry
+  sl.registerLazySingleton(() => GetPendingRecordsUseCase(sl()));
+  sl.registerLazySingleton(() => GetAiExpirySummaryUseCase(sl()));
+  sl.registerLazySingleton(() => ApproveRecordUseCase(sl()));
+
   // Stock Import
   sl.registerLazySingleton(() => GetStockImportsUseCase(sl()));
   sl.registerLazySingleton(() => CreateDraftImportUseCase(sl()));
@@ -175,7 +193,7 @@ Future<void> init() async {
   /// Data Sources
   /// ==============================
   sl.registerLazySingleton<StockRemoteDataSource>(
-    () => StockRemoteDataSourceImpl(dio: sl()),
+    () => StockRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<CategoryRemoteDataSource>(

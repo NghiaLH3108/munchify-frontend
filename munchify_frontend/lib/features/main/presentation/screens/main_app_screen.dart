@@ -5,6 +5,8 @@ import '../../../pos/presentation/screens/pos_home_screen.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../admin/presentation/pages/admin_shell_screen.dart';
 
+import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
+
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({Key? key}) : super(key: key);
 
@@ -19,6 +21,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
     const PosHomeScreen(),
     _PlaceholderScreen(title: 'Khách hàng'),
     const InventoryScreen(),
+    const AiExpiryScreen(), // Tab mới cho AI Insights
     _PlaceholderScreen(title: 'Tài khoản'),
   ];
 
@@ -45,6 +48,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Bán hàng'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Khách hàng'),
           BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Kho'),
+          BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: 'AI Insights'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
         ],
       ),
