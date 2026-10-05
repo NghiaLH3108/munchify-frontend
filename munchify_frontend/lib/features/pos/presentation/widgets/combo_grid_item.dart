@@ -68,7 +68,13 @@ class ComboGridItem extends StatelessWidget {
                   height: 120,
                   width: double.infinity,
                   color: Colors.orange.shade100,
-                  child: const Center(child: Icon(Icons.fastfood, size: 60, color: Colors.orange)),
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.fastfood, size: 60, color: Colors.orange)),
+                        )
+                      : const Center(child: Icon(Icons.fastfood, size: 60, color: Colors.orange)),
                 ),
               ),
               Positioned(

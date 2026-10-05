@@ -12,6 +12,8 @@ import 'features/pos/presentation/bloc/pos_catalog_event.dart';
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
 import 'features/units/presentation/bloc/unit_bloc.dart';
+import 'features/products/presentation/bloc/product_admin_bloc.dart';
+import 'features/products/presentation/bloc/product_form_bloc.dart';
 
 import 'injection_container.dart' as di;
 
@@ -38,6 +40,8 @@ class MyApp extends StatelessWidget {
         BlocProvider<StockMovementBloc>(create: (_) => di.sl<StockMovementBloc>()),
         BlocProvider<StockImportBloc>(create: (_) => di.sl<StockImportBloc>()),
         BlocProvider<UnitBloc>(create: (_) => di.sl<UnitBloc>()),
+        BlocProvider<ProductAdminBloc>(create: (_) => di.sl<ProductAdminBloc>()),
+        BlocProvider<ProductFormBloc>(create: (_) => di.sl<ProductFormBloc>()),
       ],
       child: MaterialApp(
         title: 'Munchify POS',
