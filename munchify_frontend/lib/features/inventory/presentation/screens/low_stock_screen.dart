@@ -7,7 +7,8 @@ import '../bloc/low_stock/low_stock_state.dart';
 import '../../domain/entities/forecast_item_entity.dart';
 
 class LowStockScreen extends StatefulWidget {
-  const LowStockScreen({Key? key}) : super(key: key);
+  final bool embedInShell;
+  const LowStockScreen({Key? key, this.embedInShell = false}) : super(key: key);
 
   @override
   _LowStockScreenState createState() => _LowStockScreenState();
@@ -249,7 +250,7 @@ class _LowStockScreenState extends State<LowStockScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFBF9F5), // surface
-      appBar: _buildAppBar(),
+      appBar: widget.embedInShell ? null : _buildAppBar(),
       body: BlocConsumer<LowStockBloc, LowStockState>(
         listener: (context, state) {
           if (state is DraftImportGeneratedSuccess) {

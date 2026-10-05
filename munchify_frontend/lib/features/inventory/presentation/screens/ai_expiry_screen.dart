@@ -9,7 +9,8 @@ import '../../domain/entities/damaged_expired_record_entity.dart';
 import '../../domain/entities/ai_expiry_summary_entity.dart';
 
 class AiExpiryScreen extends StatefulWidget {
-  const AiExpiryScreen({Key? key}) : super(key: key);
+  final bool embedInShell;
+  const AiExpiryScreen({Key? key, this.embedInShell = false}) : super(key: key);
 
   @override
   _AiExpiryScreenState createState() => _AiExpiryScreenState();
@@ -41,7 +42,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFBF9F5), // surface
-      appBar: _buildAppBar(),
+      appBar: widget.embedInShell ? null : _buildAppBar(),
       body: BlocConsumer<AiExpiryBloc, AiExpiryState>(
         listener: (context, state) {
           if (state is AiExpiryApproveSuccess) {
@@ -106,25 +107,6 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
         ],
       ),
       actions: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          width: 250,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE3BFB2).withOpacity(0.4)),
-          ),
-          child: const TextField(
-            decoration: InputDecoration(
-              hintText: 'Tìm kiếm món, kho, lô hàng...',
-              hintStyle: TextStyle(fontSize: 12, color: Colors.grey),
-              prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF8F7066)),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 11),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
         const Icon(Icons.notifications, color: Color(0xFF5A4138)),
         const SizedBox(width: 16),
         Row(
