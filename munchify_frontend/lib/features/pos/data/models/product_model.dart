@@ -1,4 +1,5 @@
 import '../../domain/entities/product_entity.dart';
+import 'combo_item_model.dart';
 
 class ProductModel extends ProductEntity {
   const ProductModel({
@@ -11,6 +12,7 @@ class ProductModel extends ProductEntity {
     required String unitName,
     String? imageUrl,
     required bool isCombo,
+    List<ComboItemModel> comboItems = const [],
   }) : super(
           id: id,
           code: code,
@@ -21,9 +23,11 @@ class ProductModel extends ProductEntity {
           unitName: unitName,
           imageUrl: imageUrl,
           isCombo: isCombo,
+          comboItems: comboItems,
         );
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final rawComboItems = json['comboItems'] as List<dynamic>? ?? [];
     return ProductModel(
       id: json['id'] ?? json['productId'] ?? 0,
       code: json['code'] ?? json['productCode'] ?? '',
@@ -34,6 +38,9 @@ class ProductModel extends ProductEntity {
       unitName: json['unitName'] ?? '',
       imageUrl: json['imageUrl'],
       isCombo: json['isCombo'] ?? false,
+      comboItems: rawComboItems
+          .map((item) => ComboItemModel.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 
