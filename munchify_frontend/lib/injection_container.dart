@@ -28,6 +28,7 @@ import 'features/pos/data/datasources/pos_remote_data_source.dart';
 import 'features/pos/data/repositories/pos_repository_impl.dart';
 import 'features/pos/domain/repositories/pos_repository.dart';
 import 'features/pos/domain/usecases/get_products_usecase.dart';
+import 'features/pos/domain/usecases/get_combos_usecase.dart';
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 
 // Inventory (Stock Imports & Movements)
@@ -80,6 +81,7 @@ Future<void> init() async {
   sl.registerFactory(
     () => PosCatalogBloc(
       getProductsUseCase: sl(),
+      getCombosUseCase: sl(),
       repository: sl(),
     ),
   );
@@ -114,6 +116,7 @@ Future<void> init() async {
 
   // POS
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
+  sl.registerLazySingleton(() => GetCombosUseCase(sl()));
 
   // Inventory Movements
   sl.registerLazySingleton(() => GetStockMovementsUseCase(sl()));

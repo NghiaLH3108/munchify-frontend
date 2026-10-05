@@ -8,6 +8,7 @@ import '../../../../core/network/DioClient.dart';
 abstract class PosRemoteDataSource {
   Future<List<CategoryModel>> getCategories();
   Future<List<ProductModel>> getProducts({String? searchTerm, int? categoryId});
+  Future<List<ProductModel>> getCombos();
 }
 
 class PosRemoteDataSourceImpl implements PosRemoteDataSource {
@@ -36,9 +37,23 @@ class PosRemoteDataSourceImpl implements PosRemoteDataSource {
         if (searchTerm != null && searchTerm.isNotEmpty) 'searchTerm': searchTerm,
         if (categoryId != null) 'categoryId': categoryId,
         'isActive': true,
-        'pageSize': 100, // Load all products for POS
+        'isCombo': false, // Chỉ lấy sản phẩm đơn; combo load riêng qua getCombos()
+        'pageSize': 100,
       },
     );
+    final responseData = response.data['data'] ?? response.data;
+    List dataList = [];
+    if (responseData is List) {
+      dataList = responseData;
+    } else if (responseData is Map && responseData.containsKey('items')) {
+      dataList = responseData['items'] as List;
+    }
+    return dataList.map((json) => ProductModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<ProductModel>> getCombos() async {
+    final response = await dioClient.dio.get('${ApiEndpoints.products}/combos');
     final responseData = response.data['data'] ?? response.data;
     List dataList = [];
     if (responseData is List) {
