@@ -166,7 +166,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
                 children: [
                   Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFA43700), shape: BoxShape.circle)),
                   const SizedBox(width: 6),
-                  const Text('COPILOT REALTIME ACTIVE', style: TextStyle(color: Color(0xFFA43700), fontSize: 11, fontWeight: FontWeight.bold)),
+                  const Text('AI REALTIME ACTIVE', style: TextStyle(color: Color(0xFFA43700), fontSize: 11, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -174,36 +174,36 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
             const Text('AI Expiry Insights & Write-offs', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Color(0xFF1B1C1A))),
             const SizedBox(height: 4),
             const Text(
-              'Giám sát cảnh báo cận date, tồn kho hết hạn và đề xuất chiến lược tối ưu hao hụt từ AI Copilot cho toàn chuỗi F&B.',
+              'Giám sát cảnh báo cận date, tồn kho hết hạn và đề xuất chiến lược tối ưu hao hụt từ AI cho toàn chuỗi F&B.',
               style: TextStyle(color: Color(0xFF5A4138), fontSize: 14),
             ),
           ],
         ),
         Row(
           children: [
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.file_download, size: 18, color: Color(0xFF5A4138)),
-              label: const Text('Xuất báo cáo hao hụt', style: TextStyle(color: Color(0xFF1B1C1A))),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                elevation: 1,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.done_all, size: 18, color: Colors.white),
-              label: const Text('Duyệt nhanh tất cả (Batch Approve)', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFA43700),
-                elevation: 2,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
+            // ElevatedButton.icon(
+            //   onPressed: () {},
+            //   icon: const Icon(Icons.file_download, size: 18, color: Color(0xFF5A4138)),
+            //   label: const Text('Xuất báo cáo hao hụt', style: TextStyle(color: Color(0xFF1B1C1A))),
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: Colors.white,
+            //     elevation: 1,
+            //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            //   ),
+            // ),
+            // const SizedBox(width: 12),
+            // ElevatedButton.icon(
+            //   onPressed: () {},
+            //   icon: const Icon(Icons.done_all, size: 18, color: Colors.white),
+            //   label: const Text('Duyệt nhanh tất cả (Batch Approve)', style: TextStyle(color: Colors.white)),
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: const Color(0xFFA43700),
+            //     elevation: 2,
+            //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            //   ),
+            // ),
           ],
         )
       ],
@@ -376,6 +376,8 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
               ],
             ),
           ),
+          // Table header
+          _buildTableHeader(),
           // Table contents
           if (state is AiExpiryLoading)
             const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator(color: Color(0xFFA43700))))
@@ -434,6 +436,34 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       ),
     );
   }
+
+  Widget _buildTableHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFBF9F5),
+        border: Border(bottom: BorderSide(color: Color(0xFFE4E2DE))),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 36), // For Checkbox
+          Expanded(flex: 3, child: Text('TÊN SẢN PHẨM', style: _headerStyle)),
+          Expanded(flex: 2, child: Text('MÃ LÔ / NGÀY TẠO', style: _headerStyle)),
+          Expanded(flex: 2, child: Text('TÌNH TRẠNG', style: _headerStyle)),
+          Expanded(flex: 1, child: Align(alignment: Alignment.centerRight, child: Text('S.LƯỢNG', style: _headerStyle))),
+          Expanded(flex: 1, child: Center(child: Text('TRẠNG THÁI', style: _headerStyle))),
+          Expanded(flex: 2, child: Align(alignment: Alignment.centerRight, child: Text('HÀNH ĐỘNG', style: _headerStyle))),
+        ],
+      ),
+    );
+  }
+
+  static const _headerStyle = TextStyle(
+    color: Color(0xFF8F7066),
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.5,
+  );
 
   Widget _buildTableRow(DamagedExpiredRecordEntity record) {
     return Padding(

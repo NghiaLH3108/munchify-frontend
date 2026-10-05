@@ -2,25 +2,44 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../domain/entities/damaged_expired_record_entity.dart';
 
-class AiInsightDialog extends StatelessWidget {
+class AiInsightDialog extends StatefulWidget {
   final DamagedExpiredRecordEntity record;
 
   const AiInsightDialog({Key? key, required this.record}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    String insight = 'Financial loss detected. AI recommends write-off and reducing future import quantities to prevent further losses.';
-    String cause = 'Nhập dư so với tốc độ bán thực tế.';
-    String proposedAction = 'Giảm hạn mức đặt hàng tuần sau.';
+  State<AiInsightDialog> createState() => _AiInsightDialogState();
+}
 
-    if (record.aiAnalysis != null && record.aiAnalysis!.isNotEmpty) {
+class _AiInsightDialogState extends State<AiInsightDialog> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String insight = 'Đang chờ phân tích từ AI hoặc không có dữ liệu.';
+    String cause = 'Chưa xác định do thiếu dữ liệu AI.';
+    String proposedAction = 'Vui lòng kiểm tra kết nối mạng hoặc API Key.';
+
+    if (widget.record.aiAnalysis != null && widget.record.aiAnalysis!.isNotEmpty) {
       try {
-        final Map<String, dynamic> aiData = jsonDecode(record.aiAnalysis!);
+        final Map<String, dynamic> aiData = jsonDecode(widget.record.aiAnalysis!);
         insight = aiData['insight'] ?? insight;
         cause = aiData['cause'] ?? cause;
         proposedAction = aiData['proposedAction'] ?? proposedAction;
       } catch (e) {
-        insight = record.aiAnalysis!; // fallback to raw string
+        insight = widget.record.aiAnalysis!; // fallback to raw string (usually error messages from backend)
       }
     }
 
@@ -79,7 +98,7 @@ class AiInsightDialog extends StatelessWidget {
                             style: const TextStyle(fontSize: 14, color: Color(0xFF5A4138)),
                             children: [
                               const TextSpan(text: 'Phân tích tự động tồn kho & đề xuất giảm thiểu hao hụt cho lô '),
-                              TextSpan(text: '#BATCH-2026-P${record.productId}', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace', color: Color(0xFF1B1C1A))),
+                              TextSpan(text: '#BATCH-2026-P${widget.record.productId}', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace', color: Color(0xFF1B1C1A))),
                             ],
                           ),
                         )
@@ -95,7 +114,21 @@ class AiInsightDialog extends StatelessWidget {
             ),
             // Body
             Flexible(
-              child: SingleChildScrollView(
+              child: _isLoading 
+                ? const Padding(
+                    padding: EdgeInsets.all(80),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(color: Color(0xFFA43700)),
+                          SizedBox(height: 24),
+                          Text('AI Copilot đang kết nối và phân tích dữ liệu...', style: TextStyle(color: Color(0xFF5A4138), fontSize: 14, fontWeight: FontWeight.w500)),
+                        ],
+                      )
+                    ),
+                  )
+                : SingleChildScrollView(
                 padding: const EdgeInsets.all(28),
                 child: Column(
                   children: [
@@ -142,9 +175,9 @@ class AiInsightDialog extends StatelessWidget {
                             children: [
                               const Text('MẶT HÀNG & QUY CÁCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5A4138))),
                               const SizedBox(height: 4),
-                              Text(record.productName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1B1C1A))),
+                              Text(widget.record.productName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1B1C1A))),
                               const SizedBox(height: 4),
-                              Text('SKU: P${record.productId.toString().padLeft(3, '0')} • Tồn: ${record.quantity} ${record.unitName}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFA43700))),
+                              Text('SKU: P${widget.record.productId.toString().padLeft(3, '0')} • Tồn: ${widget.record.quantity} ${widget.record.unitName}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFA43700))),
                             ],
                           ),
                         ),
@@ -206,11 +239,11 @@ class AiInsightDialog extends StatelessWidget {
                     style: TextButton.styleFrom(backgroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () => Navigator.pop(context, true),
+                    onPressed: _isLoading ? null : () => Navigator.pop(context, true),
                     icon: const Icon(Icons.delete_forever, color: Colors.white, size: 18),
                     label: const Text('Approve Write-off (Deduct Stock)', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFBA1A1A),
+                      backgroundColor: _isLoading ? Colors.grey : const Color(0xFFBA1A1A),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       elevation: 2,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

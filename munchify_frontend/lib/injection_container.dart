@@ -56,6 +56,10 @@ import 'features/inventory/domain/usecases/get_pending_records_usecase.dart';
 import 'features/inventory/domain/usecases/get_ai_expiry_summary_usecase.dart';
 import 'features/inventory/domain/usecases/approve_record_usecase.dart';
 
+import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
+import 'features/inventory/domain/usecases/get_forecasting_usecase.dart';
+import 'features/inventory/domain/usecases/generate_draft_imports_from_forecast_usecase.dart';
+
 final sl = GetIt.instance; // sl = Service Locator
 
 Future<void> init() async {
@@ -67,6 +71,13 @@ Future<void> init() async {
       getPendingRecordsUseCase: sl(),
       getAiExpirySummaryUseCase: sl(),
       approveRecordUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => LowStockBloc(
+      getForecastingUseCase: sl(),
+      generateDraftImportsFromForecastUseCase: sl(),
     ),
   );
 
@@ -127,6 +138,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetPendingRecordsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiExpirySummaryUseCase(sl()));
   sl.registerLazySingleton(() => ApproveRecordUseCase(sl()));
+
+  // AI Low Stock
+  sl.registerLazySingleton(() => GetForecastingUseCase(sl()));
+  sl.registerLazySingleton(() => GenerateDraftImportsFromForecastUseCase(sl()));
 
   // Stock Import
   sl.registerLazySingleton(() => GetStockImportsUseCase(sl()));

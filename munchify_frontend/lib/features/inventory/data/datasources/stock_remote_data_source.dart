@@ -7,6 +7,7 @@ import 'package:munchify_frontend/core/network/DioClient.dart';
 
 
 import '../models/ai_expiry_summary_model.dart';
+import '../models/forecast_item_model.dart';
 
 abstract class StockRemoteDataSource {
   Future<List<StockImportModel>> getStockImports();
@@ -19,6 +20,10 @@ abstract class StockRemoteDataSource {
   Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords();
   Future<AiExpirySummaryModel> getAiExpirySummaryMetrics();
   Future<bool> approveDamagedExpiredRecord(int id);
+
+  // AI Low Stock Warning
+  Future<List<ForecastItemModel>> getForecasting({int daysHistory = 30});
+  Future<bool> generateDraftImportsFromForecast(List<ForecastItemModel> items);
 }
 
 class StockRemoteDataSourceImpl implements StockRemoteDataSource {
@@ -77,6 +82,21 @@ class StockRemoteDataSourceImpl implements StockRemoteDataSource {
   @override
   Future<bool> approveDamagedExpiredRecord(int id) async {
     final response = await dioClient.dio.put(ApiEndpoints.damagedExpiredApprove(id));
+    return response.data['data'] as bool;
+  }
+
+  @override
+  Future<List<ForecastItemModel>> getForecasting({int daysHistory = 30}) async {
+    final response = await dioClient.dio.get('/api/inventory/forecasting', queryParameters: {
+      'daysHistory': daysHistory,
+    });
+    final data = response.data['data'] as List;
+    return data.map((json) => ForecastItemModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<bool> generateDraftImportsFromForecast(List<ForecastItemModel> items) async {
+    final response = await dioClient.dio.post('/api/stock-imports/generate-from-forecast', data: items.map((i) => i.toJson()).toList());
     return response.data['data'] as bool;
   }
 }
