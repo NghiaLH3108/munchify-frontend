@@ -1,83 +1,63 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/ColorPalette.dart';
 import '../bloc/pos_catalog_bloc.dart';
-import '../bloc/pos_catalog_event.dart';
 import '../bloc/pos_catalog_state.dart';
-import '../../domain/entities/product_entity.dart';
 import '../widgets/cart_summary_bottom_bar.dart';
 import '../widgets/combo_grid_item.dart';
 import '../widgets/product_grid_item.dart';
-import '../../../customers/presentation/bloc/customer_bloc.dart';
-import '../../../customers/presentation/bloc/customer_state.dart';
-import '../../../customers/presentation/widgets/customer_lookup_bottom_sheet.dart';
-import '../../../customers/presentation/widgets/add_customer_bottom_sheet.dart';
-import '../../../customers/presentation/widgets/customer_loyalty_card.dart';
 
-class PosHomeScreen extends StatefulWidget {
+/// Màn hình chính POS: chỉ lắp ráp các widget, không chứa UI chi tiết.
+class PosHomeScreen extends StatelessWidget {
   const PosHomeScreen({Key? key}) : super(key: key);
-
-  @override
-  State<PosHomeScreen> createState() => _PosHomeScreenState();
-}
-
-class _PosHomeScreenState extends State<PosHomeScreen> {
-  Timer? _debounce;
-  final TextEditingController _searchController = TextEditingController();
-
-  void _onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      context.read<PosCatalogBloc>().add(SearchProductEvent(query));
-    });
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFDF9), // Light Warm Cream
-      appBar: _buildAppBar(),
+      backgroundColor: ColorPalette.background,
+      appBar: const PosAppBar(),
       body: BlocBuilder<PosCatalogBloc, PosCatalogState>(
         builder: (context, state) {
           if (state is PosCatalogLoading) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFE65100)));
+            return const Center(
+              child: CircularProgressIndicator(color: ColorPalette.appetizingOrange),
+            );
           } else if (state is PosCatalogError) {
             return Center(child: Text('Lỗi tải dữ liệu: ${state.message}'));
           } else if (state is PosCatalogLoaded) {
-            return _buildContent(state);
+            return _PosCatalogContent(state: state);
           }
           return const Center(child: Text('Đang khởi tạo...'));
         },
       ),
     );
   }
+}
 
-  Widget _buildContent(PosCatalogLoaded state) {
-    final displayedProducts = state.displayedProducts;
-    final combos = displayedProducts.where((p) => p.isCombo).toList();
-    final normalProducts = displayedProducts.where((p) => !p.isCombo).toList();
+class _PosCatalogContent extends StatelessWidget {
+  final PosCatalogLoaded state;
+
+  const _PosCatalogContent({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final combos = state.combos; // Combo được load riêng với đầy đủ comboItems
 
     return Stack(
       children: [
         CustomScrollView(
           slivers: [
-            _buildSearchBarSliver(),
-            _buildCustomerRowSliver(),
-            _buildCategoryTabsSliver(state),
-            _buildInfoRowSliver(context, state),
-            if (combos.isNotEmpty) _buildComboCarouselSliver(combos),
-            _buildProductGridSliver(normalProducts),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 100), // padding for bottom bar
-            ),
+            const SliverToBoxAdapter(child: PosSearchBar()),
+            const SliverToBoxAdapter(child: CustomerQuickRow()),
+            SliverToBoxAdapter(child: CategoryTabs(state: state)),
+            SliverToBoxAdapter(child: CatalogInfoRow(state: state)),
+            if (combos.isNotEmpty) ...[
+              SliverToBoxAdapter(child: ComboSectionHeader(count: combos.length)),
+              SliverToBoxAdapter(child: ComboCarousel(combos: combos)),
+            ],
+            PosProductGrid(products: state.displayedProducts),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
         const Positioned(
@@ -196,58 +176,41 @@ class _PosHomeScreenState extends State<PosHomeScreen> {
 
   Widget _buildCustomerRowSliver() {
     return SliverToBoxAdapter(
-      child: BlocBuilder<CustomerBloc, CustomerState>(
-        builder: (context, customerState) {
-          if (customerState is CustomerSelected) {
-            return const CustomerLoyaltyCard();
-          }
-          // Default: show phone lookup + add customer button
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => CustomerLookupBottomSheet.show(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.phone, size: 16, color: Color(0xFFE65100)),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Nhập SĐT khách (Tích điểm)...',
-                              style: TextStyle(color: Colors.grey, fontSize: 13),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () => AddCustomerBottomSheet.show(context),
-                  icon: const Icon(Icons.person_add, size: 16),
-                  label: const Text('Thêm khách'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFA000), // Amber
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 0,
-                  ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.phone, size: 16, color: Color(0xFFE65100)),
+                    SizedBox(width: 8),
+                    Text('Nhập SĐT khách (Tích điểm)...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        },
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.person_add, size: 16),
+              label: const Text('Thêm khách'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFA000), // Amber
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                elevation: 0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

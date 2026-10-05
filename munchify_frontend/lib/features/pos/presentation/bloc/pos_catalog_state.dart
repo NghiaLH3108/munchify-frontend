@@ -15,7 +15,8 @@ class PosCatalogLoading extends PosCatalogState {}
 
 class PosCatalogLoaded extends PosCatalogState {
   final List<CategoryEntity> categories;
-  final List<ProductEntity> products;
+  final List<ProductEntity> products;   // Sản phẩm đơn (isCombo=false)
+  final List<ProductEntity> combos;     // Combo kèm comboItems (isCombo=true)
   final int? selectedCategoryId;
   final String? searchQuery;
   final String? selectedUnitName;
@@ -23,6 +24,7 @@ class PosCatalogLoaded extends PosCatalogState {
   const PosCatalogLoaded({
     required this.categories,
     required this.products,
+    this.combos = const [],
     this.selectedCategoryId,
     this.searchQuery,
     this.selectedUnitName,
@@ -36,6 +38,7 @@ class PosCatalogLoaded extends PosCatalogState {
   PosCatalogLoaded copyWith({
     List<CategoryEntity>? categories,
     List<ProductEntity>? products,
+    List<ProductEntity>? combos,
     int? selectedCategoryId,
     String? searchQuery,
     String? selectedUnitName,
@@ -45,6 +48,7 @@ class PosCatalogLoaded extends PosCatalogState {
     return PosCatalogLoaded(
       categories: categories ?? this.categories,
       products: products ?? this.products,
+      combos: combos ?? this.combos,
       selectedCategoryId: clearCategoryFilter ? null : (selectedCategoryId ?? this.selectedCategoryId),
       searchQuery: searchQuery ?? this.searchQuery,
       selectedUnitName: clearUnitFilter ? null : (selectedUnitName ?? this.selectedUnitName),
@@ -52,7 +56,7 @@ class PosCatalogLoaded extends PosCatalogState {
   }
 
   @override
-  List<Object?> get props => [categories, products, selectedCategoryId, searchQuery, selectedUnitName];
+  List<Object?> get props => [categories, products, combos, selectedCategoryId, searchQuery, selectedUnitName];
 }
 
 class PosCatalogError extends PosCatalogState {
