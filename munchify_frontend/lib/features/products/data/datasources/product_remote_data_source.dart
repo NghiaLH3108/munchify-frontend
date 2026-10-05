@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/constants/ApiEndpoints.dart';
+import '../../../../core/network/DioClient.dart';
 import '../models/product_model.dart';
 import '../models/product_request_model.dart';
 
@@ -16,9 +17,9 @@ abstract class ProductRemoteDataSource {
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
-  final Dio dio;
+  final DioClient dioClient;
 
-  ProductRemoteDataSourceImpl({required this.dio});
+  ProductRemoteDataSourceImpl({required this.dioClient});
 
   @override
   Future<List<ProductModel>> getProducts({
@@ -27,7 +28,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     bool? isActive,
     bool? lowStockWarning,
   }) async {
-    final response = await dio.get(
+    final response = await dioClient.dio.get(
       ApiEndpoints.products,
       queryParameters: {
         if (search != null && search.isNotEmpty) 'searchTerm': search,
@@ -54,7 +55,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<ProductModel> addProduct(ProductRequestModel request) async {
     try {
-      final response = await dio.post(
+      final response = await dioClient.dio.post(
         ApiEndpoints.products,
         data: request.toJson(),
       );
@@ -72,7 +73,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<ProductModel> updateProduct(String id, ProductRequestModel request) async {
     try {
-      final response = await dio.put(
+      final response = await dioClient.dio.put(
         '${ApiEndpoints.products}/$id',
         data: request.toJson(),
       );
@@ -89,7 +90,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Future<void> toggleProductStatus(String id, bool isActive) async {
-    await dio.patch(
+    await dioClient.dio.patch(
       '${ApiEndpoints.products}/$id/status',
       data: {'isActive': isActive},
     );

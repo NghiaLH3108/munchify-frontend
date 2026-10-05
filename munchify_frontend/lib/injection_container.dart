@@ -234,7 +234,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<ProductRemoteDataSource>(
-    () => ProductRemoteDataSourceImpl(dio: sl()),
+    () => ProductRemoteDataSourceImpl(dioClient: sl()),
   );
 
   /// ==============================
