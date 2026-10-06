@@ -25,7 +25,6 @@ class _AdminCustomerManagementScreenState
   int _currentPage = 1;
   static const int _pageSize = 10;
   String _searchQuery = '';
-  String? _selectedTier; // null = all, 'VIP' >= 100, 'MEMBER' 20-99, 'NEW' < 20
   bool? _selectedHasPoints; // null = all, true > 0, false == 0
   bool _isCardView = false;
   String _lastSyncedTime = 'Vừa cập nhật';
@@ -59,12 +58,6 @@ class _AdminCustomerManagementScreenState
             searchKeyword: _searchQuery.isNotEmpty ? _searchQuery : null,
           ),
         );
-  }
-
-  void _onTierFilterChanged(String? tier) {
-    setState(() {
-      _selectedTier = tier;
-    });
   }
 
   void _onPointsFilterChanged(bool? hasPoints) {
@@ -161,29 +154,14 @@ class _AdminCustomerManagementScreenState
         } else if (state is AdminCustomersLoaded) {
           final allItems = state.customersData.items;
 
-          // Client-side filtering for tier and points
+          // Client-side filtering for points (Có điểm / Chưa có điểm)
           final filteredItems = allItems.where((customer) {
-            // Tier filter
-            if (_selectedTier == 'VIP' && customer.loyaltyPoints < 100) {
-              return false;
-            }
-            if (_selectedTier == 'MEMBER' &&
-                (customer.loyaltyPoints < 20 ||
-                    customer.loyaltyPoints >= 100)) {
-              return false;
-            }
-            if (_selectedTier == 'NEW' && customer.loyaltyPoints >= 20) {
-              return false;
-            }
-
-            // Points filter
             if (_selectedHasPoints == true && customer.loyaltyPoints <= 0) {
               return false;
             }
             if (_selectedHasPoints == false && customer.loyaltyPoints > 0) {
               return false;
             }
-
             return true;
           }).toList();
 
@@ -463,7 +441,7 @@ class _AdminCustomerManagementScreenState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Hồ sơ khách hàng thân thiết, hạng thẻ thành viên và lịch sử giao dịch điểm tích lũy.',
+                    'Xem danh sách khách hàng, điểm tích lũy hiện tại và lịch sử tích/đổi điểm qua từng đơn hàng.',
                     style: AppTypography.inter(
                       fontSize: 13,
                       color: ColorPalette.textMuted,
@@ -543,11 +521,11 @@ class _AdminCustomerManagementScreenState
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // KPI METRIC CARDS (Exact match with Staff Management Screen)
+  // KPI METRIC CARDS (Cleaned: Strictly based on Customer DB fields)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildKpiMetrics(List<CustomerEntity> customers, int totalCount) {
     final activeCount = customers.where((c) => c.loyaltyPoints > 0).length;
-    final vipCount = customers.where((c) => c.loyaltyPoints >= 100).length;
+    final zeroPointCount = customers.where((c) => c.loyaltyPoints == 0).length;
     final totalPoints = customers.fold<int>(0, (sum, c) => sum + c.loyaltyPoints);
 
     final activePercentage = totalCount == 0
@@ -580,7 +558,7 @@ class _AdminCustomerManagementScreenState
               trendPositive: true,
             ),
             _buildMetricCard(
-              title: 'THÀNH VIÊN TÍCH ĐIỂM',
+              title: 'CÓ ĐIỂM TÍCH LŨY',
               value: activeCount.toString(),
               subtitle: '$activePercentage% khách đã tích lũy điểm',
               icon: Icons.verified_user_rounded,
@@ -591,24 +569,22 @@ class _AdminCustomerManagementScreenState
               trendPositive: true,
             ),
             _buildMetricCard(
-              title: 'TỔNG ĐIỂM LƯU HÀNH',
+              title: 'TỔNG ĐIỂM HỆ THỐNG',
               value: NumberFormat('#,###').format(totalPoints),
-              subtitle: 'Điểm thưởng đang khả dụng',
+              subtitle: 'Điểm thưởng khả dụng toàn hệ thống',
               icon: Icons.toll_rounded,
               iconColor: ColorPalette.adminPurple,
               iconBg: ColorPalette.adminPurple.withValues(alpha: 0.1),
               width: cardWidth,
             ),
             _buildMetricCard(
-              title: 'KHÁCH HÀNG VIP',
-              value: vipCount.toString(),
-              subtitle: 'Hạng Vàng & Kim Cương (≥100đ)',
-              icon: Icons.workspace_premium_rounded,
-              iconColor: const Color(0xFFD97706),
-              iconBg: ColorPalette.amber.withValues(alpha: 0.12),
+              title: 'CHƯA CÓ ĐIỂM',
+              value: zeroPointCount.toString(),
+              subtitle: 'Khách hàng chưa phát sinh điểm',
+              icon: Icons.person_outline_rounded,
+              iconColor: ColorPalette.textMuted,
+              iconBg: ColorPalette.webBgAdmin,
               width: cardWidth,
-              trendValue: 'VIP',
-              trendPositive: true,
             ),
           ],
         );
@@ -851,38 +827,11 @@ class _AdminCustomerManagementScreenState
       children: [
         _buildPillFilter(
           label: 'Tất cả',
-          isActive: _selectedTier == null && _selectedHasPoints == null,
-          onTap: () {
-            _onTierFilterChanged(null);
-            _onPointsFilterChanged(null);
-          },
+          isActive: _selectedHasPoints == null,
+          onTap: () => _onPointsFilterChanged(null),
         ),
         _buildPillFilter(
-          label: 'VIP (≥100đ)',
-          isActive: _selectedTier == 'VIP',
-          onTap: () =>
-              _onTierFilterChanged(_selectedTier == 'VIP' ? null : 'VIP'),
-          icon: Icons.workspace_premium_rounded,
-          activeColor: const Color(0xFFD97706),
-        ),
-        _buildPillFilter(
-          label: 'Thành viên (≥20đ)',
-          isActive: _selectedTier == 'MEMBER',
-          onTap: () => _onTierFilterChanged(
-              _selectedTier == 'MEMBER' ? null : 'MEMBER'),
-          icon: Icons.stars_rounded,
-          activeColor: const Color(0xFF2563EB),
-        ),
-        _buildPillFilter(
-          label: 'Mới (<20đ)',
-          isActive: _selectedTier == 'NEW',
-          onTap: () =>
-              _onTierFilterChanged(_selectedTier == 'NEW' ? null : 'NEW'),
-          icon: Icons.person_outline_rounded,
-        ),
-        Container(width: 1, height: 24, color: ColorPalette.borderSubtle),
-        _buildPillFilter(
-          label: 'Có điểm',
+          label: 'Có điểm tích lũy',
           isActive: _selectedHasPoints == true,
           onTap: () => _onPointsFilterChanged(
               _selectedHasPoints == true ? null : true),
@@ -890,11 +839,12 @@ class _AdminCustomerManagementScreenState
           icon: Icons.monetization_on_rounded,
         ),
         _buildPillFilter(
-          label: '0 điểm',
+          label: 'Chưa có điểm (0đ)',
           isActive: _selectedHasPoints == false,
           onTap: () => _onPointsFilterChanged(
               _selectedHasPoints == false ? null : false),
           activeColor: ColorPalette.textMuted,
+          icon: Icons.person_outline_rounded,
         ),
       ],
     );
@@ -1077,7 +1027,7 @@ class _AdminCustomerManagementScreenState
           if (!_isCardView)
             LayoutBuilder(
               builder: (context, constraints) {
-                final effectiveWidth = math.max(920.0, constraints.maxWidth);
+                final effectiveWidth = math.max(880.0, constraints.maxWidth);
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: SizedBox(
@@ -1126,15 +1076,14 @@ class _AdminCustomerManagementScreenState
               flex: 4,
               child: Text('KHÁCH HÀNG', style: AppTypography.tableHeader)),
           Expanded(
-              flex: 2,
-              child: Text('HẠNG THÀNH VIÊN', style: AppTypography.tableHeader)),
+              flex: 3,
+              child: Text('SỐ ĐIỆN THOẠI', style: AppTypography.tableHeader)),
           Expanded(
-              flex: 2,
+              flex: 3,
               child: Text('ĐIỂM TÍCH LŨY', style: AppTypography.tableHeader)),
           Expanded(
               flex: 3,
-              child: Text('LIÊN HỆ & THAM GIA',
-                  style: AppTypography.tableHeader)),
+              child: Text('NGÀY THAM GIA', style: AppTypography.tableHeader)),
           SizedBox(
               width: 80,
               child: Text('THAO TÁC',
@@ -1148,7 +1097,6 @@ class _AdminCustomerManagementScreenState
   // ─── Proportional Flex Table Row ────────────────────────────────────────────
   Widget _buildProportionalTableRow(
       BuildContext context, CustomerEntity customer, int index) {
-    final tier = _getCustomerTier(customer.loyaltyPoints);
     final df = DateFormat('dd/MM/yyyy');
 
     return Material(
@@ -1198,13 +1146,14 @@ class _AdminCustomerManagementScreenState
                   children: [
                     CircleAvatar(
                       radius: 17,
-                      backgroundColor: tier.color.withValues(alpha: 0.12),
+                      backgroundColor:
+                          ColorPalette.primaryFixed.withValues(alpha: 0.8),
                       child: Text(
                         _getInitials(customer.customerName),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 12,
-                          color: tier.color,
+                          color: ColorPalette.primaryContainer,
                         ),
                       ),
                     ),
@@ -1233,43 +1182,33 @@ class _AdminCustomerManagementScreenState
                 ),
               ),
 
-              // Membership Tier Badge
+              // Phone Number
               Expanded(
-                flex: 2,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: tier.color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: tier.color.withValues(alpha: 0.3),
+                flex: 3,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.phone_outlined,
+                        size: 14, color: ColorPalette.textMuted),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        customer.phone,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: ColorPalette.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(tier.icon, size: 13, color: tier.color),
-                        const SizedBox(width: 5),
-                        Text(
-                          tier.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: tier.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
               ),
 
               // Loyalty Points
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: Row(
                   children: [
                     Container(
@@ -1286,7 +1225,7 @@ class _AdminCustomerManagementScreenState
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${customer.loyaltyPoints} đ',
+                      '${customer.loyaltyPoints} điểm',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -1297,47 +1236,22 @@ class _AdminCustomerManagementScreenState
                 ),
               ),
 
-              // Contact & Join Date
+              // Join Date
               Expanded(
                 flex: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.phone_outlined,
-                            size: 13, color: ColorPalette.textMuted),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            customer.phone,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: ColorPalette.textPrimary),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 12, color: ColorPalette.textMuted),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'Tham gia: ${df.format(customer.createdAt)}',
-                            style: const TextStyle(
-                                fontSize: 11, color: ColorPalette.textMuted),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    const Icon(Icons.calendar_today_outlined,
+                        size: 13, color: ColorPalette.textMuted),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        df.format(customer.createdAt),
+                        style: const TextStyle(
+                            fontSize: 12, color: ColorPalette.textMuted),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -1442,7 +1356,6 @@ class _AdminCustomerManagementScreenState
 
   Widget _buildCustomerCard(
       BuildContext context, CustomerEntity customer, int index) {
-    final tier = _getCustomerTier(customer.loyaltyPoints);
     final df = DateFormat('dd/MM/yyyy');
 
     return Container(
@@ -1466,13 +1379,14 @@ class _AdminCustomerManagementScreenState
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: tier.color.withValues(alpha: 0.12),
+                backgroundColor:
+                    ColorPalette.primaryFixed.withValues(alpha: 0.8),
                 child: Text(
                   _getInitials(customer.customerName),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
-                    color: tier.color,
+                    color: ColorPalette.primaryContainer,
                   ),
                 ),
               ),
@@ -1491,29 +1405,6 @@ class _AdminCustomerManagementScreenState
                       'Mã KH: #${customer.customerId}',
                       style: AppTypography.dashboardSubtitle.copyWith(fontSize: 12),
                       overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: tier.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: tier.color.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(tier.icon, size: 12, color: tier.color),
-                    const SizedBox(width: 4),
-                    Text(
-                      tier.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: tier.color,
-                      ),
                     ),
                   ],
                 ),
@@ -1750,7 +1641,6 @@ class _AdminCustomerManagementScreenState
               _searchController.clear();
               setState(() {
                 _searchQuery = '';
-                _selectedTier = null;
                 _selectedHasPoints = null;
               });
               _loadData();
@@ -1820,48 +1710,4 @@ class _AdminCustomerManagementScreenState
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TIER HELPER
-  // ═══════════════════════════════════════════════════════════════════════════
-  _CustomerTierInfo _getCustomerTier(int points) {
-    if (points >= 100) {
-      return _CustomerTierInfo(
-        label: 'VIP VÀNG',
-        icon: Icons.workspace_premium_rounded,
-        color: const Color(0xFFD97706),
-      );
-    }
-    if (points >= 50) {
-      return _CustomerTierInfo(
-        label: 'VIP BẠC',
-        icon: Icons.military_tech_rounded,
-        color: const Color(0xFF2563EB),
-      );
-    }
-    if (points >= 20) {
-      return _CustomerTierInfo(
-        label: 'ĐỒNG',
-        icon: Icons.stars_rounded,
-        color: const Color(0xFFEA580C),
-      );
-    }
-    return _CustomerTierInfo(
-      label: 'THÀNH VIÊN',
-      icon: Icons.person_outline_rounded,
-      color: const Color(0xFF059669),
-    );
-  }
-}
-
-class _CustomerTierInfo {
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  _CustomerTierInfo({
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
 }
