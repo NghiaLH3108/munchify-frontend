@@ -13,13 +13,6 @@ import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
 import 'features/units/presentation/bloc/unit_bloc.dart';
 
-// Customer Imports
-import 'features/customers/data/datasources/customer_remote_data_source.dart';
-import 'features/customers/data/repositories/customer_repository_impl.dart';
-import 'features/customers/domain/usecases/search_customer_usecase.dart';
-import 'features/customers/domain/usecases/create_customer_usecase.dart';
-import 'features/customers/domain/usecases/get_customers_usecase.dart';
-import 'features/customers/domain/usecases/get_customer_point_history_usecase.dart';
 import 'features/customers/presentation/bloc/customer_bloc.dart';
 import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
 

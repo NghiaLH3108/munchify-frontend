@@ -6,7 +6,6 @@ import '../../../staff/presentation/pages/staff_management_screen.dart';
 import '../../../categories/presentation/screens/manage_categories_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
-import '../../../inventory/presentation/screens/stock_movement_history_screen.dart';
 import '../../../units/presentation/screens/manage_units_screen.dart';
 import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 

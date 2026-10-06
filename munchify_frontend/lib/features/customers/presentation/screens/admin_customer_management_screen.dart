@@ -7,7 +7,6 @@ import '../bloc/admin_customer_bloc.dart';
 import '../bloc/admin_customer_event.dart';
 import '../bloc/admin_customer_state.dart';
 import '../widgets/customer_points_history_modal.dart';
-import 'package:intl/intl.dart';
 
 class AdminCustomerManagementScreen extends StatefulWidget {
   const AdminCustomerManagementScreen({super.key});
