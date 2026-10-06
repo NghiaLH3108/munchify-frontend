@@ -9,4 +9,5 @@ abstract class PosRepository {
     String? searchTerm,
     int? categoryId,
   });
+  Future<Either<Failure, List<ProductEntity>>> getCombos();
 }

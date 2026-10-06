@@ -35,6 +35,7 @@ import 'features/pos/data/datasources/pos_remote_data_source.dart';
 import 'features/pos/data/repositories/pos_repository_impl.dart';
 import 'features/pos/domain/repositories/pos_repository.dart';
 import 'features/pos/domain/usecases/get_products_usecase.dart';
+import 'features/pos/domain/usecases/get_combos_usecase.dart';
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 
 // Inventory (Stock Imports & Movements)
@@ -61,6 +62,14 @@ import 'features/products/domain/usecases/update_product_usecase.dart';
 import 'features/products/domain/usecases/toggle_product_status_usecase.dart';
 import 'features/products/presentation/bloc/product_admin_bloc.dart';
 import 'features/products/presentation/bloc/product_form_bloc.dart';
+import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
+import 'features/inventory/domain/usecases/get_pending_records_usecase.dart';
+import 'features/inventory/domain/usecases/get_ai_expiry_summary_usecase.dart';
+import 'features/inventory/domain/usecases/approve_record_usecase.dart';
+
+import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
+import 'features/inventory/domain/usecases/get_forecasting_usecase.dart';
+import 'features/inventory/domain/usecases/generate_draft_imports_from_forecast_usecase.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
 
@@ -68,6 +77,21 @@ Future<void> init() async {
   /// ==============================
   /// BLoC
   /// ==============================
+  sl.registerFactory(
+    () => AiExpiryBloc(
+      getPendingRecordsUseCase: sl(),
+      getAiExpirySummaryUseCase: sl(),
+      approveRecordUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => LowStockBloc(
+      getForecastingUseCase: sl(),
+      generateDraftImportsFromForecastUseCase: sl(),
+    ),
+  );
+
   sl.registerFactory(
     () => StockImportBloc(
       getStockImportsUseCase: sl(),
@@ -107,6 +131,7 @@ Future<void> init() async {
   sl.registerFactory(
     () => PosCatalogBloc(
       getProductsUseCase: sl(),
+      getCombosUseCase: sl(),
       repository: sl(),
     ),
   );
@@ -135,6 +160,15 @@ Future<void> init() async {
   /// ==============================
   /// Use Cases
   /// ==============================
+  // AI Expiry
+  sl.registerLazySingleton(() => GetPendingRecordsUseCase(sl()));
+  sl.registerLazySingleton(() => GetAiExpirySummaryUseCase(sl()));
+  sl.registerLazySingleton(() => ApproveRecordUseCase(sl()));
+
+  // AI Low Stock
+  sl.registerLazySingleton(() => GetForecastingUseCase(sl()));
+  sl.registerLazySingleton(() => GenerateDraftImportsFromForecastUseCase(sl()));
+
   // Stock Import
   sl.registerLazySingleton(() => GetStockImportsUseCase(sl()));
   sl.registerLazySingleton(() => CreateDraftImportUseCase(sl()));
@@ -161,6 +195,7 @@ Future<void> init() async {
 
   // POS
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
+  sl.registerLazySingleton(() => GetCombosUseCase(sl()));
 
   // Inventory Movements
   sl.registerLazySingleton(() => GetStockMovementsUseCase(sl()));
@@ -210,7 +245,7 @@ Future<void> init() async {
   /// Data Sources
   /// ==============================
   sl.registerLazySingleton<StockRemoteDataSource>(
-    () => StockRemoteDataSourceImpl(dio: sl()),
+    () => StockRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<CategoryRemoteDataSource>(

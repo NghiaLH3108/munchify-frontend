@@ -35,4 +35,14 @@ class PosRepositoryImpl implements PosRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<ProductEntity>>> getCombos() async {
+    try {
+      final combos = await remoteDataSource.getCombos();
+      return Right(combos);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

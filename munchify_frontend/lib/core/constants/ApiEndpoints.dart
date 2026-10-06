@@ -41,6 +41,13 @@ class ApiEndpoints {
   // ─── Reports / Analytics ──────────────────────────────────────────────────
   static const String reports = '/api/reports';
 
+  // ─── AI Expiry Insights ───────────────────────────────────────────────────
+  static const String damagedExpiredRecords = '/api/DamagedExpiredRecords';
+  static String damagedExpiredPending() => '$damagedExpiredRecords/pending';
+  static String damagedExpiredSummaryMetrics() => '$damagedExpiredRecords/summary-metrics';
+  static String damagedExpiredApprove(dynamic id) => '$damagedExpiredRecords/$id/approve';
+  static String damagedExpiredReject(dynamic id) => '$damagedExpiredRecords/$id/reject';
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
   /// Build a parameterised path, e.g. stockImportById(3) → '/api/stock-imports/3'
   static String stockImportById(dynamic id) => '$stockImports/$id';
