@@ -67,7 +67,13 @@ class ProductGridItem extends StatelessWidget {
                   height: 120,
                   width: double.infinity,
                   color: Colors.grey.shade200,
-                  child: const Icon(Icons.fastfood, size: 40, color: Colors.grey), // Placeholder
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.fastfood, size: 40, color: Colors.grey),
+                        )
+                      : const Icon(Icons.fastfood, size: 40, color: Colors.grey),
                 ),
               ),
               Positioned(

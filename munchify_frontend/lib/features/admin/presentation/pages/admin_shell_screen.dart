@@ -4,6 +4,7 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../staff/presentation/pages/staff_management_screen.dart';
 import '../../../categories/presentation/screens/manage_categories_screen.dart';
+import '../../../products/presentation/screens/product_management_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../inventory/presentation/screens/stock_movement_history_screen.dart';
@@ -44,8 +45,10 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'Báo cáo tổng quan';
       case 'orders':
         return 'Đơn hàng';
+      case 'products':
+        return 'Thực đơn & Sản phẩm';
       case 'menu':
-        return 'Quản lý danh mục';
+        return 'Danh mục';
       case 'combos':
         return 'Combo sản phẩm';
       case 'inventory':
@@ -286,9 +289,14 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     badgeColor: ColorPalette.primaryContainer,
                   ),
                   _buildSidebarItem(
+                    key: 'products',
+                    icon: Icons.fastfood_rounded,
+                    title: 'Thực đơn & Sản phẩm',
+                  ),
+                  _buildSidebarItem(
                     key: 'menu',
                     icon: Icons.restaurant_menu_rounded,
-                    title: 'Quản lý danh mục',
+                    title: 'Danh mục',
                   ),
                   _buildSidebarItem(
                     key: 'units',
@@ -886,6 +894,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
     switch (_currentTab) {
       case 'dashboard':
         return const AnalyticsDashboardView();
+      case 'products':
+        return const ProductManagementScreen();
       case 'menu':
         return const ManageCategoriesScreen(embedInShell: true);
       case 'units':

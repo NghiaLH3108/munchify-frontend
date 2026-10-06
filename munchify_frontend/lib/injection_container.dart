@@ -52,6 +52,16 @@ import 'features/inventory/domain/usecases/get_stock_movements_usecase.dart';
 import 'features/inventory/domain/usecases/adjust_stock_usecase.dart';
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 
+// Products Admin
+import 'features/products/data/datasources/product_remote_data_source.dart';
+import 'features/products/data/repositories/product_repository_impl.dart';
+import 'features/products/domain/repositories/product_repository.dart';
+import 'features/products/domain/usecases/get_products_usecase.dart' as admin_get_products;
+import 'features/products/domain/usecases/add_product_usecase.dart';
+import 'features/products/domain/usecases/update_product_usecase.dart';
+import 'features/products/domain/usecases/toggle_product_status_usecase.dart';
+import 'features/products/presentation/bloc/product_admin_bloc.dart';
+import 'features/products/presentation/bloc/product_form_bloc.dart';
 import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
 import 'features/inventory/domain/usecases/get_pending_records_usecase.dart';
 import 'features/inventory/domain/usecases/get_ai_expiry_summary_usecase.dart';
@@ -133,6 +143,20 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(
+    () => ProductAdminBloc(
+      getProductsUseCase: sl(),
+      toggleProductStatusUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ProductFormBloc(
+      addProductUseCase: sl(),
+      updateProductUseCase: sl(),
+    ),
+  );
+
   /// ==============================
   /// Use Cases
   /// ==============================
@@ -177,6 +201,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetStockMovementsUseCase(sl()));
   sl.registerLazySingleton(() => AdjustStockUseCase(sl()));
 
+  // Products
+  sl.registerLazySingleton(() => admin_get_products.GetProductsUseCase(sl()));
+  sl.registerLazySingleton(() => AddProductUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleProductStatusUseCase(sl()));
+
   /// ==============================
   /// Repository
   /// ==============================
@@ -207,6 +237,10 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerLazySingleton<ProductRepository>(
+    () => ProductRepositoryImpl(remoteDataSource: sl()),
+  );
+
   /// ==============================
   /// Data Sources
   /// ==============================
@@ -232,6 +266,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<InventoryRemoteDataSource>(
     () => InventoryRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<ProductRemoteDataSource>(
+    () => ProductRemoteDataSourceImpl(dioClient: sl()),
   );
 
   /// ==============================
