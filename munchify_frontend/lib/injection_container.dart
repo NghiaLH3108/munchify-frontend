@@ -227,7 +227,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<PosRemoteDataSource>(
-    () => PosRemoteDataSourceImpl(dio: sl()),
+    () => PosRemoteDataSourceImpl(dioClient: sl()),
   );
   
   sl.registerLazySingleton<CustomerRemoteDataSource>(
@@ -253,4 +253,5 @@ Future<void> init() async {
   
   sl.registerLazySingleton<NetworkInfo>(
     () => NetworkInfoImpl(sl()),
+  );
 }
