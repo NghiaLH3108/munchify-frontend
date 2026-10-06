@@ -3,6 +3,16 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
+import 'features/customers/data/datasources/customer_remote_data_source.dart';
+import 'features/customers/data/repositories/customer_repository_impl.dart';
+import 'features/customers/domain/repositories/customer_repository.dart';
+import 'features/customers/domain/usecases/search_customer_usecase.dart';
+import 'features/customers/domain/usecases/create_customer_usecase.dart';
+import 'features/customers/domain/usecases/get_customers_usecase.dart';
+import 'features/customers/domain/usecases/get_customer_point_history_usecase.dart';
+import 'features/customers/presentation/bloc/customer_bloc.dart';
+import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
+
 import 'core/network/DioClient.dart';
 import 'core/network/NetworkInfo.dart';
 
@@ -78,6 +88,12 @@ Future<void> init() async {
   /// BLoC
   /// ==============================
   sl.registerFactory(
+    () => CustomerBloc(
+      searchCustomer: sl(),
+      createCustomer: sl(),
+      ),
+  );
+  sl.registerFactory(
     () => AiExpiryBloc(
       getPendingRecordsUseCase: sl(),
       getAiExpirySummaryUseCase: sl(),
@@ -85,6 +101,12 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(
+    () => AdminCustomerBloc(
+      getCustomersUseCase: sl(),
+      getCustomerPointHistoryUseCase: sl(),
+    ),
+  );
   sl.registerFactory(
     () => LowStockBloc(
       getForecastingUseCase: sl(),
@@ -197,6 +219,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   sl.registerLazySingleton(() => GetCombosUseCase(sl()));
 
+  // Customer
+  sl.registerLazySingleton(() => SearchCustomerUseCase(sl()));
+  sl.registerLazySingleton(() => CreateCustomerUseCase(sl()));
+  sl.registerLazySingleton(() => GetCustomersUseCase(sl()));
+  sl.registerLazySingleton(() => GetCustomerPointHistoryUseCase(sl()));
+
   // Inventory Movements
   sl.registerLazySingleton(() => GetStockMovementsUseCase(sl()));
   sl.registerLazySingleton(() => AdjustStockUseCase(sl()));
@@ -228,6 +256,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<PosRepository>(
     () => PosRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<CustomerRepository>(
+    () => CustomerRepositoryImpl(remoteDataSource: sl()),
   );
 
   sl.registerLazySingleton<InventoryRepository>(
@@ -262,6 +294,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<PosRemoteDataSource>(
     () => PosRemoteDataSourceImpl(dioClient: sl()),
+  );
+  
+  sl.registerLazySingleton<CustomerRemoteDataSource>(
+    () => CustomerRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<InventoryRemoteDataSource>(

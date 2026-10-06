@@ -20,6 +20,9 @@ import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
 import 'features/inventory/presentation/screens/ai_expiry_screen.dart';
 import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 
+import 'features/customers/presentation/bloc/customer_bloc.dart';
+import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
+
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -45,6 +48,8 @@ class MyApp extends StatelessWidget {
         BlocProvider<StockMovementBloc>(create: (_) => di.sl<StockMovementBloc>()),
         BlocProvider<StockImportBloc>(create: (_) => di.sl<StockImportBloc>()),
         BlocProvider<UnitBloc>(create: (_) => di.sl<UnitBloc>()),
+        BlocProvider<CustomerBloc>(create: (_) => di.sl<CustomerBloc>()),
+        BlocProvider<AdminCustomerBloc>(create: (_) => di.sl<AdminCustomerBloc>()),
         BlocProvider<ProductAdminBloc>(create: (_) => di.sl<ProductAdminBloc>()),
         BlocProvider<ProductFormBloc>(create: (_) => di.sl<ProductFormBloc>()),
         BlocProvider<AiExpiryBloc>(create: (_) => di.sl<AiExpiryBloc>()), // THÊM BỘ CẤP BLoC Ở ĐÂY
