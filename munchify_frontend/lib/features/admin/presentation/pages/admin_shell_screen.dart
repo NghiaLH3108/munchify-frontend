@@ -875,7 +875,7 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
       case 'inventory':
         return const InventoryScreen(embedInShell: true);
       case 'loyalty':
-        return const AdminCustomerManagementScreen();
+        return const AdminCustomerManagementScreen(embedInShell: true);
       default:
         // Placeholder for other tabs with clean informative card
         return Center(
