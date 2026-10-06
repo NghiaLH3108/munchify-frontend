@@ -5,6 +5,7 @@ import '../../../pos/presentation/screens/pos_home_screen.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../admin/presentation/pages/admin_shell_screen.dart';
 
+
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({Key? key}) : super(key: key);
 
@@ -17,9 +18,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   final List<Widget> _screens = [
     const PosHomeScreen(),
-    _PlaceholderScreen(title: 'Khách hàng'),
-    const InventoryScreen(),
-    _PlaceholderScreen(title: 'Tài khoản'),
+    const _PlaceholderScreen(title: 'Đơn hàng'),
+    const _PlaceholderScreen(title: 'Khách hàng'),
+    const _PlaceholderScreen(title: 'Tài khoản'),
   ];
 
   void _onTabTapped(int index) {
@@ -43,8 +44,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
         onTap: _onTabTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Bán hàng'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Đơn hàng'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Khách hàng'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Kho'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
         ],
       ),

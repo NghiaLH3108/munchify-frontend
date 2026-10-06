@@ -256,6 +256,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
               ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tính năng thêm phiếu thủ công đang được hoàn thiện')),
+                  );
+                },
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('Tạo phiếu nhập', style: TextStyle(fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE85D04), // Orange brand color
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
