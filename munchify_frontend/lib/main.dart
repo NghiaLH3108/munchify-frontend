@@ -12,6 +12,7 @@ import 'features/pos/presentation/bloc/pos_catalog_event.dart';
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
 import 'features/units/presentation/bloc/unit_bloc.dart';
+import 'features/combos/presentation/bloc/combo_bloc.dart';
 
 import 'injection_container.dart' as di;
 
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<StockMovementBloc>(create: (_) => di.sl<StockMovementBloc>()),
         BlocProvider<StockImportBloc>(create: (_) => di.sl<StockImportBloc>()),
         BlocProvider<UnitBloc>(create: (_) => di.sl<UnitBloc>()),
+        BlocProvider<ComboBloc>(create: (_) => di.sl<ComboBloc>()),
       ],
       child: MaterialApp(
         title: 'Munchify POS',

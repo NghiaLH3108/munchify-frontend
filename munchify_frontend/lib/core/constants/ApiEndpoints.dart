@@ -15,6 +15,7 @@ class ApiEndpoints {
   static const String products = '/api/products';
   static const String productsForStock = '/api/products/for-stock';
   static const String units = '/api/units';
+  static const String combos = '/api/combos';
 
   // ─── Orders & POS ─────────────────────────────────────────────────────────
   static const String orders = '/api/orders';
