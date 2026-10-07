@@ -9,7 +9,6 @@ import 'features/categories/presentation/bloc/category_bloc.dart';
 import 'features/staff/presentation/bloc/staff_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_event.dart';
-import 'features/main/presentation/screens/main_app_screen.dart';
 
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
@@ -17,7 +16,6 @@ import 'features/units/presentation/bloc/unit_bloc.dart';
 import 'features/products/presentation/bloc/product_admin_bloc.dart';
 import 'features/products/presentation/bloc/product_form_bloc.dart';
 import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
-import 'features/inventory/presentation/screens/ai_expiry_screen.dart';
 import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 
 import 'features/customers/presentation/bloc/customer_bloc.dart';
@@ -52,7 +50,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<AdminCustomerBloc>(create: (_) => di.sl<AdminCustomerBloc>()),
         BlocProvider<ProductAdminBloc>(create: (_) => di.sl<ProductAdminBloc>()),
         BlocProvider<ProductFormBloc>(create: (_) => di.sl<ProductFormBloc>()),
-        BlocProvider<AiExpiryBloc>(create: (_) => di.sl<AiExpiryBloc>()), // THÊM BỘ CẤP BLoC Ở ĐÂY
+        BlocProvider<AiExpiryBloc>(create: (_) => di.sl<AiExpiryBloc>()),
         BlocProvider<LowStockBloc>(create: (_) => di.sl<LowStockBloc>()),
       ],
       child: MaterialApp(

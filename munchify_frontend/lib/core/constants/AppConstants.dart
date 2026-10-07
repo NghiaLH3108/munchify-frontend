@@ -14,8 +14,11 @@ class AppConstants {
   /// Change to your real staging/production URL before deploying.
   /// Web / Windows Desktop: https://localhost:<port_backend>
   /// Android Emulator: https://10.0.2.2:<port_backend>
-
-  static const String baseUrl = kIsWeb ? 'http://localhost:5194' : 'http://10.0.2.2:5194';
+  static String get baseUrl {
+    if (kIsWeb) return 'http://localhost:5194';
+    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:5194';
+    return 'http://localhost:5194';
+  }
 
   // ─── HTTP Timeouts (milliseconds) ─────────────────────────────────────────
   static const int connectTimeoutMs = 15000;
