@@ -10,6 +10,7 @@ class ProductGridItem extends StatelessWidget {
   final int stockQuantity;
   final double price;
   final String imageUrl;
+  final VoidCallback? onAddToCart;
 
   const ProductGridItem({
     Key? key,
@@ -19,6 +20,7 @@ class ProductGridItem extends StatelessWidget {
     required this.stockQuantity,
     required this.price,
     required this.imageUrl,
+    this.onAddToCart,
   }) : super(key: key);
 
   @override
@@ -163,14 +165,16 @@ class ProductGridItem extends StatelessWidget {
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFBF360C), // Deep Orange/Brown
+                        color: onAddToCart != null
+                            ? const Color(0xFFBF360C)
+                            : Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.add, color: Colors.white, size: 20),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                        onPressed: () {},
+                        onPressed: onAddToCart,
                       ),
                     ),
                   ],

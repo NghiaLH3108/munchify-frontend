@@ -48,6 +48,19 @@ import 'features/pos/domain/usecases/get_products_usecase.dart';
 import 'features/pos/domain/usecases/get_combos_usecase.dart';
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 
+// POS – Cart & Orders
+import 'features/pos/data/datasources/order_remote_data_source.dart';
+import 'features/pos/data/datasources/promotion_remote_data_source.dart';
+import 'features/pos/data/repositories/order_repository_impl.dart';
+import 'features/pos/data/repositories/promotion_repository_impl.dart';
+import 'features/pos/domain/repositories/order_repository.dart';
+import 'features/pos/domain/repositories/promotion_repository.dart';
+import 'features/pos/domain/usecases/create_order_usecase.dart';
+import 'features/pos/domain/usecases/get_orders_usecase.dart';
+import 'features/pos/domain/usecases/apply_promotion_usecase.dart';
+import 'features/pos/presentation/bloc/cart_cubit.dart';
+import 'features/pos/presentation/bloc/order_bloc.dart';
+
 // Inventory (Stock Imports & Movements)
 import 'features/inventory/data/datasources/stock_remote_data_source.dart';
 import 'features/inventory/data/repositories/stock_repository_impl.dart';
@@ -159,6 +172,17 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => CartCubit(applyPromotionUseCase: sl()),
+  );
+
+  sl.registerFactory(
+    () => OrderBloc(
+      createOrderUseCase: sl(),
+      getOrdersUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => StockMovementBloc(
       getStockMovementsUseCase: sl(),
       adjustStockUseCase: sl(),
@@ -219,6 +243,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   sl.registerLazySingleton(() => GetCombosUseCase(sl()));
 
+  // POS – Orders & Promotions
+  sl.registerLazySingleton(() => CreateOrderUseCase(sl()));
+  sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => ApplyPromotionUseCase(sl()));
+
   // Customer
   sl.registerLazySingleton(() => SearchCustomerUseCase(sl()));
   sl.registerLazySingleton(() => CreateCustomerUseCase(sl()));
@@ -258,6 +287,14 @@ Future<void> init() async {
     () => PosRepositoryImpl(remoteDataSource: sl()),
   );
 
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<PromotionRepository>(
+    () => PromotionRepositoryImpl(remoteDataSource: sl()),
+  );
+
   sl.registerLazySingleton<CustomerRepository>(
     () => CustomerRepositoryImpl(remoteDataSource: sl()),
   );
@@ -294,6 +331,14 @@ Future<void> init() async {
 
   sl.registerLazySingleton<PosRemoteDataSource>(
     () => PosRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<PromotionRemoteDataSource>(
+    () => PromotionRemoteDataSourceImpl(dioClient: sl()),
   );
   
   sl.registerLazySingleton<CustomerRemoteDataSource>(

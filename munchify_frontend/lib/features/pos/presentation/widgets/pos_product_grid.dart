@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/product_entity.dart';
+import '../bloc/cart_cubit.dart';
 import 'product_grid_item.dart';
 
 /// Lưới sản phẩm đơn 2 cột (sliver). Hiển thị thông báo khi rỗng.
@@ -45,6 +47,9 @@ class PosProductGrid extends StatelessWidget {
               stockQuantity: product.stockQuantity,
               price: product.price,
               imageUrl: product.imageUrl ?? '',
+              onAddToCart: product.stockQuantity > 0
+                  ? () => context.read<CartCubit>().addItem(product)
+                  : null,
             );
           },
           childCount: products.length,

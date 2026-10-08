@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/AppTypography.dart';
 import '../../../pos/presentation/screens/pos_home_screen.dart';
+import '../../../pos/presentation/screens/order_history_screen.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../admin/presentation/pages/admin_shell_screen.dart';
 
@@ -18,7 +19,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   final List<Widget> _screens = [
     const PosHomeScreen(),
-    const _PlaceholderScreen(title: 'Đơn hàng'),
+    const OrderHistoryScreen(),
     const _PlaceholderScreen(title: 'Khách hàng'),
     const _PlaceholderScreen(title: 'Tài khoản'),
   ];
