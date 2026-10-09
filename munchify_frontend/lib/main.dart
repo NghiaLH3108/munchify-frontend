@@ -9,10 +9,18 @@ import 'features/categories/presentation/bloc/category_bloc.dart';
 import 'features/staff/presentation/bloc/staff_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_event.dart';
+
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
 import 'features/units/presentation/bloc/unit_bloc.dart';
 import 'features/combos/presentation/bloc/combo_bloc.dart';
+import 'features/products/presentation/bloc/product_admin_bloc.dart';
+import 'features/products/presentation/bloc/product_form_bloc.dart';
+import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
+import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
+
+import 'features/customers/presentation/bloc/customer_bloc.dart';
+import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
 
 import 'injection_container.dart' as di;
 
@@ -40,12 +48,18 @@ class MyApp extends StatelessWidget {
         BlocProvider<StockImportBloc>(create: (_) => di.sl<StockImportBloc>()),
         BlocProvider<UnitBloc>(create: (_) => di.sl<UnitBloc>()),
         BlocProvider<ComboBloc>(create: (_) => di.sl<ComboBloc>()),
+        BlocProvider<CustomerBloc>(create: (_) => di.sl<CustomerBloc>()),
+        BlocProvider<AdminCustomerBloc>(create: (_) => di.sl<AdminCustomerBloc>()),
+        BlocProvider<ProductAdminBloc>(create: (_) => di.sl<ProductAdminBloc>()),
+        BlocProvider<ProductFormBloc>(create: (_) => di.sl<ProductFormBloc>()),
+        BlocProvider<AiExpiryBloc>(create: (_) => di.sl<AiExpiryBloc>()),
+        BlocProvider<LowStockBloc>(create: (_) => di.sl<LowStockBloc>()),
       ],
       child: MaterialApp(
         title: 'Munchify POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const MainAppScreen(), // Đổi sang màn hình chính có bottom navigation
+        home: const MainAppScreen(),
       ),
     );
   }

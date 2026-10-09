@@ -4,11 +4,14 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../staff/presentation/pages/staff_management_screen.dart';
 import '../../../categories/presentation/screens/manage_categories_screen.dart';
+import '../../../products/presentation/screens/product_management_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
-import '../../../inventory/presentation/screens/stock_movement_history_screen.dart';
 import '../../../units/presentation/screens/manage_units_screen.dart';
 import '../../../combos/presentation/screens/manage_combos_screen.dart';
+import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
+import '../../../inventory/presentation/screens/low_stock_screen.dart';
+import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
@@ -43,12 +46,18 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'Báo cáo tổng quan';
       case 'orders':
         return 'Đơn hàng';
+      case 'products':
+        return 'Thực đơn & Sản phẩm';
       case 'menu':
-        return 'Quản lý danh mục';
+        return 'Danh mục';
       case 'combos':
         return 'Combo sản phẩm';
       case 'inventory':
         return 'Quản lý Kho & Nhập';
+      case 'ai_low_stock':
+        return 'AI Cảnh Báo Cạn Kho';
+      case 'ai_expiry':
+        return 'AI Hàng Hỏng/Hết Hạn';
       case 'cashbook':
         return 'Sổ quỹ & Biến động';
       case 'loyalty':
@@ -281,9 +290,14 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     badgeColor: ColorPalette.primaryContainer,
                   ),
                   _buildSidebarItem(
+                    key: 'products',
+                    icon: Icons.fastfood_rounded,
+                    title: 'Thực đơn & Sản phẩm',
+                  ),
+                  _buildSidebarItem(
                     key: 'menu',
                     icon: Icons.restaurant_menu_rounded,
-                    title: 'Quản lý danh mục',
+                    title: 'Danh mục',
                   ),
                   _buildSidebarItem(
                     key: 'units',
@@ -299,6 +313,20 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'inventory',
                     icon: Icons.inventory_2_rounded,
                     title: 'Quản lý Kho & Nhập',
+                  ),
+                  _buildSidebarItem(
+                    key: 'ai_low_stock',
+                    icon: Icons.warning_amber_rounded,
+                    title: 'AI Cảnh Báo Cạn Kho',
+                    badge: 'Mới',
+                    badgeColor: ColorPalette.dangerCrimson,
+                  ),
+                  _buildSidebarItem(
+                    key: 'ai_expiry',
+                    icon: Icons.auto_awesome_rounded,
+                    title: 'AI Hàng Hỏng/Hết Hạn',
+                    badge: 'Mới',
+                    badgeColor: ColorPalette.dangerCrimson,
                   ),
                   _buildSidebarItem(
                     key: 'cashbook',
@@ -867,6 +895,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
     switch (_currentTab) {
       case 'dashboard':
         return const AnalyticsDashboardView();
+      case 'products':
+        return const ProductManagementScreen();
       case 'menu':
         return const ManageCategoriesScreen(embedInShell: true);
       case 'units':
@@ -877,6 +907,12 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const ManageCombosScreen(embedInShell: true);
       case 'inventory':
         return const InventoryScreen(embedInShell: true);
+      case 'loyalty':
+        return const AdminCustomerManagementScreen(embedInShell: true);
+      case 'ai_low_stock':
+        return const LowStockScreen(embedInShell: true);
+      case 'ai_expiry':
+        return const AiExpiryScreen(embedInShell: true);
       default:
         // Placeholder for other tabs with clean informative card
         return Center(

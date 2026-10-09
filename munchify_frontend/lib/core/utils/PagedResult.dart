@@ -10,4 +10,6 @@ class PagedResult<T> {
     required this.pageNumber,
     required this.pageSize,
   });
+
+  int get totalPages => (totalCount / (pageSize > 0 ? pageSize : 1)).ceil();
 }
