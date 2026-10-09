@@ -8,6 +8,7 @@ import '../../../products/presentation/screens/product_management_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../units/presentation/screens/manage_units_screen.dart';
+import '../../../combos/presentation/screens/manage_combos_screen.dart';
 import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
@@ -902,6 +903,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const ManageUnitsScreen(embedInShell: true);
       case 'staff':
         return const StaffManagementScreen(embedInShell: true);
+      case 'combos':
+        return const ManageCombosScreen(embedInShell: true);
       case 'inventory':
         return const InventoryScreen(embedInShell: true);
       case 'loyalty':
