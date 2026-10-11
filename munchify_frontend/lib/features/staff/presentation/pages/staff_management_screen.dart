@@ -956,20 +956,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                         ],
                       ),
                     ),
-                    // Export button
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.ios_share_rounded, size: 16, color: ColorPalette.tertiary),
-                      label: const Text('Xuất Excel / PDF'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: ColorPalette.onSurfaceDark,
-                        side: const BorderSide(color: ColorPalette.borderSubtle),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        textStyle: AppTypography.inter(fontSize: 12, fontWeight: FontWeight.w600),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                  ],
+],
                 ),
               ],
             ),

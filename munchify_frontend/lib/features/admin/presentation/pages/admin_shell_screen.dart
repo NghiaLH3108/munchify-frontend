@@ -11,6 +11,7 @@ import '../../../units/presentation/screens/manage_units_screen.dart';
 import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
+import '../../../promotions/presentation/pages/promotion_management_screen.dart';
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
@@ -341,9 +342,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'promotions',
                     icon: Icons.campaign_rounded,
                     title: 'Khuyến mãi',
-                    badge: 'Đang chạy: 2',
-                    badgeColor: const Color(0xFF663E00),
-                    badgeBorder: const Color(0xFFFDA625),
                   ),
                   _buildSidebarItem(
                     key: 'staff',
@@ -910,6 +908,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const LowStockScreen(embedInShell: true);
       case 'ai_expiry':
         return const AiExpiryScreen(embedInShell: true);
+      case 'promotions':
+        return const PromotionManagementScreen(embedInShell: true);
       default:
         // Placeholder for other tabs with clean informative card
         return Center(

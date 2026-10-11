@@ -81,12 +81,37 @@ import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 import 'features/inventory/domain/usecases/get_forecasting_usecase.dart';
 import 'features/inventory/domain/usecases/generate_draft_imports_from_forecast_usecase.dart';
 
+import 'features/promotions/data/datasources/promotion_remote_data_source.dart';
+import 'features/promotions/data/repositories/promotion_repository_impl.dart';
+import 'features/promotions/domain/repositories/promotion_repository.dart';
+import 'features/promotions/domain/usecases/get_promotions_usecase.dart';
+import 'features/promotions/domain/usecases/get_promotion_by_id_usecase.dart';
+import 'features/promotions/domain/usecases/create_promotion_usecase.dart';
+import 'features/promotions/domain/usecases/update_promotion_usecase.dart';
+import 'features/promotions/domain/usecases/toggle_promotion_status_usecase.dart';
+import 'features/promotions/presentation/bloc/promotion_admin_bloc.dart';
+import 'features/promotions/presentation/bloc/promotion_form_bloc.dart';
+
 final sl = GetIt.instance; // sl = Service Locator
 
 Future<void> init() async {
   /// ==============================
   /// BLoC
   /// ==============================
+  sl.registerFactory(
+    () => PromotionAdminBloc(
+      getPromotionsUseCase: sl(),
+      togglePromotionStatusUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => PromotionFormBloc(
+      createPromotionUseCase: sl(),
+      updatePromotionUseCase: sl(),
+    ),
+  );
+
   sl.registerFactory(
     () => CustomerBloc(
       searchCustomer: sl(),
@@ -235,9 +260,20 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
   sl.registerLazySingleton(() => ToggleProductStatusUseCase(sl()));
 
+  // Promotions
+  sl.registerLazySingleton(() => GetPromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetPromotionByIdUseCase(sl()));
+  sl.registerLazySingleton(() => CreatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => TogglePromotionStatusUseCase(sl()));
+
   /// ==============================
   /// Repository
   /// ==============================
+  sl.registerLazySingleton<PromotionRepository>(
+    () => PromotionRepositoryImpl(remoteDataSource: sl()),
+  );
+
   sl.registerLazySingleton<StockRepository>(
     () => StockRepositoryImpl(remoteDataSource: sl()),
   );
@@ -276,6 +312,10 @@ Future<void> init() async {
   /// ==============================
   /// Data Sources
   /// ==============================
+  sl.registerLazySingleton<PromotionRemoteDataSource>(
+    () => PromotionRemoteDataSourceImpl(dioClient: sl()),
+  );
+
   sl.registerLazySingleton<StockRemoteDataSource>(
     () => StockRemoteDataSourceImpl(dioClient: sl()),
   );
