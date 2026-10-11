@@ -5,6 +5,8 @@ import 'package:munchify_frontend/features/customers/domain/entities/customer_en
 import 'package:munchify_frontend/features/customers/domain/repositories/customer_repository.dart';
 import 'package:munchify_frontend/features/customers/domain/usecases/create_customer_usecase.dart';
 import 'package:munchify_frontend/features/customers/domain/usecases/search_customer_usecase.dart';
+import 'package:munchify_frontend/core/utils/PagedResult.dart';
+import 'package:munchify_frontend/features/customers/domain/entities/customer_point_history_entity.dart';
 
 class MockCustomerRepository implements CustomerRepository {
   Either<Failure, CustomerEntity>? searchResult;
@@ -21,6 +23,16 @@ class MockCustomerRepository implements CustomerRepository {
     required String phone,
   }) async {
     return createResult!;
+  }
+
+  @override
+  Future<Either<Failure, PagedResult<CustomerEntity>>> getAllCustomers(int pageIndex, int pageSize, String? searchKeyword) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, PagedResult<CustomerPointHistoryEntity>>> getCustomerHistory(int customerId, int pageIndex, int pageSize) async {
+    throw UnimplementedError();
   }
 }
 
