@@ -21,12 +21,16 @@ import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 import 'features/customers/presentation/bloc/customer_bloc.dart';
 import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
 
+import 'core/services/signalr_service.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   await di.init();
+  
+  // Initialize SignalR
+  await signalRService.init();
 
   runApp(const MyApp());
 }

@@ -11,6 +11,8 @@ import '../../../units/presentation/screens/manage_units_screen.dart';
 import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
+import '../../../../core/services/signalr_service.dart';
+
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
@@ -31,6 +33,34 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
   void initState() {
     super.initState();
     _currentTab = widget.initialTab;
+    signalRService.onLowStockWarning(_onAiAlertReceived);
+    signalRService.onExpiryAlert(_onAiAlertReceived);
+  }
+
+  @override
+  void dispose() {
+    signalRService.removeLowStockWarningListener(_onAiAlertReceived);
+    signalRService.removeExpiryAlertListener(_onAiAlertReceived);
+    super.dispose();
+  }
+
+  void _onAiAlertReceived(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 5),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _onTabSelected(String tabKey) {
