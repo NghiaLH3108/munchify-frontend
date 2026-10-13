@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
@@ -54,8 +54,16 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
       final detail = widget.promotionToEdit as PromotionDetailEntity;
       if (detail.products.isNotEmpty) {
         _scopeType = 1;
-        // Assuming products contain ids or are strings, mapping to String.
-        _selectedProductIds = detail.products.map((e) => e.toString()).toList();
+        _selectedProductIds = detail.products.map((e) {
+          if (e is Map) {
+            return (e['productId'] ?? e['id'] ?? '').toString();
+          }
+          try {
+            return (e.productId ?? e.id).toString();
+          } catch (_) {
+            return e.toString();
+          }
+        }).where((id) => id.isNotEmpty).toList();
       }
     }
     
@@ -114,21 +122,38 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
     if (!_formKey.currentState!.validate()) return;
     if (_startDate == null || _endDate == null) return;
     
+    final List<int> productIds = _scopeType == 0
+        ? []
+        : _selectedProductIds
+            .map((id) => int.tryParse(id) ?? 0)
+            .where((id) => id > 0)
+            .toList();
+
+    if (_scopeType == 1 && productIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn ít nhất một món áp dụng hoặc chuyển sang "Toàn bộ menu"'),
+          backgroundColor: ColorPalette.error,
+        ),
+      );
+      return;
+    }
+
     final Map<String, dynamic> data = {
-      'promotionCode': _codeController.text,
-      'promotionName': _nameController.text,
-      'description': _descController.text,
+      'promotionCode': _codeController.text.trim(),
+      'promotionName': _nameController.text.trim(),
+      'description': _descController.text.trim(),
       'discountType': _discountType,
-      'discountValue': double.tryParse(_discountValueController.text) ?? 0,
-      'minimumOrderAmount': double.tryParse(_minOrderController.text) ?? 0,
+      'discountValue': double.tryParse(_discountValueController.text.trim()) ?? 0,
+      'minimumOrderAmount': double.tryParse(_minOrderController.text.trim()) ?? 0,
       'startDate': _startDate!.toIso8601String(),
       'endDate': _endDate!.toIso8601String(),
       'isActive': _isActive,
-      'products': _scopeType == 0 ? [] : _selectedProductIds,
+      'productIds': productIds,
     };
 
     context.read<PromotionFormBloc>().add(
-      SubmitPromotionForm(id: widget.promotionToEdit?.promotionId?.toString(), data: data),
+      SubmitPromotionForm(id: widget.promotionToEdit?.promotionId.toString(), data: data),
     );
   }
 
@@ -171,16 +196,23 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                       Expanded(
                         child: TextFormField(
                           controller: _codeController,
-                          decoration: const InputDecoration(labelText: 'Mã KM (VD: TET2026)', border: OutlineInputBorder()),
-                          validator: (v) => v!.isEmpty ? 'Vui lòng nhập' : null,
+                          readOnly: widget.promotionToEdit != null,
+                          decoration: InputDecoration(
+                            labelText: widget.promotionToEdit != null
+                                ? 'Mã KM (Cố định)'
+                                : 'Mã KM (Bỏ trống để tự tạo)',
+                            border: const OutlineInputBorder(),
+                            filled: widget.promotionToEdit != null,
+                            fillColor: widget.promotionToEdit != null ? ColorPalette.webBgAdmin : null,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: TextFormField(
                           controller: _nameController,
-                          decoration: const InputDecoration(labelText: 'Tên chương trình', border: OutlineInputBorder()),
-                          validator: (v) => v!.isEmpty ? 'Vui lòng nhập' : null,
+                          decoration: const InputDecoration(labelText: 'Tên chương trình *', border: OutlineInputBorder()),
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên chương trình' : null,
                         ),
                       ),
                     ],
@@ -199,7 +231,7 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                           decoration: const InputDecoration(labelText: 'Loại giảm giá', border: OutlineInputBorder()),
                           items: const [
                             DropdownMenuItem(value: 'PERCENTAGE', child: Text('Theo %')),
-                            DropdownMenuItem(value: 'FIXED_AMOUNT', child: Text('Theo số tiền (VND)')),
+                            DropdownMenuItem(value: 'FIXED_AMOUNT', child: Text('Theo số tiền (VNĐ)')),
                           ],
                           onChanged: (v) => setState(() => _discountType = v!),
                         ),
@@ -208,9 +240,22 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                       Expanded(
                         child: TextFormField(
                           controller: _discountValueController,
-                          decoration: const InputDecoration(labelText: 'Mức giảm', border: OutlineInputBorder()),
+                          decoration: InputDecoration(
+                            labelText: _discountType == 'PERCENTAGE' ? 'Mức giảm (%) *' : 'Mức giảm (VNĐ) *',
+                            border: const OutlineInputBorder(),
+                          ),
                           keyboardType: TextInputType.number,
-                          validator: (v) => v!.isEmpty ? 'Vui lòng nhập' : null,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Vui lòng nhập mức giảm';
+                            final val = double.tryParse(v.trim());
+                            if (val == null) return 'Giá trị không hợp lệ';
+                            if (_discountType == 'PERCENTAGE') {
+                              if (val <= 0 || val > 100) return 'Phần trăm giảm từ 1% đến 100%';
+                            } else {
+                              if (val <= 0) return 'Số tiền giảm phải lớn hơn 0';
+                            }
+                            return null;
+                          },
                         ),
                       ),
                     ],
@@ -218,8 +263,15 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _minOrderController,
-                    decoration: const InputDecoration(labelText: 'Đơn hàng tối thiểu (VND)', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(labelText: 'Đơn hàng tối thiểu (VNĐ)', border: OutlineInputBorder()),
                     keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v != null && v.trim().isNotEmpty) {
+                        final val = double.tryParse(v.trim());
+                        if (val == null || val < 0) return 'Đơn hàng tối thiểu không được âm';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -288,8 +340,11 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                                 value: _selectedProductIds.contains(pid),
                                 onChanged: (checked) {
                                   setState(() {
-                                    if (checked == true) _selectedProductIds.add(pid);
-                                    else _selectedProductIds.remove(pid);
+                                    if (checked == true) {
+                                      _selectedProductIds.add(pid);
+                                    } else {
+                                      _selectedProductIds.remove(pid);
+                                    }
                                   });
                                 },
                               );

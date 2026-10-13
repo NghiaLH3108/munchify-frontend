@@ -4,6 +4,7 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/promotion_entity.dart';
+import '../../domain/usecases/get_promotion_by_id_usecase.dart';
 import '../bloc/promotion_admin_bloc.dart';
 import '../bloc/promotion_admin_event.dart';
 import '../bloc/promotion_admin_state.dart';
@@ -51,7 +52,41 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
     ));
   }
 
-  void _openFormDialog({PromotionEntity? promotion}) {
+  Future<void> _openFormDialog({PromotionEntity? promotion}) async {
+    PromotionDetailEntity? detailToEdit;
+    if (promotion != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(color: ColorPalette.appetizingOrange),
+        ),
+      );
+
+      final getDetail = sl<GetPromotionByIdUseCase>();
+      final result = await getDetail(promotion.promotionId.toString());
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failure.message), backgroundColor: ColorPalette.error),
+            );
+          }
+        },
+        (detail) {
+          detailToEdit = detail;
+        },
+      );
+
+      if (detailToEdit == null) return;
+    }
+
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => MultiBlocProvider(
@@ -59,7 +94,7 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
           BlocProvider<PromotionFormBloc>(create: (_) => sl<PromotionFormBloc>()),
         ],
         child: PromotionFormDialog(
-          promotionToEdit: promotion,
+          promotionToEdit: detailToEdit,
           onSuccess: _loadData,
         ),
       ),
