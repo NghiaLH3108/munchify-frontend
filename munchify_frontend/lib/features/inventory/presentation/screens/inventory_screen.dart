@@ -259,8 +259,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tính năng thêm phiếu thủ công đang được hoàn thiện')),
+                  showDialog(
+                    context: context,
+                    builder: (context) => const CreateImportModal(),
                   );
                 },
                 icon: const Icon(Icons.add, size: 20),

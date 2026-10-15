@@ -10,29 +10,34 @@ class ComboCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final availableWidth = constraints.maxWidth;
-          final count = combos.length;
-          const spacing = 12.0;
-          // Tính chiều rộng mỗi card để giàn đều, tối thiểu 180px
-          final cardWidth = ((availableWidth - (spacing * (count - 1))) / count)
-              .clamp(180.0, 300.0);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
+    // Trên mobile: mỗi combo card rộng gần bằng cả màn hình (trừ lề 32px), tạo cảm giác 1 card nằm ngang trọn vẹn
+    final cardWidth = isMobile ? (screenWidth - 48).clamp(280.0, 420.0) : 340.0;
+    final carouselHeight = isMobile ? 160.0 : 250.0;
 
-          return Wrap(
-            spacing: spacing,
-            runSpacing: spacing,
-            children: combos.map((combo) {
-              return SizedBox(
-                width: cardWidth,
-                height: 260,
-                child: ComboGridItem(combo: combo),
-              );
-            }).toList(),
-          );
-        },
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 14),
+      child: SizedBox(
+        height: carouselHeight,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: combos.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (context, index) {
+            return SizedBox(
+              width: cardWidth,
+              height: carouselHeight,
+              child: ComboGridItem(
+                combo: combos[index],
+                isHorizontal: isMobile,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

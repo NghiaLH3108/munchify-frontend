@@ -6,7 +6,6 @@ import '../../../pos/presentation/screens/order_history_screen.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../admin/presentation/pages/admin_shell_screen.dart';
 
-
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({Key? key}) : super(key: key);
 

@@ -15,6 +15,7 @@ import 'features/pos/presentation/bloc/order_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
 import 'features/units/presentation/bloc/unit_bloc.dart';
+import 'features/combos/presentation/bloc/combo_bloc.dart';
 import 'features/products/presentation/bloc/product_admin_bloc.dart';
 import 'features/products/presentation/bloc/product_form_bloc.dart';
 import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
@@ -23,12 +24,16 @@ import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 import 'features/customers/presentation/bloc/customer_bloc.dart';
 import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
 
+import 'core/services/signalr_service.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   await di.init();
+  
+  // Initialize SignalR
+  await signalRService.init();
 
   runApp(const MyApp());
 }
@@ -54,6 +59,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<StockMovementBloc>(create: (_) => di.sl<StockMovementBloc>()),
         BlocProvider<StockImportBloc>(create: (_) => di.sl<StockImportBloc>()),
         BlocProvider<UnitBloc>(create: (_) => di.sl<UnitBloc>()),
+        BlocProvider<ComboBloc>(create: (_) => di.sl<ComboBloc>()),
         BlocProvider<CustomerBloc>(create: (_) => di.sl<CustomerBloc>()),
         BlocProvider<AdminCustomerBloc>(create: (_) => di.sl<AdminCustomerBloc>()),
         BlocProvider<ProductAdminBloc>(create: (_) => di.sl<ProductAdminBloc>()),

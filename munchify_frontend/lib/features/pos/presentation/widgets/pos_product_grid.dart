@@ -27,14 +27,18 @@ class PosProductGrid extends StatelessWidget {
       );
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth >= 1200 ? 5 : (screenWidth >= 800 ? 4 : (screenWidth >= 600 ? 3 : 2));
+    final childAspectRatio = screenWidth < 600 ? 0.70 : 0.75;
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 0.90,
+          childAspectRatio: childAspectRatio,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {

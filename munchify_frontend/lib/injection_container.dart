@@ -30,6 +30,13 @@ import 'features/units/domain/repositories/unit_repository.dart';
 import 'features/units/domain/usecases/manage_unit_usecases.dart';
 import 'features/units/presentation/bloc/unit_bloc.dart';
 
+// Combos
+import 'features/combos/data/datasources/combo_remote_data_source.dart';
+import 'features/combos/data/repositories/combo_repository_impl.dart';
+import 'features/combos/domain/repositories/combo_repository.dart';
+import 'features/combos/domain/usecases/manage_combo_usecases.dart';
+import 'features/combos/presentation/bloc/combo_bloc.dart';
+import 'features/combos/presentation/bloc/combo_form_options_cubit.dart';
 // Staff
 import 'features/staff/data/datasources/staff_remote_data_source.dart';
 import 'features/staff/data/repositories/staff_repository_impl.dart';
@@ -45,7 +52,7 @@ import 'features/pos/data/datasources/pos_remote_data_source.dart';
 import 'features/pos/data/repositories/pos_repository_impl.dart';
 import 'features/pos/domain/repositories/pos_repository.dart';
 import 'features/pos/domain/usecases/get_products_usecase.dart';
-import 'features/pos/domain/usecases/get_combos_usecase.dart';
+import 'features/pos/domain/usecases/get_combos_usecase.dart' as pos_uc;
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 
 // POS – Cart & Orders
@@ -155,6 +162,19 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => ComboBloc(
+      getCombos: sl(),
+      createCombo: sl(),
+      updateCombo: sl(),
+      deleteCombo: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ComboFormOptionsCubit(getFormOptions: sl()),
+  );
+
+  sl.registerFactory(
     () => StaffBloc(
       getStaffList: sl(),
       createStaff: sl(),
@@ -233,6 +253,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateUnitUseCase(sl()));
   sl.registerLazySingleton(() => DeleteUnitUseCase(sl()));
 
+  // Combo
+  sl.registerLazySingleton(() => GetCombosUseCase(sl()));
+  sl.registerLazySingleton(() => CreateComboUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateComboUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteComboUseCase(sl()));
+  sl.registerLazySingleton(() => GetComboFormOptionsUseCase(sl()));
+
   // Staff
   sl.registerLazySingleton(() => GetStaffListUseCase(sl()));
   sl.registerLazySingleton(() => CreateStaffUseCase(sl()));
@@ -241,7 +268,7 @@ Future<void> init() async {
 
   // POS
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
-  sl.registerLazySingleton(() => GetCombosUseCase(sl()));
+  sl.registerLazySingleton(() => pos_uc.GetCombosUseCase(sl()));
 
   // POS – Orders & Promotions
   sl.registerLazySingleton(() => CreateOrderUseCase(sl()));
@@ -277,6 +304,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<UnitRepository>(
     () => UnitRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<ComboRepository>(
+    () => ComboRepositoryImpl(remoteDataSource: sl()),
   );
 
   sl.registerLazySingleton<StaffRepository>(
@@ -323,6 +354,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<UnitRemoteDataSource>(
     () => UnitRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<ComboRemoteDataSource>(
+    () => ComboRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<StaffRemoteDataSource>(
