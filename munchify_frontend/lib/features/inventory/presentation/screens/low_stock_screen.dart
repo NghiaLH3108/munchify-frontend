@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/low_stock/low_stock_bloc.dart';
 import '../bloc/low_stock/low_stock_event.dart';
 import '../bloc/low_stock/low_stock_state.dart';
 import '../../domain/entities/forecast_item_entity.dart';
+import '../../../../core/services/signalr_service.dart';
 
 class LowStockScreen extends StatefulWidget {
   final bool embedInShell;
@@ -16,22 +16,41 @@ class LowStockScreen extends StatefulWidget {
 
 class _LowStockScreenState extends State<LowStockScreen> {
   String _searchQuery = '';
-  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     context.read<LowStockBloc>().add(const FetchLowStockWarningEvent());
     
-    // Polling mỗi 10 giây để làm mới dữ liệu
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Tích hợp SignalR: Lắng nghe cảnh báo tồn kho sắp hết từ Server theo thời gian thực
+    signalRService.onLowStockWarning(_onLowStockWarning);
+  }
+
+  void _onLowStockWarning(String message) {
+    if (mounted) {
+      // Tự động làm mới danh sách dữ liệu dự báo & cảnh báo
       context.read<LowStockBloc>().add(const FetchLowStockWarningEvent());
-    });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text('[SignalR Realtime] $message')),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1B1C1A),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    signalRService.removeLowStockWarningListener(_onLowStockWarning);
     super.dispose();
   }
 
@@ -509,7 +528,6 @@ class _LowStockScreenState extends State<LowStockScreen> {
 
   Widget _buildTableRow(ForecastItemEntity record, bool isEven) {
     bool isCritical = record.riskLevel == 'CRITICAL';
-    bool isWarning = record.riskLevel == 'WARNING';
     bool isOrdered = record.riskLevel == 'ORDERED';
     
     return Container(

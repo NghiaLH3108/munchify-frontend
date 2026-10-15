@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/ai_expiry/ai_expiry_bloc.dart';
@@ -7,6 +6,7 @@ import '../bloc/ai_expiry/ai_expiry_state.dart';
 import 'widgets/ai_insight_dialog.dart';
 import '../../domain/entities/damaged_expired_record_entity.dart';
 import '../../domain/entities/ai_expiry_summary_entity.dart';
+import '../../../../core/services/signalr_service.dart';
 
 class AiExpiryScreen extends StatefulWidget {
   final bool embedInShell;
@@ -18,7 +18,7 @@ class AiExpiryScreen extends StatefulWidget {
 
 class _AiExpiryScreenState extends State<AiExpiryScreen> {
   String _searchQuery = '';
-  Timer? _pollingTimer;
+  String _filterStatus = 'ALL'; // 'ALL', 'PENDING', 'APPROVED', 'REJECTED'
 
   @override
   void initState() {
@@ -26,15 +26,35 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
     // Lần gọi đầu tiên khi vừa mở màn hình
     context.read<AiExpiryBloc>().add(FetchPendingRecordsEvent());
     
-    // Polling mỗi 10 giây để làm mới dữ liệu (Realtime)
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Tích hợp SignalR: Lắng nghe sự kiện phát hiện hàng cận/quá hạn từ Server theo thời gian thực
+    signalRService.onExpiryAlert(_onSignalRAlert);
+  }
+
+  void _onSignalRAlert(String message) {
+    if (mounted) {
+      // Tự động làm mới danh sách dữ liệu ngay lập tức
       context.read<AiExpiryBloc>().add(FetchPendingRecordsEvent());
-    });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.bolt, color: Colors.amber, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text('[SignalR Realtime] $message')),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1B1C1A),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    signalRService.removeExpiryAlertListener(_onSignalRAlert);
     super.dispose();
   }
 
@@ -49,7 +69,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Đã duyệt tiêu hủy & cập nhật trừ kho thành công!'),
-                backgroundColor: Color(0xFFBA1A1A), // error color for delete action
+                backgroundColor: Color(0xFF386A20), // success green
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -64,14 +84,17 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
           List<DamagedExpiredRecordEntity> records = [];
           if (state is AiExpiryLoaded) {
             summary = state.summary;
-            if (_searchQuery.isEmpty) {
-              records = state.records;
-            } else {
-              records = state.records.where((r) => 
-                r.productName.toLowerCase().contains(_searchQuery) || 
-                r.productId.toString().contains(_searchQuery)
-              ).toList();
-            }
+            records = state.records.where((r) {
+              // Lọc theo search
+              final matchSearch = _searchQuery.isEmpty || 
+                  r.productName.toLowerCase().contains(_searchQuery) || 
+                  r.productId.toString().contains(_searchQuery);
+              
+              // Lọc theo trạng thái
+              final matchStatus = _filterStatus == 'ALL' || r.status.toUpperCase() == _filterStatus;
+
+              return matchSearch && matchStatus;
+            }).toList();
           }
 
           return SingleChildScrollView(
@@ -161,33 +184,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
             ),
           ],
         ),
-        Row(
-          children: [
-            // ElevatedButton.icon(
-            //   onPressed: () {},
-            //   icon: const Icon(Icons.file_download, size: 18, color: Color(0xFF5A4138)),
-            //   label: const Text('Xuất báo cáo hao hụt', style: TextStyle(color: Color(0xFF1B1C1A))),
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: Colors.white,
-            //     elevation: 1,
-            //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            //   ),
-            // ),
-            // const SizedBox(width: 12),
-            // ElevatedButton.icon(
-            //   onPressed: () {},
-            //   icon: const Icon(Icons.done_all, size: 18, color: Colors.white),
-            //   label: const Text('Duyệt nhanh tất cả (Batch Approve)', style: TextStyle(color: Colors.white)),
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: const Color(0xFFA43700),
-            //     elevation: 2,
-            //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            //   ),
-            // ),
-          ],
-        )
+
       ],
     );
   }
@@ -197,7 +194,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       children: [
         Expanded(
           child: _buildMetricCard(
-            title: 'Total Pending Alerts',
+            title: 'Tổng số cảnh báo đang chờ xử lý',
             value: '${summary.totalPendingAlerts} lô cảnh báo',
             icon: Icons.warning,
             iconColor: const Color(0xFFBA1A1A),
@@ -216,7 +213,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: _buildMetricCard(
-            title: 'Est. Financial Loss',
+            title: 'Ước tính thiệt hại tài chính',
             value: '\$${summary.estFinancialLoss.toStringAsFixed(2)}',
             icon: Icons.trending_up,
             iconColor: const Color(0xFF7E5700),
@@ -237,7 +234,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: _buildMetricCard(
-            title: 'Auto-resolved This Month',
+            title: 'Đã tự động giải quyết trong tháng này',
             value: '${summary.autoResolvedThisMonth} lô đã xử lý',
             icon: Icons.task_alt,
             iconColor: const Color(0xFF005AB7),
@@ -350,10 +347,25 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    _buildFilterBtn('Tất cả kho (5 chi nhánh)', Icons.store, false),
-                    const SizedBox(width: 12),
-                    _buildFilterBtn('Hết hạn trong 7 ngày', Icons.date_range, true),
+                    _buildFilterBtn('Tất cả kho', Icons.store, false),
                   ],
+                ),
+                // Tab lọc trạng thái
+                Container(
+                  height: 40,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE4E2DE)),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildStatusTab('Tất cả', 'ALL'),
+                      _buildStatusTab('Chờ duyệt (Pending)', 'PENDING'),
+                      _buildStatusTab('Đã trừ kho (Approved)', 'APPROVED'),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -400,6 +412,33 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
             ),
           )
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusTab(String title, String status) {
+    final isSelected = _filterStatus == status;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _filterStatus = status;
+        });
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFA43700) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF5A4138),
+          ),
+        ),
       ),
     );
   }
@@ -527,18 +566,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
           Expanded(
             flex: 1,
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFFFEB300).withOpacity(0.3), borderRadius: BorderRadius.circular(16)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF7E5700), shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    const Text('Pending', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6A4800))),
-                  ],
-                ),
-              ),
+              child: _buildRecordStatusBadge(record.status),
             ),
           ),
           // Actions
@@ -546,28 +574,94 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
             flex: 2,
             child: Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AiInsightDialog(record: record),
-                  ).then((approved) {
-                    if (approved == true) {
-                      context.read<AiExpiryBloc>().add(ApproveRecordEvent(record.recordId));
-                    }
-                  });
-                },
-                icon: const Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                label: const Text('✨ AI Insights', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFA43700),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-              ),
+              child: record.status == 'APPROVED'
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDEF7EC),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF31C48D).withOpacity(0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle, size: 16, color: Color(0xFF03543F)),
+                          SizedBox(width: 6),
+                          Text(
+                            'Đã duyệt hủy kho',
+                            style: TextStyle(
+                              color: Color(0xFF03543F),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ElevatedButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AiInsightDialog(record: record),
+                        ).then((approved) {
+                          if (approved == true) {
+                            context.read<AiExpiryBloc>().add(ApproveRecordEvent(record.recordId));
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.auto_awesome, size: 16, color: Colors.white),
+                      label: const Text('AI phân tích', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFA43700),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                    ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecordStatusBadge(String status) {
+    Color bgColor;
+    Color dotColor;
+    Color textColor;
+    String label;
+
+    switch (status.toUpperCase()) {
+      case 'APPROVED':
+        bgColor = const Color(0xFFDEF7EC);
+        dotColor = const Color(0xFF31C48D);
+        textColor = const Color(0xFF03543F);
+        label = 'Đã trừ kho';
+        break;
+      case 'REJECTED':
+        bgColor = const Color(0xFFFDE8E8);
+        dotColor = const Color(0xFFF98080);
+        textColor = const Color(0xFF9B1C1C);
+        label = 'Đã hủy';
+        break;
+      case 'PENDING':
+      default:
+        bgColor = const Color(0xFFFEB300).withOpacity(0.3);
+        dotColor = const Color(0xFF7E5700);
+        textColor = const Color(0xFF6A4800);
+        label = 'Chờ duyệt';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 8, height: 8, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor)),
         ],
       ),
     );

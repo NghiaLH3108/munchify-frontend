@@ -16,7 +16,7 @@ abstract class StockRemoteDataSource {
   Future<bool> cancelImport(int id);
   
   // AI Expiry Insights
-  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords();
+  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords({String status = 'ALL'});
   Future<AiExpirySummaryModel> getAiExpirySummaryMetrics();
   Future<bool> approveDamagedExpiredRecord(int id);
 
@@ -66,8 +66,11 @@ class StockRemoteDataSourceImpl implements StockRemoteDataSource {
   }
 
   @override
-  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords() async {
-    final response = await dioClient.dio.get(ApiEndpoints.damagedExpiredPending());
+  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords({String status = 'ALL'}) async {
+    final response = await dioClient.dio.get(
+      ApiEndpoints.damagedExpiredPending(), 
+      queryParameters: {'status': status},
+    );
     final data = response.data['data'] as List;
     return data.map((json) => DamagedExpiredRecordModel.fromJson(json)).toList();
   }
