@@ -93,16 +93,20 @@ class ProductDetailBottomSheet extends StatelessWidget {
             width: double.infinity,
             height: 54,
             child: ElevatedButton(
-              onPressed: () {
-                // TODO: Gọi BLoC thêm vào giỏ hàng
-                Navigator.pop(context);
-              },
+              onPressed: stockQuantity > 0
+                  ? () => Navigator.pop(context, true) // Return true → caller gọi addItem
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE65100),
                 foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey.shade300,
+                disabledForegroundColor: Colors.grey.shade500,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('THÊM VÀO GIỎ HÀNG', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(
+                stockQuantity > 0 ? 'THÊM VÀO GIỎ HÀNG' : 'HẾT HÀNG',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           const SizedBox(height: 16), // safe area
