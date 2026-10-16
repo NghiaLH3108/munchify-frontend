@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
-import '../../../../injection_container.dart';
-import '../../../products/domain/usecases/get_products_usecase.dart' as admin_products;
+import '../../../products/domain/entities/product_entity.dart';
 import '../../domain/entities/promotion_entity.dart';
 import '../bloc/promotion_form_bloc.dart';
 import '../bloc/promotion_form_event.dart';
@@ -33,7 +32,7 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
   bool _isActive = true;
 
   int _scopeType = 0; // 0: Toàn bộ menu, 1: Món cụ thể
-  List<dynamic> _allProducts = [];
+  List<ProductEntity> _allProducts = [];
   List<String> _selectedProductIds = [];
   bool _isLoadingProducts = false;
 
@@ -54,37 +53,28 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
       final detail = widget.promotionToEdit as PromotionDetailEntity;
       if (detail.products.isNotEmpty) {
         _scopeType = 1;
-        _selectedProductIds = detail.products.map((e) {
-          if (e is Map) {
-            return (e['productId'] ?? e['id'] ?? '').toString();
-          }
-          try {
-            return (e.productId ?? e.id).toString();
-          } catch (_) {
-            return e.toString();
-          }
-        }).where((id) => id.isNotEmpty).toList();
+        _selectedProductIds = _extractProductIds(detail.products);
       }
     }
     
-    _loadProducts();
+    context.read<PromotionFormBloc>().add(const LoadPromotionProducts());
   }
 
-  Future<void> _loadProducts() async {
-    setState(() => _isLoadingProducts = true);
-    final usecase = sl<admin_products.GetProductsUseCase>();
-    final result = await usecase.call();
-    result.fold(
-      (l) => null,
-      (r) {
-        if (mounted) {
-          setState(() {
-            _allProducts = r;
-          });
+  List<String> _extractProductIds(List<dynamic> products) {
+    final result = <String>[];
+    for (final item in products) {
+      if (item is ProductEntity) {
+        result.add(item.id);
+      } else if (item is Map<String, dynamic>) {
+        final id = item['productId'] ?? item['id'];
+        if (id != null) {
+          result.add(id.toString());
         }
-      },
-    );
-    setState(() => _isLoadingProducts = false);
+      } else if (item is int || item is String) {
+        result.add(item.toString());
+      }
+    }
+    return result;
   }
 
   @override
@@ -172,6 +162,13 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: ColorPalette.error),
           );
+        } else if (state is PromotionFormProductsLoading) {
+          setState(() => _isLoadingProducts = true);
+        } else if (state is PromotionFormProductsLoaded) {
+          setState(() {
+            _allProducts = state.products;
+            _isLoadingProducts = false;
+          });
         }
       },
       child: Dialog(

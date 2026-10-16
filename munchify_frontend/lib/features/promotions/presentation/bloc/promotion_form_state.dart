@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../products/domain/entities/product_entity.dart';
 
 abstract class PromotionFormState extends Equatable {
   const PromotionFormState();
@@ -8,6 +9,17 @@ abstract class PromotionFormState extends Equatable {
 }
 
 class PromotionFormInitial extends PromotionFormState {}
+
+class PromotionFormProductsLoading extends PromotionFormState {}
+
+class PromotionFormProductsLoaded extends PromotionFormState {
+  final List<ProductEntity> products;
+
+  const PromotionFormProductsLoaded(this.products);
+
+  @override
+  List<Object?> get props => [products];
+}
 
 class PromotionFormLoading extends PromotionFormState {}
 

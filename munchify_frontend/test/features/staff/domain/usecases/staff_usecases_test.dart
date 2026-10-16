@@ -29,6 +29,7 @@ class MockStaffRepository implements StaffRepository {
   Future<Either<Failure, PagedStaffResult>> getStaffList({
     String? role,
     bool? isActive,
+    String? searchKeyword,
     int page = 1,
     int pageSize = 10,
   }) async {

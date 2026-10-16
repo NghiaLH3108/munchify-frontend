@@ -8,6 +8,7 @@ import '../../domain/entities/customer_entity.dart';
 import '../bloc/admin_customer_bloc.dart';
 import '../bloc/admin_customer_event.dart';
 import '../bloc/admin_customer_state.dart';
+import '../bloc/customer_bloc.dart';
 import '../widgets/customer_points_history_modal.dart';
 import '../widgets/customer_form_dialog.dart';
 
@@ -90,8 +91,11 @@ class _AdminCustomerManagementScreenState
   void _openCreateCustomerDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => CustomerFormDialog(
-        onSuccess: _loadData,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<CustomerBloc>(),
+        child: CustomerFormDialog(
+          onSuccess: _loadData,
+        ),
       ),
     );
   }

@@ -1,19 +1,35 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/create_promotion_usecase.dart';
 import '../../domain/usecases/update_promotion_usecase.dart';
+import '../../../products/domain/usecases/get_products_usecase.dart';
 import 'promotion_form_event.dart';
 import 'promotion_form_state.dart';
 
 class PromotionFormBloc extends Bloc<PromotionFormEvent, PromotionFormState> {
   final CreatePromotionUseCase createPromotionUseCase;
   final UpdatePromotionUseCase updatePromotionUseCase;
+  final GetProductsUseCase getProductsUseCase;
 
   PromotionFormBloc({
     required this.createPromotionUseCase,
     required this.updatePromotionUseCase,
+    required this.getProductsUseCase,
   }) : super(PromotionFormInitial()) {
+    on<LoadPromotionProducts>(_onLoadPromotionProducts);
     on<SubmitPromotionForm>(_onSubmitPromotionForm);
     on<ValidatePromotionForm>(_onValidatePromotionForm);
+  }
+
+  Future<void> _onLoadPromotionProducts(
+    LoadPromotionProducts event,
+    Emitter<PromotionFormState> emit,
+  ) async {
+    emit(PromotionFormProductsLoading());
+    final result = await getProductsUseCase();
+    result.fold(
+      (failure) => emit(PromotionFormError(failure.message)),
+      (products) => emit(PromotionFormProductsLoaded(products)),
+    );
   }
 
   void _onValidatePromotionForm(

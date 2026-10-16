@@ -219,7 +219,7 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
         ElevatedButton.icon(
           onPressed: () => _openFormDialog(),
           icon: const Icon(Icons.add_rounded, size: 18),
-          label: const Text('+ Thêm Khuyến mãi'),
+          label: const Text('Thêm Khuyến mãi'),
           style: ElevatedButton.styleFrom(
             backgroundColor: ColorPalette.primaryContainer,
             foregroundColor: Colors.white,

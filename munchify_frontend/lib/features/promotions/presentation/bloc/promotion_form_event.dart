@@ -7,6 +7,10 @@ abstract class PromotionFormEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class LoadPromotionProducts extends PromotionFormEvent {
+  const LoadPromotionProducts();
+}
+
 class SubmitPromotionForm extends PromotionFormEvent {
   final String? id; // if null, create. if not null, update
   final Map<String, dynamic> data;

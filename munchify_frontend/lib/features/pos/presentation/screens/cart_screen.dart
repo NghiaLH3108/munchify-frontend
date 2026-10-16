@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/AppConstants.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../customers/presentation/bloc/customer_bloc.dart';
 import '../../../customers/presentation/bloc/customer_event.dart';
@@ -248,8 +247,13 @@ class _SummaryPanel extends StatelessWidget {
                       customerState is CustomerSelected
                           ? customerState.discountFromPoints.toDouble()
                           : 0.0;
-                  final finalTotal = (cartState.totalAmount - pointsDiscount)
-                      .clamp(0.0, double.infinity);
+                  final amountAfterVoucher =
+                      (cartState.subtotal - cartState.discountAmount)
+                          .clamp(0.0, double.infinity);
+                  final effectivePointsDiscount =
+                      pointsDiscount.clamp(0.0, amountAfterVoucher);
+                  final finalTotal =
+                      amountAfterVoucher - effectivePointsDiscount;
                   return _TotalRow(
                     label: 'Tổng thanh toán',
                     value: currency.format(finalTotal),

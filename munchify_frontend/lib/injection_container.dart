@@ -57,11 +57,11 @@ import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 
 // POS – Cart & Orders
 import 'features/pos/data/datasources/order_remote_data_source.dart';
-import 'features/pos/data/datasources/promotion_remote_data_source.dart';
+import 'features/pos/data/datasources/promotion_remote_data_source.dart' as pos_promo;
 import 'features/pos/data/repositories/order_repository_impl.dart';
-import 'features/pos/data/repositories/promotion_repository_impl.dart';
+import 'features/pos/data/repositories/promotion_repository_impl.dart' as pos_promo;
 import 'features/pos/domain/repositories/order_repository.dart';
-import 'features/pos/domain/repositories/promotion_repository.dart';
+import 'features/pos/domain/repositories/promotion_repository.dart' as pos_promo;
 import 'features/pos/domain/usecases/create_order_usecase.dart';
 import 'features/pos/domain/usecases/get_orders_usecase.dart';
 import 'features/pos/domain/usecases/apply_promotion_usecase.dart';
@@ -130,6 +130,7 @@ Future<void> init() async {
     () => PromotionFormBloc(
       createPromotionUseCase: sl(),
       updatePromotionUseCase: sl(),
+      getProductsUseCase: sl<admin_get_products.GetProductsUseCase>(),
     ),
   );
 
@@ -360,8 +361,8 @@ Future<void> init() async {
     () => OrderRepositoryImpl(remoteDataSource: sl()),
   );
 
-  sl.registerLazySingleton<PromotionRepository>(
-    () => PromotionRepositoryImpl(remoteDataSource: sl()),
+  sl.registerLazySingleton<pos_promo.PromotionRepository>(
+    () => pos_promo.PromotionRepositoryImpl(remoteDataSource: sl()),
   );
 
   sl.registerLazySingleton<CustomerRepository>(
@@ -414,8 +415,8 @@ Future<void> init() async {
     () => OrderRemoteDataSourceImpl(dioClient: sl()),
   );
 
-  sl.registerLazySingleton<PromotionRemoteDataSource>(
-    () => PromotionRemoteDataSourceImpl(dioClient: sl()),
+  sl.registerLazySingleton<pos_promo.PromotionRemoteDataSource>(
+    () => pos_promo.PromotionRemoteDataSourceImpl(dioClient: sl()),
   );
   
   sl.registerLazySingleton<CustomerRemoteDataSource>(

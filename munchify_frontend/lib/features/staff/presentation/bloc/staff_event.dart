@@ -12,11 +12,12 @@ class LoadStaffList extends StaffEvent {
   final int pageSize;
   final String? role;
   final bool? isActive;
+  final String? searchKeyword;
 
-  const LoadStaffList({this.page = 1, this.pageSize = 10, this.role, this.isActive});
+  const LoadStaffList({this.page = 1, this.pageSize = 10, this.role, this.isActive, this.searchKeyword});
 
   @override
-  List<Object?> get props => [page, pageSize, role, isActive];
+  List<Object?> get props => [page, pageSize, role, isActive, searchKeyword];
 }
 
 class CreateStaffEvent extends StaffEvent {
