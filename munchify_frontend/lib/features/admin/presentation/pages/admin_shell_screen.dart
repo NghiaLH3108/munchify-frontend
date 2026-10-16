@@ -4,6 +4,7 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../staff/presentation/pages/staff_management_screen.dart';
 import '../../../categories/presentation/screens/manage_categories_screen.dart';
+import '../../../suppliers/presentation/screens/manage_suppliers_screen.dart';
 import '../../../products/presentation/screens/product_management_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
@@ -82,6 +83,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'Danh mục';
       case 'combos':
         return 'Combo sản phẩm';
+      case 'suppliers':
+        return 'Nhà cung cấp';
       case 'inventory':
         return 'Quản lý Kho & Nhập';
       case 'ai_low_stock':
@@ -338,6 +341,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'combos',
                     icon: Icons.lunch_dining_rounded,
                     title: 'Combo sản phẩm',
+                  ),
+                  _buildSidebarItem(
+                    key: 'suppliers',
+                    icon: Icons.local_shipping_rounded,
+                    title: 'Nhà cung cấp',
                   ),
                   _buildSidebarItem(
                     key: 'inventory',
@@ -931,6 +939,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const ManageCategoriesScreen(embedInShell: true);
       case 'units':
         return const ManageUnitsScreen(embedInShell: true);
+      case 'suppliers':
+        return const ManageSuppliersScreen(embedInShell: true);
       case 'staff':
         return const StaffManagementScreen(embedInShell: true);
       case 'combos':

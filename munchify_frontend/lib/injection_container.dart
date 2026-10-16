@@ -23,6 +23,13 @@ import 'features/categories/domain/repositories/category_repository.dart';
 import 'features/categories/domain/usecases/manage_category_usecases.dart';
 import 'features/categories/presentation/bloc/category_bloc.dart';
 
+// Suppliers
+import 'features/suppliers/data/datasources/supplier_remote_data_source.dart';
+import 'features/suppliers/data/repositories/supplier_repository_impl.dart';
+import 'features/suppliers/domain/repositories/supplier_repository.dart';
+import 'features/suppliers/domain/usecases/manage_supplier_usecases.dart';
+import 'features/suppliers/presentation/bloc/supplier_bloc.dart';
+
 // Units
 import 'features/units/data/datasources/unit_remote_data_source.dart';
 import 'features/units/data/repositories/unit_repository_impl.dart';
@@ -154,6 +161,15 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => SupplierBloc(
+      getSuppliersUseCase: sl(),
+      createSupplierUseCase: sl(),
+      updateSupplierUseCase: sl(),
+      deleteSupplierUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => UnitBloc(
       getUnits: sl(),
       createUnit: sl(),
@@ -248,6 +264,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
 
+  // Supplier
+  sl.registerLazySingleton(() => GetSuppliersUseCase(sl()));
+  sl.registerLazySingleton(() => CreateSupplierUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateSupplierUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteSupplierUseCase(sl()));
+
   // Unit
   sl.registerLazySingleton(() => GetUnitsUseCase(sl()));
   sl.registerLazySingleton(() => CreateUnitUseCase(sl()));
@@ -304,6 +326,13 @@ Future<void> init() async {
     () => CategoryRepositoryImpl(remoteDataSource: sl()),
   );
 
+  sl.registerLazySingleton<SupplierRepository>(
+    () => SupplierRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
   sl.registerLazySingleton<UnitRepository>(
     () => UnitRepositoryImpl(remoteDataSource: sl()),
   );
@@ -352,6 +381,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<CategoryRemoteDataSource>(
     () => CategoryRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<SupplierRemoteDataSource>(
+    () => SupplierRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<UnitRemoteDataSource>(
