@@ -86,23 +86,37 @@ class ProductDetailBottomSheet extends StatelessWidget {
           const Text('Thông tin chi tiết', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           _buildDetailRow('Đơn vị bán:', unitName),
-          _buildDetailRow('Tồn kho hiện tại:', '$stockQuantity $unitName', isWarning: stockQuantity < 5),
+          _buildDetailRow(
+            'Tồn kho hiện tại:',
+            stockQuantity <= 0 ? 'Hết hàng (0)' : '$stockQuantity $unitName',
+            isWarning: stockQuantity <= 5,
+            isError: stockQuantity <= 0,
+          ),
           const SizedBox(height: 32),
           // Add to cart button
           SizedBox(
             width: double.infinity,
             height: 54,
-            child: ElevatedButton(
-              onPressed: () {
-                // TODO: Gọi BLoC thêm vào giỏ hàng
-                Navigator.pop(context);
-              },
+            child: ElevatedButton.icon(
+              onPressed: stockQuantity <= 0
+                  ? null
+                  : () {
+                      // TODO: Gọi BLoC thêm vào giỏ hàng
+                      Navigator.pop(context);
+                    },
+              icon: Icon(
+                stockQuantity <= 0 ? Icons.remove_shopping_cart_outlined : Icons.add_shopping_cart_rounded,
+                color: Colors.white,
+              ),
+              label: Text(
+                stockQuantity <= 0 ? 'SẢN PHẨM ĐÃ HẾT HÀNG' : 'THÊM VÀO GIỎ HÀNG',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE65100),
+                backgroundColor: stockQuantity <= 0 ? Colors.grey.shade400 : const Color(0xFFE65100),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('THÊM VÀO GIỎ HÀNG', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 16), // safe area
@@ -111,7 +125,14 @@ class ProductDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {bool isWarning = false}) {
+  Widget _buildDetailRow(String label, String value, {bool isWarning = false, bool isError = false}) {
+    Color valueColor = Colors.black87;
+    if (isError) {
+      valueColor = const Color(0xFFC62828);
+    } else if (isWarning) {
+      valueColor = Colors.orange.shade800;
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
@@ -123,7 +144,7 @@ class ProductDetailBottomSheet extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 15,
-              color: isWarning ? Colors.orange.shade800 : Colors.black87,
+              color: valueColor,
             ),
           ),
         ],
