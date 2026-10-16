@@ -6,6 +6,7 @@ import 'features/main/presentation/screens/main_app_screen.dart';
 
 // BLoCs
 import 'features/categories/presentation/bloc/category_bloc.dart';
+import 'features/suppliers/presentation/bloc/supplier_bloc.dart';
 import 'features/staff/presentation/bloc/staff_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_event.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<CategoryBloc>(create: (_) => di.sl<CategoryBloc>()),
+        BlocProvider<SupplierBloc>(create: (_) => di.sl<SupplierBloc>()),
         BlocProvider<StaffBloc>(create: (_) => di.sl<StaffBloc>()),
         BlocProvider<PosCatalogBloc>(
           create: (_) => di.sl<PosCatalogBloc>()..add(LoadCatalogEvent()),
