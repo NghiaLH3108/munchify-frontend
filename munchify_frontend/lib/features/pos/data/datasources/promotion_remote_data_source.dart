@@ -1,5 +1,6 @@
 import '../../../../core/constants/ApiEndpoints.dart';
 import '../../../../core/network/DioClient.dart';
+import '../models/catalog_promotion_model.dart';
 import '../models/promotion_model.dart';
 
 abstract class PromotionRemoteDataSource {
@@ -7,6 +8,9 @@ abstract class PromotionRemoteDataSource {
     required String promotionCode,
     required double subtotal,
   });
+
+  /// Lấy danh sách promotion đang active và trong kỹ hiệu lực.
+  Future<List<CatalogPromotionModel>> getActivePromotions();
 }
 
 class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
@@ -32,6 +36,25 @@ class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
     } else {
       throw Exception(
           response.data?['message'] ?? 'Mã khuyến mãi không hợp lệ');
+    }
+  }
+
+  @override
+  Future<List<CatalogPromotionModel>> getActivePromotions() async {
+    final response = await dioClient.dio.get(ApiEndpoints.promotions);
+
+    if (response.data != null && response.data['success'] == true) {
+      final List<dynamic> data = response.data['data'] ?? [];
+      final now = DateTime.now();
+      return data
+          .map((e) => CatalogPromotionModel.fromJson(e))
+          .where((p) =>
+              p.isActive &&
+              now.isAfter(p.startDate) &&
+              now.isBefore(p.endDate))
+          .toList();
+    } else {
+      return [];
     }
   }
 }

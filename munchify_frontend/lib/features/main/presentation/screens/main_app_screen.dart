@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../pos/presentation/screens/pos_home_screen.dart';
 import '../../../pos/presentation/screens/order_history_screen.dart';
-import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../admin/presentation/pages/admin_shell_screen.dart';
 
 class MainAppScreen extends StatefulWidget {
@@ -32,10 +31,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFFE65100), // Appetizing Orange
@@ -43,9 +39,18 @@ class _MainAppScreenState extends State<MainAppScreen> {
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Bán hàng'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Đơn hàng'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Khách hàng'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.point_of_sale),
+            label: 'Bán hàng',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Đơn hàng',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Khách hàng',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
         ],
       ),
@@ -62,7 +67,10 @@ class _PlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title, style: AppTypography.inter(fontWeight: FontWeight.bold)),
+        title: Text(
+          title,
+          style: AppTypography.inter(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -88,7 +96,8 @@ class _PlaceholderScreen extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const AdminShellScreen(initialTab: 'dashboard'),
+                      builder: (_) =>
+                          const AdminShellScreen(initialTab: 'dashboard'),
                     ),
                   );
                 },
@@ -97,7 +106,10 @@ class _PlaceholderScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE65100),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

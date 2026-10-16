@@ -346,6 +346,7 @@ class _CustomerRow extends StatelessWidget {
           onPressed: () => showModalBottomSheet(
             context: context,
             isScrollControlled: true,
+            showDragHandle: false,
             backgroundColor: Colors.transparent,
             builder: (_) => BlocProvider.value(
               value: context.read<CustomerBloc>(),

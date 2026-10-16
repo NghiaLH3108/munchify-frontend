@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../bloc/cart_cubit.dart';
 import '../bloc/cart_state.dart';
+import 'promotion_list_bottom_sheet.dart';
 
 /// Row nhập mã khuyến mãi + nút "Áp dụng" / "Gỡ".
 class PromotionInputRow extends StatefulWidget {
@@ -55,6 +56,17 @@ class _PromotionInputRowState extends State<PromotionInputRow> {
                         Icons.local_offer_outlined,
                         color: ColorPalette.appetizingOrange,
                         size: 20,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.discount_outlined,
+                          color: ColorPalette.appetizingOrange,
+                          size: 20,
+                        ),
+                        tooltip: 'Xem danh sách khuyến mãi',
+                        onPressed: isApplied || isLoading
+                            ? null
+                            : () => PromotionListBottomSheet.show(context),
                       ),
                       filled: true,
                       fillColor: isApplied
@@ -125,6 +137,36 @@ class _PromotionInputRowState extends State<PromotionInputRow> {
                   ),
               ],
             ),
+
+            // ── View promotions list quick link ───────────────────────────
+            if (!isApplied) ...[
+              const SizedBox(height: 6),
+              InkWell(
+                onTap: isLoading
+                    ? null
+                    : () => PromotionListBottomSheet.show(context),
+                borderRadius: BorderRadius.circular(6),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.confirmation_number_outlined,
+                          size: 14, color: ColorPalette.appetizingOrange),
+                      SizedBox(width: 4),
+                      Text(
+                        'Xem danh sách khuyến mãi',
+                        style: TextStyle(
+                          color: ColorPalette.appetizingOrange,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
 
             // ── Success / Error message ───────────────────────────────────
             if (isApplied) ...[

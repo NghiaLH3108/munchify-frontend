@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'product_detail_bottom_sheet.dart';
 
 class ProductGridItem extends StatelessWidget {
   final String productCode;
@@ -11,6 +10,8 @@ class ProductGridItem extends StatelessWidget {
   final double price;
   final String imageUrl;
   final VoidCallback? onAddToCart;
+  /// Callback khi tap vào card (mở detail sheet). Nếu null, sẽ không có tác dụng.
+  final VoidCallback? onTapCard;
 
   const ProductGridItem({
     Key? key,
@@ -21,6 +22,7 @@ class ProductGridItem extends StatelessWidget {
     required this.price,
     required this.imageUrl,
     this.onAddToCart,
+    this.onTapCard,
   }) : super(key: key);
 
   @override
@@ -29,21 +31,7 @@ class ProductGridItem extends StatelessWidget {
     final isLowStock = stockQuantity <= 5;
     
     return GestureDetector(
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => ProductDetailBottomSheet(
-            productName: productName,
-            productCode: productCode,
-            price: price,
-            stockQuantity: stockQuantity,
-            unitName: unitName,
-            imageUrl: imageUrl,
-          ),
-        );
-      },
+      onTap: onTapCard, // Delegate hoàn toàn cho caller xử lý
       child: Container(
         decoration: BoxDecoration(
         color: Colors.white,

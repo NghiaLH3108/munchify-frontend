@@ -65,6 +65,7 @@ import 'features/pos/domain/repositories/promotion_repository.dart';
 import 'features/pos/domain/usecases/create_order_usecase.dart';
 import 'features/pos/domain/usecases/get_orders_usecase.dart';
 import 'features/pos/domain/usecases/apply_promotion_usecase.dart';
+import 'features/pos/domain/usecases/get_active_promotions_usecase.dart';
 import 'features/pos/presentation/bloc/cart_cubit.dart';
 import 'features/pos/presentation/bloc/order_bloc.dart';
 
@@ -274,6 +275,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CreateOrderUseCase(sl()));
   sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
   sl.registerLazySingleton(() => ApplyPromotionUseCase(sl()));
+  sl.registerLazySingleton(() => GetActivePromotionsUseCase(sl()));
 
   // Customer
   sl.registerLazySingleton(() => SearchCustomerUseCase(sl()));
