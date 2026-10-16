@@ -25,6 +25,7 @@ class ApiEndpoints {
 
   // ─── Promotions ───────────────────────────────────────────────────────────
   static const String promotions = '/api/promotions';
+  static const String applyPromotion = '/api/promotions/apply';
 
   // ─── Inventory & Stock ────────────────────────────────────────────────────
   static const String stockImports = '/api/stock-imports';

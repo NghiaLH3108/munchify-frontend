@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'product_detail_bottom_sheet.dart';
 
 class ProductGridItem extends StatelessWidget {
   final String productCode;
@@ -10,6 +9,9 @@ class ProductGridItem extends StatelessWidget {
   final int stockQuantity;
   final double price;
   final String imageUrl;
+  final VoidCallback? onAddToCart;
+  /// Callback khi tap vào card (mở detail sheet). Nếu null, sẽ không có tác dụng.
+  final VoidCallback? onTapCard;
 
   const ProductGridItem({
     Key? key,
@@ -19,6 +21,8 @@ class ProductGridItem extends StatelessWidget {
     required this.stockQuantity,
     required this.price,
     required this.imageUrl,
+    this.onAddToCart,
+    this.onTapCard,
   }) : super(key: key);
 
   @override
@@ -27,21 +31,7 @@ class ProductGridItem extends StatelessWidget {
     final isLowStock = stockQuantity <= 5;
     
     return GestureDetector(
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => ProductDetailBottomSheet(
-            productName: productName,
-            productCode: productCode,
-            price: price,
-            stockQuantity: stockQuantity,
-            unitName: unitName,
-            imageUrl: imageUrl,
-          ),
-        );
-      },
+      onTap: onTapCard, // Delegate hoàn toàn cho caller xử lý
       child: Container(
         decoration: BoxDecoration(
         color: Colors.white,
@@ -173,14 +163,16 @@ class ProductGridItem extends StatelessWidget {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFBF360C), // Deep Orange/Brown
+                          color: onAddToCart != null
+                              ? const Color(0xFFBF360C)
+                              : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                          icon: const Icon(Icons.add, color: Colors.white, size: 20),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          onPressed: () {},
+                          onPressed: onAddToCart,
                         ),
                       ),
                     ],

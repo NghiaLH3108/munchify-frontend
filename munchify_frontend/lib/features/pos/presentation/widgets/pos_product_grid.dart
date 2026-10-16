@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/product_entity.dart';
+import '../bloc/cart_cubit.dart';
+import 'product_detail_bottom_sheet.dart';
 import 'product_grid_item.dart';
 
 /// Lưới sản phẩm đơn 2 cột (sliver). Hiển thị thông báo khi rỗng.
@@ -41,6 +44,7 @@ class PosProductGrid extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final product = products[index];
+            final cartCubit = context.read<CartCubit>();
 
             return ProductGridItem(
               productCode: product.code,
@@ -49,6 +53,29 @@ class PosProductGrid extends StatelessWidget {
               stockQuantity: product.stockQuantity,
               price: product.price,
               imageUrl: product.imageUrl ?? '',
+              // Nút "+" → thêm ngay vào giỏ không qua sheet
+              onAddToCart: product.stockQuantity > 0
+                  ? () => cartCubit.addItem(product)
+                  : null,
+              // Tap vào card → mở detail sheet; nếu user bấm "Thêm" trong sheet → addItem
+              onTapCard: () async {
+                final added = await showModalBottomSheet<bool>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => ProductDetailBottomSheet(
+                    productName: product.name,
+                    productCode: product.code,
+                    price: product.price,
+                    stockQuantity: product.stockQuantity,
+                    unitName: product.unitName,
+                    imageUrl: product.imageUrl ?? '',
+                  ),
+                );
+                if (added == true) {
+                  cartCubit.addItem(product);
+                }
+              },
             );
           },
           childCount: products.length,
