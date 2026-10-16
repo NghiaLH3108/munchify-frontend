@@ -8,6 +8,7 @@ import '../../domain/entities/customer_entity.dart';
 import '../bloc/admin_customer_bloc.dart';
 import '../bloc/admin_customer_event.dart';
 import '../bloc/admin_customer_state.dart';
+import '../bloc/customer_bloc.dart';
 import '../widgets/customer_points_history_modal.dart';
 import '../widgets/customer_form_dialog.dart';
 
@@ -90,8 +91,11 @@ class _AdminCustomerManagementScreenState
   void _openCreateCustomerDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => CustomerFormDialog(
-        onSuccess: _loadData,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<CustomerBloc>(),
+        child: CustomerFormDialog(
+          onSuccess: _loadData,
+        ),
       ),
     );
   }
@@ -999,24 +1003,7 @@ class _AdminCustomerManagementScreenState
                         ],
                       ),
                     ),
-                    // Export button
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.ios_share_rounded,
-                          size: 16, color: ColorPalette.tertiary),
-                      label: const Text('Xuất Excel / PDF'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: ColorPalette.onSurfaceDark,
-                        side: const BorderSide(color: ColorPalette.borderSubtle),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        textStyle: AppTypography.inter(
-                            fontSize: 12, fontWeight: FontWeight.w600),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                  ],
+],
                 ),
               ],
             ),

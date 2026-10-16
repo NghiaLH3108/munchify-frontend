@@ -12,9 +12,9 @@ class StaffRepositoryImpl implements StaffRepository {
   StaffRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, PagedStaffResult>> getStaffList({String? role, bool? isActive, int page = 1, int pageSize = 10}) async {
+  Future<Either<Failure, PagedStaffResult>> getStaffList({String? role, bool? isActive, String? searchKeyword, int page = 1, int pageSize = 10}) async {
     try {
-      final result = await remoteDataSource.getStaffList(role: role, isActive: isActive, page: page, pageSize: pageSize);
+      final result = await remoteDataSource.getStaffList(role: role, isActive: isActive, searchKeyword: searchKeyword, page: page, pageSize: pageSize);
       return Right(result);
     } on DioException catch (e) {
       return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Server error'));

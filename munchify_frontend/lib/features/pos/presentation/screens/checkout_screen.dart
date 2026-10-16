@@ -84,9 +84,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     customerState is CustomerSelected
                         ? customerState.discountFromPoints.toDouble()
                         : 0.0;
-                final finalTotal =
-                    (cartState.totalAmount - pointsDiscount)
+                final amountAfterVoucher =
+                    (cartState.subtotal - cartState.discountAmount)
                         .clamp(0.0, double.infinity);
+                final effectivePointsDiscount =
+                    pointsDiscount.clamp(0.0, amountAfterVoucher);
+                final finalTotal =
+                    amountAfterVoucher - effectivePointsDiscount;
 
                 return Column(
                   children: [
@@ -99,7 +103,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             // ── Order summary card ────────────────────────
                             _OrderSummaryCard(
                               cartState: cartState,
-                              pointsDiscount: pointsDiscount,
+                              pointsDiscount: effectivePointsDiscount,
                               finalTotal: finalTotal,
                               currency: currency,
                             ),
@@ -481,11 +485,18 @@ class _ConfirmButton extends StatelessWidget {
         ? (customerState as CustomerSelected).pointsToRedeem
         : 0;
 
+    final amountAfterVoucher =
+        (cartState.subtotal - cartState.discountAmount).clamp(0.0, double.infinity);
+    final maxPointsNeeded =
+        (amountAfterVoucher / AppConstants.pointsToVndRate).ceil();
+    final actualPointsToSend =
+        pointsToRedeem > maxPointsNeeded ? maxPointsNeeded : pointsToRedeem;
+
     context.read<OrderBloc>().add(CreateOrderEvent(
           customerId: customer?.customerId,
           promotionCode: cartState.appliedPromotion?.promotionCode,
           paymentMethod: paymentMethod,
-          pointsToRedeem: pointsToRedeem,
+          pointsToRedeem: actualPointsToSend,
           items: cartState.items
               .map((i) => {'productId': i.productId, 'quantity': i.quantity})
               .toList(),

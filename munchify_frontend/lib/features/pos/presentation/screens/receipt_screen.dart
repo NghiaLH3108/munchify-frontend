@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/AppConstants.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/order_entity.dart';
 
@@ -152,7 +153,7 @@ class ReceiptScreen extends StatelessWidget {
                         if (order.pointsRedeemed > 0)
                           _AmountRow(
                             'Điểm quy đổi',
-                            '- ${currency.format(order.pointsRedeemed * 1000)}',
+                            '- ${currency.format(order.pointsRedeemed * AppConstants.pointsToVndRate)}',
                             valueColor: Colors.green,
                           ),
                         const SizedBox(height: 6),
