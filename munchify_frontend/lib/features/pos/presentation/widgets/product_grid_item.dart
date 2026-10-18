@@ -23,7 +23,7 @@ class ProductGridItem extends StatelessWidget {
     required this.imageUrl,
     this.onAddToCart,
     this.onTapCard,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +85,7 @@ class ProductGridItem extends StatelessWidget {
                             ? Image.network(
                                 imageUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorBuilder: (context, error, stackTrace) =>
                                     const Icon(Icons.fastfood, size: 40, color: Colors.grey),
                               )
                             : const Icon(Icons.fastfood, size: 40, color: Colors.grey),
