@@ -33,3 +33,13 @@ class AiExpiryError extends AiExpiryState {
 }
 
 class AiExpiryApproveSuccess extends AiExpiryState {}
+
+class AiExpiryReportSubmitting extends AiExpiryState {}
+
+class AiExpiryReportSuccess extends AiExpiryState {
+  final String message;
+  const AiExpiryReportSuccess({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}

@@ -35,3 +35,6 @@ class FilterByUnitEvent extends PosCatalogEvent {
   @override
   List<Object?> get props => [unitName];
 }
+
+class ToggleLowStockFilterEvent extends PosCatalogEvent {}
+

@@ -17,3 +17,20 @@ class ApproveRecordEvent extends AiExpiryEvent {
   @override
   List<Object> get props => [recordId];
 }
+
+class SubmitStaffReportEvent extends AiExpiryEvent {
+  final int productId;
+  final int quantity;
+  final String reportType;
+  final String reason;
+
+  const SubmitStaffReportEvent({
+    required this.productId,
+    required this.quantity,
+    required this.reportType,
+    required this.reason,
+  });
+
+  @override
+  List<Object> get props => [productId, quantity, reportType, reason];
+}

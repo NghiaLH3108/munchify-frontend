@@ -8,7 +8,7 @@ class DamagedExpiredRecordModel extends DamagedExpiredRecordEntity {
   @override
   final int recordId;
   @override
-  final int importDetailId;
+  final int? importDetailId;
   @override
   final int productId;
   @override
@@ -18,7 +18,11 @@ class DamagedExpiredRecordModel extends DamagedExpiredRecordEntity {
   @override
   final int quantity;
   @override
+  final String reportType;
+  @override
   final String status;
+  @override
+  final String? reason;
   @override
   final String? aiAnalysis;
   @override
@@ -28,12 +32,14 @@ class DamagedExpiredRecordModel extends DamagedExpiredRecordEntity {
 
   const DamagedExpiredRecordModel({
     required this.recordId,
-    required this.importDetailId,
+    this.importDetailId,
     required this.productId,
     required this.productName,
     required this.unitName,
     required this.quantity,
+    this.reportType = 'EXPIRED',
     required this.status,
+    this.reason,
     this.aiAnalysis,
     required this.createdAt,
     this.processedAt,
@@ -44,7 +50,9 @@ class DamagedExpiredRecordModel extends DamagedExpiredRecordEntity {
           productName: productName,
           unitName: unitName,
           quantity: quantity,
+          reportType: reportType,
           status: status,
+          reason: reason,
           aiAnalysis: aiAnalysis,
           createdAt: createdAt,
           processedAt: processedAt,

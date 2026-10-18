@@ -8,6 +8,7 @@ import '../../domain/entities/stock_import_entity.dart';
 import '../widgets/create_import_modal.dart';
 import '../widgets/import_detail_modal.dart';
 import '../../../../../core/theme/ColorPalette.dart';
+import '../../../../../core/services/signalr_service.dart';
 
 class InventoryScreen extends StatefulWidget {
   final bool embedInShell;
@@ -30,6 +31,37 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void initState() {
     super.initState();
     context.read<StockImportBloc>().add(FetchStockImportsEvent());
+
+    // Tích hợp SignalR: Lắng nghe sự kiện cập nhật phiếu nhập kho từ Server theo thời gian thực
+    signalRService.onStockImportUpdate(_onStockImportUpdate);
+  }
+
+  void _onStockImportUpdate(String message) {
+    if (mounted) {
+      // Tự động làm mới danh sách phiếu nhập kho
+      context.read<StockImportBloc>().add(FetchStockImportsEvent());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.sync, color: Colors.lightGreenAccent, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text('[SignalR Realtime] $message')),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1B1C1A),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    signalRService.removeStockImportUpdateListener(_onStockImportUpdate);
+    super.dispose();
   }
 
   @override
