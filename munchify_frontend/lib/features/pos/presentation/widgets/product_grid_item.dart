@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'product_detail_bottom_sheet.dart';
 
 class ProductGridItem extends StatelessWidget {
   final String productCode;
@@ -10,6 +9,9 @@ class ProductGridItem extends StatelessWidget {
   final int stockQuantity;
   final double price;
   final String imageUrl;
+  final VoidCallback? onAddToCart;
+  /// Callback khi tap vào card (mở detail sheet). Nếu null, sẽ không có tác dụng.
+  final VoidCallback? onTapCard;
 
   const ProductGridItem({
     super.key,
@@ -19,7 +21,9 @@ class ProductGridItem extends StatelessWidget {
     required this.stockQuantity,
     required this.price,
     required this.imageUrl,
-  });
+    this.onAddToCart,
+    this.onTapCard,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -39,21 +43,7 @@ class ProductGridItem extends StatelessWidget {
                 ),
               );
             }
-          : () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => ProductDetailBottomSheet(
-                  productName: productName,
-                  productCode: productCode,
-                  price: price,
-                  stockQuantity: stockQuantity,
-                  unitName: unitName,
-                  imageUrl: imageUrl,
-                ),
-              );
-            },
+          : onTapCard,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
         opacity: isOutOfStock ? 0.55 : 1.0,
@@ -282,21 +272,7 @@ class ProductGridItem extends StatelessWidget {
                               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               onPressed: isOutOfStock
                                   ? null
-                                  : () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        builder: (context) => ProductDetailBottomSheet(
-                                          productName: productName,
-                                          productCode: productCode,
-                                          price: price,
-                                          stockQuantity: stockQuantity,
-                                          unitName: unitName,
-                                          imageUrl: imageUrl,
-                                        ),
-                                      );
-                                    },
+                                  : onAddToCart,
                             ),
                           ),
                         ],

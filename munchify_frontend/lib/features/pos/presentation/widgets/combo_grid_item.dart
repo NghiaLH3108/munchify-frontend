@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/product_entity.dart';
+import '../bloc/cart_cubit.dart';
 import 'combo_detail_bottom_sheet.dart';
 
 /// Card hiển thị combo trong carousel POS Home.
@@ -239,7 +241,18 @@ class ComboGridItem extends StatelessWidget {
                           ],
                         ),
                         ElevatedButton.icon(
-                          onPressed: isAvailable ? () {} : null,
+                          onPressed: isAvailable
+                              ? () {
+                                  context.read<CartCubit>().addItem(combo);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Đã thêm ${combo.name} vào giỏ'),
+                                      duration: const Duration(seconds: 1),
+                                      backgroundColor: ColorPalette.success,
+                                    ),
+                                  );
+                                }
+                              : null,
                           icon: const Icon(Icons.add, size: 16),
                           label: const Text('Chọn', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
@@ -482,7 +495,18 @@ class ComboGridItem extends StatelessWidget {
                       disabledForegroundColor: ColorPalette.onPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: isAvailable ? () {} : null,
+                    onPressed: isAvailable
+                        ? () {
+                            context.read<CartCubit>().addItem(combo);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Đã thêm ${combo.name} vào giỏ'),
+                                duration: const Duration(seconds: 1),
+                                backgroundColor: ColorPalette.success,
+                              ),
+                            );
+                          }
+                        : null,
                   ),
                 ],
               ),

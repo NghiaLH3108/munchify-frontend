@@ -6,9 +6,12 @@ import 'features/main/presentation/screens/main_app_screen.dart';
 
 // BLoCs
 import 'features/categories/presentation/bloc/category_bloc.dart';
+import 'features/suppliers/presentation/bloc/supplier_bloc.dart';
 import 'features/staff/presentation/bloc/staff_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 import 'features/pos/presentation/bloc/pos_catalog_event.dart';
+import 'features/pos/presentation/bloc/cart_cubit.dart';
+import 'features/pos/presentation/bloc/order_bloc.dart';
 
 import 'features/inventory/presentation/bloc/stock_movement_bloc.dart';
 import 'features/inventory/presentation/bloc/stock_import_bloc.dart';
@@ -44,9 +47,16 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<CategoryBloc>(create: (_) => di.sl<CategoryBloc>()),
+        BlocProvider<SupplierBloc>(create: (_) => di.sl<SupplierBloc>()),
         BlocProvider<StaffBloc>(create: (_) => di.sl<StaffBloc>()),
         BlocProvider<PosCatalogBloc>(
           create: (_) => di.sl<PosCatalogBloc>()..add(LoadCatalogEvent()),
+        ),
+        BlocProvider<CartCubit>(
+          create: (_) => di.sl<CartCubit>(),
+        ),
+        BlocProvider<OrderBloc>(
+          create: (_) => di.sl<OrderBloc>(),
         ),
         BlocProvider<StockMovementBloc>(create: (_) => di.sl<StockMovementBloc>()),
         BlocProvider<StockImportBloc>(create: (_) => di.sl<StockImportBloc>()),

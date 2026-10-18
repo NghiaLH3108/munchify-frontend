@@ -100,10 +100,7 @@ class ProductDetailBottomSheet extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: stockQuantity <= 0
                   ? null
-                  : () {
-                      // TODO: Gọi BLoC thêm vào giỏ hàng
-                      Navigator.pop(context);
-                    },
+                  : () => Navigator.pop(context, true),
               icon: Icon(
                 stockQuantity <= 0 ? Icons.remove_shopping_cart_outlined : Icons.add_shopping_cart_rounded,
                 color: Colors.white,
@@ -115,6 +112,8 @@ class ProductDetailBottomSheet extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: stockQuantity <= 0 ? Colors.grey.shade400 : const Color(0xFFE65100),
                 foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey.shade300,
+                disabledForegroundColor: Colors.grey.shade500,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),

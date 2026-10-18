@@ -23,6 +23,13 @@ import 'features/categories/domain/repositories/category_repository.dart';
 import 'features/categories/domain/usecases/manage_category_usecases.dart';
 import 'features/categories/presentation/bloc/category_bloc.dart';
 
+// Suppliers
+import 'features/suppliers/data/datasources/supplier_remote_data_source.dart';
+import 'features/suppliers/data/repositories/supplier_repository_impl.dart';
+import 'features/suppliers/domain/repositories/supplier_repository.dart';
+import 'features/suppliers/domain/usecases/manage_supplier_usecases.dart';
+import 'features/suppliers/presentation/bloc/supplier_bloc.dart';
+
 // Units
 import 'features/units/data/datasources/unit_remote_data_source.dart';
 import 'features/units/data/repositories/unit_repository_impl.dart';
@@ -54,6 +61,20 @@ import 'features/pos/domain/repositories/pos_repository.dart';
 import 'features/pos/domain/usecases/get_products_usecase.dart';
 import 'features/pos/domain/usecases/get_combos_usecase.dart' as pos_uc;
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
+
+// POS – Cart & Orders
+import 'features/pos/data/datasources/order_remote_data_source.dart';
+import 'features/pos/data/datasources/promotion_remote_data_source.dart' as pos_promo;
+import 'features/pos/data/repositories/order_repository_impl.dart';
+import 'features/pos/data/repositories/promotion_repository_impl.dart' as pos_promo;
+import 'features/pos/domain/repositories/order_repository.dart';
+import 'features/pos/domain/repositories/promotion_repository.dart' as pos_promo;
+import 'features/pos/domain/usecases/create_order_usecase.dart';
+import 'features/pos/domain/usecases/get_orders_usecase.dart';
+import 'features/pos/domain/usecases/apply_promotion_usecase.dart';
+import 'features/pos/domain/usecases/get_active_promotions_usecase.dart';
+import 'features/pos/presentation/bloc/cart_cubit.dart';
+import 'features/pos/presentation/bloc/order_bloc.dart';
 
 // Inventory (Stock Imports & Movements)
 import 'features/inventory/data/datasources/stock_remote_data_source.dart';
@@ -89,12 +110,38 @@ import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 import 'features/inventory/domain/usecases/get_forecasting_usecase.dart';
 import 'features/inventory/domain/usecases/generate_draft_imports_from_forecast_usecase.dart';
 
+import 'features/promotions/data/datasources/promotion_remote_data_source.dart';
+import 'features/promotions/data/repositories/promotion_repository_impl.dart';
+import 'features/promotions/domain/repositories/promotion_repository.dart';
+import 'features/promotions/domain/usecases/get_promotions_usecase.dart';
+import 'features/promotions/domain/usecases/get_promotion_by_id_usecase.dart';
+import 'features/promotions/domain/usecases/create_promotion_usecase.dart';
+import 'features/promotions/domain/usecases/update_promotion_usecase.dart';
+import 'features/promotions/domain/usecases/toggle_promotion_status_usecase.dart';
+import 'features/promotions/presentation/bloc/promotion_admin_bloc.dart';
+import 'features/promotions/presentation/bloc/promotion_form_bloc.dart';
+
 final sl = GetIt.instance; // sl = Service Locator
 
 Future<void> init() async {
   /// ==============================
   /// BLoC
   /// ==============================
+  sl.registerFactory(
+    () => PromotionAdminBloc(
+      getPromotionsUseCase: sl(),
+      togglePromotionStatusUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => PromotionFormBloc(
+      createPromotionUseCase: sl(),
+      updatePromotionUseCase: sl(),
+      getProductsUseCase: sl<admin_get_products.GetProductsUseCase>(),
+    ),
+  );
+
   sl.registerFactory(
     () => CustomerBloc(
       searchCustomer: sl(),
@@ -142,6 +189,15 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => SupplierBloc(
+      getSuppliersUseCase: sl(),
+      createSupplierUseCase: sl(),
+      updateSupplierUseCase: sl(),
+      deleteSupplierUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => UnitBloc(
       getUnits: sl(),
       createUnit: sl(),
@@ -177,6 +233,17 @@ Future<void> init() async {
       getProductsUseCase: sl(),
       getCombosUseCase: sl(),
       repository: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => CartCubit(applyPromotionUseCase: sl()),
+  );
+
+  sl.registerFactory(
+    () => OrderBloc(
+      createOrderUseCase: sl(),
+      getOrdersUseCase: sl(),
     ),
   );
 
@@ -226,6 +293,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
 
+  // Supplier
+  sl.registerLazySingleton(() => GetSuppliersUseCase(sl()));
+  sl.registerLazySingleton(() => CreateSupplierUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateSupplierUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteSupplierUseCase(sl()));
+
   // Unit
   sl.registerLazySingleton(() => GetUnitsUseCase(sl()));
   sl.registerLazySingleton(() => CreateUnitUseCase(sl()));
@@ -249,6 +322,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   sl.registerLazySingleton(() => pos_uc.GetCombosUseCase(sl()));
 
+  // POS – Orders & Promotions
+  sl.registerLazySingleton(() => CreateOrderUseCase(sl()));
+  sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => ApplyPromotionUseCase(sl()));
+  sl.registerLazySingleton(() => GetActivePromotionsUseCase(sl()));
+
   // Customer
   sl.registerLazySingleton(() => SearchCustomerUseCase(sl()));
   sl.registerLazySingleton(() => CreateCustomerUseCase(sl()));
@@ -265,15 +344,33 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
   sl.registerLazySingleton(() => ToggleProductStatusUseCase(sl()));
 
+  // Promotions
+  sl.registerLazySingleton(() => GetPromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetPromotionByIdUseCase(sl()));
+  sl.registerLazySingleton(() => CreatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => TogglePromotionStatusUseCase(sl()));
+
   /// ==============================
   /// Repository
   /// ==============================
+  sl.registerLazySingleton<PromotionRepository>(
+    () => PromotionRepositoryImpl(remoteDataSource: sl()),
+  );
+
   sl.registerLazySingleton<StockRepository>(
     () => StockRepositoryImpl(remoteDataSource: sl()),
   );
   
   sl.registerLazySingleton<CategoryRepository>(
     () => CategoryRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<SupplierRepository>(
+    () => SupplierRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
   );
 
   sl.registerLazySingleton<UnitRepository>(
@@ -290,6 +387,14 @@ Future<void> init() async {
 
   sl.registerLazySingleton<PosRepository>(
     () => PosRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<pos_promo.PromotionRepository>(
+    () => pos_promo.PromotionRepositoryImpl(remoteDataSource: sl()),
   );
 
   sl.registerLazySingleton<CustomerRepository>(
@@ -310,12 +415,20 @@ Future<void> init() async {
   /// ==============================
   /// Data Sources
   /// ==============================
+  sl.registerLazySingleton<PromotionRemoteDataSource>(
+    () => PromotionRemoteDataSourceImpl(dioClient: sl()),
+  );
+
   sl.registerLazySingleton<StockRemoteDataSource>(
     () => StockRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<CategoryRemoteDataSource>(
     () => CategoryRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<SupplierRemoteDataSource>(
+    () => SupplierRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<UnitRemoteDataSource>(
@@ -332,6 +445,14 @@ Future<void> init() async {
 
   sl.registerLazySingleton<PosRemoteDataSource>(
     () => PosRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<pos_promo.PromotionRemoteDataSource>(
+    () => pos_promo.PromotionRemoteDataSourceImpl(dioClient: sl()),
   );
   
   sl.registerLazySingleton<CustomerRemoteDataSource>(

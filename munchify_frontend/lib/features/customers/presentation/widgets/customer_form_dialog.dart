@@ -44,7 +44,7 @@ class _CustomerFormDialogState extends State<CustomerFormDialog> {
   Widget build(BuildContext context) {
     return BlocListener<CustomerBloc, CustomerState>(
       listener: (context, state) {
-        if (state is CustomerCreated || state is CustomerSelected) {
+        if (state is CustomerCreated) {
           setState(() => _isLoading = false);
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(

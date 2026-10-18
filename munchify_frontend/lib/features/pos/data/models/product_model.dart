@@ -35,7 +35,9 @@ class ProductModel extends ProductEntity {
       price: (json['price'] ?? 0).toDouble(),
       stockQuantity: json['stockQuantity'] ?? 0,
       categoryId: json['categoryId'] ?? 0,
-      unitName: json['unitName'] ?? '',
+      unitName: (json['unitName'] != null && json['unitName'].toString().isNotEmpty)
+          ? json['unitName']
+          : ((json['isCombo'] ?? false) ? 'Combo' : 'Phần'),
       imageUrl: json['imageUrl'],
       isCombo: json['isCombo'] ?? false,
       comboItems: rawComboItems

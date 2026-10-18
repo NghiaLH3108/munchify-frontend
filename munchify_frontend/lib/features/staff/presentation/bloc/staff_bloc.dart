@@ -17,6 +17,7 @@ class StaffBloc extends Bloc<StaffEvent, StaffState> {
     required this.createStaff,
     required this.updateStaff,
     required this.toggleStaffStatus,
+    
   }) : super(StaffInitial()) {
     on<LoadStaffList>((event, emit) async {
       emit(StaffLoading());
@@ -25,6 +26,7 @@ class StaffBloc extends Bloc<StaffEvent, StaffState> {
         pageSize: event.pageSize,
         role: event.role,
         isActive: event.isActive,
+        searchKeyword: event.searchKeyword,
       );
       result.fold(
         (failure) => emit(StaffError(failure.message)),

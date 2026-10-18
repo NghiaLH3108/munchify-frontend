@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/entities/combo_item_entity.dart';
+import '../bloc/cart_cubit.dart';
 
 /// Bottom sheet hiển thị chi tiết combo: danh sách thành phần + SavingAmount thực
 class ComboDetailBottomSheet extends StatelessWidget {
@@ -172,7 +174,19 @@ class ComboDetailBottomSheet extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: combo.isComboAvailable ? () => Navigator.pop(context) : null,
+                onPressed: combo.isComboAvailable
+                    ? () {
+                        context.read<CartCubit>().addItem(combo);
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Đã thêm ${combo.name} vào giỏ'),
+                            duration: const Duration(seconds: 1),
+                            backgroundColor: ColorPalette.success,
+                          ),
+                        );
+                      }
+                    : null,
                 icon: const Icon(Icons.add_shopping_cart),
                 label: Text(
                   combo.isComboAvailable

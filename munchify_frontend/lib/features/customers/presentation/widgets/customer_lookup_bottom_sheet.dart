@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,13 +14,14 @@ import '../bloc/customer_state.dart';
 import 'add_customer_bottom_sheet.dart';
 
 class CustomerLookupBottomSheet extends StatefulWidget {
-  const CustomerLookupBottomSheet({Key? key}) : super(key: key);
+  const CustomerLookupBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      showDragHandle: false,
       builder: (_) => BlocProvider.value(
         value: context.read<CustomerBloc>(),
         child: const CustomerLookupBottomSheet(),
@@ -42,9 +44,9 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
       Duration(milliseconds: AppConstants.searchDebounceMs),
       () {
         if (value.trim().length >= 10) {
-          context
-              .read<CustomerBloc>()
-              .add(SearchCustomerByPhoneEvent(value.trim()));
+          context.read<CustomerBloc>().add(
+            SearchCustomerByPhoneEvent(value.trim()),
+          );
         }
       },
     );
@@ -101,11 +103,14 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: ColorPalette.appetizingOrange.withOpacity(0.1),
+                    color: ColorPalette.appetizingOrange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.person_search,
-                      color: ColorPalette.appetizingOrange, size: 20),
+                  child: const Icon(
+                    Icons.person_search,
+                    color: ColorPalette.appetizingOrange,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -134,10 +139,14 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                     ],
                     decoration: InputDecoration(
                       hintText: 'Nhập số điện thoại (VD: 0912345678)',
-                      hintStyle:
-                          TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                      prefixIcon: const Icon(Icons.phone,
-                          color: ColorPalette.appetizingOrange),
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.phone,
+                        color: ColorPalette.appetizingOrange,
+                      ),
                       filled: true,
                       fillColor: Colors.grey.shade50,
                       border: OutlineInputBorder(
@@ -147,10 +156,14 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                            color: ColorPalette.appetizingOrange, width: 2),
+                          color: ColorPalette.appetizingOrange,
+                          width: 2,
+                        ),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -163,7 +176,8 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                       backgroundColor: ColorPalette.appetizingOrange,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                     ),
                     child: const Icon(Icons.search),
@@ -185,7 +199,8 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: CircularProgressIndicator(
-                        color: ColorPalette.appetizingOrange),
+                      color: ColorPalette.appetizingOrange,
+                    ),
                   );
                 }
 
@@ -213,13 +228,18 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Column(
                     children: [
-                      Icon(Icons.phone_android,
-                          size: 48, color: Colors.grey.shade300),
+                      Icon(
+                        Icons.phone_android,
+                        size: 48,
+                        color: Colors.grey.shade300,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Nhập số điện thoại để tra cứu thông tin khách hàng',
                         style: TextStyle(
-                            color: Colors.grey.shade500, fontSize: 13),
+                          color: Colors.grey.shade500,
+                          fontSize: 13,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -234,17 +254,15 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
   }
 
   Widget _buildCustomerCard(dynamic customer) {
-    final currencyFormat =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-    final pointsValue =
-        customer.loyaltyPoints * AppConstants.pointsToVndRate;
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final pointsValue = customer.loyaltyPoints * AppConstants.pointsToVndRate;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorPalette.success.withOpacity(0.05),
+        color: ColorPalette.success.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.success.withOpacity(0.3)),
+        border: Border.all(color: ColorPalette.success.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,9 +270,8 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: ColorPalette.success.withOpacity(0.15),
-                child:
-                    const Icon(Icons.person, color: ColorPalette.success),
+                backgroundColor: ColorPalette.success.withValues(alpha: 0.15),
+                child: const Icon(Icons.person, color: ColorPalette.success),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -273,23 +290,26 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                     Text(
                       customer.phone,
                       style: const TextStyle(
-                          color: ColorPalette.textSecondary, fontSize: 13),
+                        color: ColorPalette.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: ColorPalette.amber.withOpacity(0.15),
+                  color: ColorPalette.amber.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star,
-                        color: ColorPalette.amber, size: 16),
+                    const Icon(Icons.star, color: ColorPalette.amber, size: 16),
                     const SizedBox(width: 4),
                     Text(
                       '${customer.loyaltyPoints} điểm',
@@ -308,7 +328,9 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
           Text(
             'Giá trị quy đổi: ${currencyFormat.format(pointsValue)}',
             style: const TextStyle(
-                color: ColorPalette.textSecondary, fontSize: 12),
+              color: ColorPalette.textSecondary,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -316,9 +338,7 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
             height: 48,
             child: ElevatedButton.icon(
               onPressed: () {
-                context.read<CustomerBloc>().add(
-                      SelectCustomerEvent(customer),
-                    );
+                context.read<CustomerBloc>().add(SelectCustomerEvent(customer));
               },
               icon: const Icon(Icons.check_circle_outline, size: 18),
               label: const Text('Chọn khách hàng này'),
@@ -326,7 +346,8 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                 backgroundColor: ColorPalette.success,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 0,
               ),
             ),
@@ -340,9 +361,9 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorPalette.amber.withOpacity(0.05),
+        color: ColorPalette.amber.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.amber.withOpacity(0.3)),
+        border: Border.all(color: ColorPalette.amber.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -351,7 +372,9 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
           Text(
             'Không tìm thấy khách hàng với SĐT "$phone"',
             style: const TextStyle(
-                color: ColorPalette.warmDarkGrey, fontSize: 14),
+              color: ColorPalette.warmDarkGrey,
+              fontSize: 14,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -369,7 +392,8 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                 backgroundColor: ColorPalette.appetizingOrange,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 0,
               ),
             ),

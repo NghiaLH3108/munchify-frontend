@@ -4,6 +4,7 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../staff/presentation/pages/staff_management_screen.dart';
 import '../../../categories/presentation/screens/manage_categories_screen.dart';
+import '../../../suppliers/presentation/screens/manage_suppliers_screen.dart';
 import '../../../products/presentation/screens/product_management_screen.dart';
 import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
@@ -12,8 +13,8 @@ import '../../../combos/presentation/screens/manage_combos_screen.dart';
 import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
+import '../../../promotions/presentation/pages/promotion_management_screen.dart';
 import '../../../../core/services/signalr_service.dart';
-
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
@@ -82,6 +83,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'Danh mục';
       case 'combos':
         return 'Combo sản phẩm';
+      case 'suppliers':
+        return 'Nhà cung cấp';
       case 'inventory':
         return 'Quản lý Kho & Nhập';
       case 'ai_low_stock':
@@ -340,6 +343,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     title: 'Combo sản phẩm',
                   ),
                   _buildSidebarItem(
+                    key: 'suppliers',
+                    icon: Icons.local_shipping_rounded,
+                    title: 'Nhà cung cấp',
+                  ),
+                  _buildSidebarItem(
                     key: 'inventory',
                     icon: Icons.inventory_2_rounded,
                     title: 'Quản lý Kho & Nhập',
@@ -372,9 +380,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'promotions',
                     icon: Icons.campaign_rounded,
                     title: 'Khuyến mãi',
-                    badge: 'Đang chạy: 2',
-                    badgeColor: const Color(0xFF663E00),
-                    badgeBorder: const Color(0xFFFDA625),
                   ),
                   _buildSidebarItem(
                     key: 'staff',
@@ -931,6 +936,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const ManageCategoriesScreen(embedInShell: true);
       case 'units':
         return const ManageUnitsScreen(embedInShell: true);
+      case 'suppliers':
+        return const ManageSuppliersScreen(embedInShell: true);
       case 'staff':
         return const StaffManagementScreen(embedInShell: true);
       case 'combos':
@@ -943,6 +950,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const LowStockScreen(embedInShell: true);
       case 'ai_expiry':
         return const AiExpiryScreen(embedInShell: true);
+      case 'promotions':
+        return const PromotionManagementScreen(embedInShell: true);
       default:
         // Placeholder for other tabs with clean informative card
         return Center(
