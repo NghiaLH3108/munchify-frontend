@@ -8,6 +8,7 @@ abstract class OrderRemoteDataSource {
     String? promotionCode,
     required String paymentMethod,
     int pointsToRedeem = 0,
+    double? cashGiven,
     required List<Map<String, int>> items,
   });
 
@@ -25,6 +26,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     String? promotionCode,
     required String paymentMethod,
     int pointsToRedeem = 0,
+    double? cashGiven,
     required List<Map<String, int>> items,
   }) async {
     final body = <String, dynamic>{
@@ -38,6 +40,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     if (promotionCode != null && promotionCode.isNotEmpty) {
       body['promotionCode'] = promotionCode;
     }
+    if (cashGiven != null) body['cashGiven'] = cashGiven;
 
     final response = await dioClient.dio.post(ApiEndpoints.orders, data: body);
 

@@ -16,6 +16,7 @@ class OrderRepositoryImpl implements OrderRepository {
     String? promotionCode,
     required String paymentMethod,
     int pointsToRedeem = 0,
+    double? cashGiven,
     required List<Map<String, int>> items,
   }) async {
     try {
@@ -24,6 +25,7 @@ class OrderRepositoryImpl implements OrderRepository {
         promotionCode: promotionCode,
         paymentMethod: paymentMethod,
         pointsToRedeem: pointsToRedeem,
+        cashGiven: cashGiven,
         items: items,
       );
       return Right(result);

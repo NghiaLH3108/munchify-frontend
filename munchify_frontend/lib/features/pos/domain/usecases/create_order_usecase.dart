@@ -13,6 +13,7 @@ class CreateOrderUseCase {
     String? promotionCode,
     required String paymentMethod,
     int pointsToRedeem = 0,
+    double? cashGiven,
     required List<Map<String, int>> items,
   }) {
     return repository.createOrder(
@@ -20,6 +21,7 @@ class CreateOrderUseCase {
       promotionCode: promotionCode,
       paymentMethod: paymentMethod,
       pointsToRedeem: pointsToRedeem,
+      cashGiven: cashGiven,
       items: items,
     );
   }
