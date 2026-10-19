@@ -11,6 +11,7 @@ class CreateOrderEvent extends OrderEvent {
   final String? promotionCode;
   final String paymentMethod;
   final int pointsToRedeem;
+  final double? cashGiven;
   final List<Map<String, int>> items;
 
   const CreateOrderEvent({
@@ -18,6 +19,7 @@ class CreateOrderEvent extends OrderEvent {
     this.promotionCode,
     required this.paymentMethod,
     this.pointsToRedeem = 0,
+    this.cashGiven,
     required this.items,
   });
 
@@ -27,6 +29,7 @@ class CreateOrderEvent extends OrderEvent {
         promotionCode,
         paymentMethod,
         pointsToRedeem,
+        cashGiven,
         items,
       ];
 }

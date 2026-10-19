@@ -8,6 +8,7 @@ abstract class OrderRepository {
     String? promotionCode,
     required String paymentMethod,
     int pointsToRedeem = 0,
+    double? cashGiven,
     required List<Map<String, int>> items,
   });
 

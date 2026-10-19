@@ -27,6 +27,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       promotionCode: event.promotionCode,
       paymentMethod: event.paymentMethod,
       pointsToRedeem: event.pointsToRedeem,
+      cashGiven: event.cashGiven,
       items: event.items,
     );
 
