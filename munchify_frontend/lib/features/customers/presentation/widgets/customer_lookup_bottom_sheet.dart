@@ -21,7 +21,6 @@ class CustomerLookupBottomSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      showDragHandle: false,
       builder: (_) => BlocProvider.value(
         value: context.read<CustomerBloc>(),
         child: const CustomerLookupBottomSheet(),

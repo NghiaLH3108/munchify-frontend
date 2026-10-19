@@ -11,12 +11,13 @@ import '../bloc/customer_state.dart';
 class AddCustomerBottomSheet extends StatefulWidget {
   final String? initialPhone;
 
-  const AddCustomerBottomSheet({Key? key, this.initialPhone}) : super(key: key);
+  const AddCustomerBottomSheet({super.key, this.initialPhone});
 
   static Future<void> show(BuildContext context, {String? initialPhone}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: context.read<CustomerBloc>(),
@@ -54,10 +55,12 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
-    context.read<CustomerBloc>().add(CreateCustomerEvent(
-          customerName: _nameController.text.trim(),
-          phone: _phoneController.text.trim(),
-        ));
+    context.read<CustomerBloc>().add(
+      CreateCustomerEvent(
+        customerName: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+      ),
+    );
   }
 
   @override
@@ -79,7 +82,8 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                 backgroundColor: ColorPalette.success,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             );
             Navigator.of(context).pop();
@@ -91,7 +95,8 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                 backgroundColor: ColorPalette.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             );
           }
@@ -120,11 +125,16 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: ColorPalette.appetizingOrange.withOpacity(0.1),
+                        color: ColorPalette.appetizingOrange.withValues(
+                          alpha: 0.1,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.person_add,
-                          color: ColorPalette.appetizingOrange, size: 20),
+                      child: const Icon(
+                        Icons.person_add,
+                        color: ColorPalette.appetizingOrange,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
@@ -148,8 +158,10 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                   decoration: InputDecoration(
                     labelText: 'Họ và tên khách hàng *',
                     hintText: 'VD: Nguyễn Văn A',
-                    prefixIcon: const Icon(Icons.person_outline,
-                        color: ColorPalette.appetizingOrange),
+                    prefixIcon: const Icon(
+                      Icons.person_outline,
+                      color: ColorPalette.appetizingOrange,
+                    ),
                     filled: true,
                     fillColor: Colors.grey.shade50,
                     border: OutlineInputBorder(
@@ -159,7 +171,9 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(
-                          color: ColorPalette.appetizingOrange, width: 2),
+                        color: ColorPalette.appetizingOrange,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -177,8 +191,10 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                   decoration: InputDecoration(
                     labelText: 'Số điện thoại *',
                     hintText: 'VD: 0912345678',
-                    prefixIcon: const Icon(Icons.phone,
-                        color: ColorPalette.appetizingOrange),
+                    prefixIcon: const Icon(
+                      Icons.phone,
+                      color: ColorPalette.appetizingOrange,
+                    ),
                     filled: true,
                     fillColor: Colors.grey.shade50,
                     border: OutlineInputBorder(
@@ -188,7 +204,9 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(
-                          color: ColorPalette.appetizingOrange, width: 2),
+                        color: ColorPalette.appetizingOrange,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -205,23 +223,26 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(Icons.check, size: 20),
                     label: Text(
-                      _isSubmitting
-                          ? 'Đang tạo...'
-                          : 'Thêm & Gắn vào đơn hàng',
+                      _isSubmitting ? 'Đang tạo...' : 'Thêm & Gắn vào đơn hàng',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorPalette.appetizingOrange,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor:
-                          ColorPalette.appetizingOrange.withOpacity(0.5),
+                      disabledBackgroundColor: ColorPalette.appetizingOrange
+                          .withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                     ),
                   ),

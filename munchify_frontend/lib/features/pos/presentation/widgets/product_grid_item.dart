@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-
 class ProductGridItem extends StatelessWidget {
   final String productCode;
   final String productName;
@@ -10,6 +9,7 @@ class ProductGridItem extends StatelessWidget {
   final double price;
   final String imageUrl;
   final VoidCallback? onAddToCart;
+
   /// Callback khi tap vào card (mở detail sheet). Nếu null, sẽ không có tác dụng.
   final VoidCallback? onTapCard;
 
@@ -30,13 +30,15 @@ class ProductGridItem extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     final isOutOfStock = stockQuantity <= 0;
     final isLowStock = !isOutOfStock && stockQuantity <= 5;
-    
+
     return GestureDetector(
       onTap: isOutOfStock
           ? () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Sản phẩm "$productName" hiện đã hết hàng trong kho!'),
+                  content: Text(
+                    'Sản phẩm "$productName" hiện đã hết hàng trong kho!',
+                  ),
                   backgroundColor: const Color(0xFFC62828),
                   duration: const Duration(seconds: 2),
                   behavior: SnackBarBehavior.floating,
@@ -54,7 +56,9 @@ class ProductGridItem extends StatelessWidget {
             border: Border.all(
               color: isOutOfStock
                   ? Colors.red.shade200
-                  : (isLowStock ? Colors.orange.shade200 : Colors.grey.shade200),
+                  : (isLowStock
+                        ? Colors.orange.shade200
+                        : Colors.grey.shade200),
               width: (isOutOfStock || isLowStock) ? 1.2 : 1.0,
             ),
             boxShadow: [
@@ -62,7 +66,7 @@ class ProductGridItem extends StatelessWidget {
                 color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: Column(
@@ -72,11 +76,19 @@ class ProductGridItem extends StatelessWidget {
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
                     child: ColorFiltered(
                       colorFilter: isOutOfStock
-                          ? const ColorFilter.mode(Colors.grey, BlendMode.saturation)
-                          : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+                          ? const ColorFilter.mode(
+                              Colors.grey,
+                              BlendMode.saturation,
+                            )
+                          : const ColorFilter.mode(
+                              Colors.transparent,
+                              BlendMode.multiply,
+                            ),
                       child: Container(
                         height: 105,
                         width: double.infinity,
@@ -86,9 +98,17 @@ class ProductGridItem extends StatelessWidget {
                                 imageUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.fastfood, size: 40, color: Colors.grey),
+                                    const Icon(
+                                      Icons.fastfood,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
                               )
-                            : const Icon(Icons.fastfood, size: 40, color: Colors.grey),
+                            : const Icon(
+                                Icons.fastfood,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
                       ),
                     ),
                   ),
@@ -96,7 +116,10 @@ class ProductGridItem extends StatelessWidget {
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black54,
                         borderRadius: BorderRadius.circular(4),
@@ -115,7 +138,10 @@ class ProductGridItem extends StatelessWidget {
                     top: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(4),
@@ -136,11 +162,16 @@ class ProductGridItem extends StatelessWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.35),
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
                         ),
                         child: Center(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFC62828),
                               borderRadius: BorderRadius.circular(6),
@@ -166,7 +197,7 @@ class ProductGridItem extends StatelessWidget {
                     ),
                 ],
               ),
-              
+
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
@@ -183,8 +214,12 @@ class ProductGridItem extends StatelessWidget {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: isOutOfStock ? Colors.grey.shade600 : Colors.black87,
-                              decoration: isOutOfStock ? TextDecoration.lineThrough : null,
+                              color: isOutOfStock
+                                  ? Colors.grey.shade600
+                                  : Colors.black87,
+                              decoration: isOutOfStock
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -192,16 +227,23 @@ class ProductGridItem extends StatelessWidget {
                           const SizedBox(height: 4),
                           // Stock badge
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: isOutOfStock
                                   ? Colors.red.shade50
-                                  : (isLowStock ? Colors.orange.shade50 : Colors.green.shade50),
+                                  : (isLowStock
+                                        ? Colors.orange.shade50
+                                        : Colors.green.shade50),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: isOutOfStock
                                     ? Colors.red.shade300
-                                    : (isLowStock ? Colors.orange.shade200 : Colors.green.shade200),
+                                    : (isLowStock
+                                          ? Colors.orange.shade200
+                                          : Colors.green.shade200),
                               ),
                             ),
                             child: Row(
@@ -211,24 +253,28 @@ class ProductGridItem extends StatelessWidget {
                                   isOutOfStock
                                       ? Icons.cancel_outlined
                                       : (isLowStock
-                                          ? Icons.warning_amber_rounded
-                                          : Icons.check_circle_outline),
+                                            ? Icons.warning_amber_rounded
+                                            : Icons.check_circle_outline),
                                   size: 11,
                                   color: isOutOfStock
                                       ? Colors.red.shade700
-                                      : (isLowStock ? Colors.orange : Colors.green.shade700),
+                                      : (isLowStock
+                                            ? Colors.orange
+                                            : Colors.green.shade700),
                                 ),
                                 const SizedBox(width: 3),
                                 Text(
                                   isOutOfStock
                                       ? 'Hết hàng (0)'
-                                      : (isLowStock ? 'Sắp hết: $stockQuantity' : 'Còn $stockQuantity'),
+                                      : (isLowStock
+                                            ? 'Sắp hết: $stockQuantity'
+                                            : 'Còn $stockQuantity'),
                                   style: TextStyle(
                                     color: isOutOfStock
                                         ? Colors.red.shade700
                                         : (isLowStock
-                                            ? Colors.orange.shade700
-                                            : Colors.green.shade700),
+                                              ? Colors.orange.shade700
+                                              : Colors.green.shade700),
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -238,7 +284,7 @@ class ProductGridItem extends StatelessWidget {
                           ),
                         ],
                       ),
-                      
+
                       // Price and Add Button
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -247,7 +293,9 @@ class ProductGridItem extends StatelessWidget {
                             child: Text(
                               currencyFormat.format(price),
                               style: TextStyle(
-                                color: isOutOfStock ? Colors.grey : const Color(0xFFC62828),
+                                color: isOutOfStock
+                                    ? Colors.grey
+                                    : const Color(0xFFC62828),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                               ),
@@ -259,20 +307,25 @@ class ProductGridItem extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isOutOfStock
                                   ? Colors.grey.shade300
-                                  : const Color(0xFFBF360C), // Deep Orange/Brown
+                                  : const Color(
+                                      0xFFBF360C,
+                                    ), // Deep Orange/Brown
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: IconButton(
                               icon: Icon(
                                 isOutOfStock ? Icons.block : Icons.add,
-                                color: isOutOfStock ? Colors.grey.shade500 : Colors.white,
+                                color: isOutOfStock
+                                    ? Colors.grey.shade500
+                                    : Colors.white,
                                 size: 18,
                               ),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                              onPressed: isOutOfStock
-                                  ? null
-                                  : onAddToCart,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                              onPressed: isOutOfStock ? null : onAddToCart,
                             ),
                           ),
                         ],
