@@ -47,6 +47,7 @@ dependencies:
   internet_connection_checker_plus: ^3.1.2
   file_picker: ^13.1.0
   signalr_netcore: ^1.4.4
+  flutter_svg: ^2.0.16
 
 dev_dependencies:
   flutter_test:

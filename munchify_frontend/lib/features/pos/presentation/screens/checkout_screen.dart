@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/AppConstants.dart';
@@ -62,7 +64,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
                   Text('Thanh toán thành công!'),
                 ],
@@ -95,7 +101,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               Text(
                 'Quầy thu ngân POS',
-                style: TextStyle(fontSize: 11, color: ColorPalette.textSecondary),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: ColorPalette.textSecondary,
+                ),
               ),
             ],
           ),
@@ -114,7 +123,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: ColorPalette.appetizingOrange.withValues(alpha: 0.15),
+                      color: ColorPalette.appetizingOrange.withValues(
+                        alpha: 0.15,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -144,10 +155,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 final pointsDiscount = customerState is CustomerSelected
                     ? customerState.discountFromPoints.toDouble()
                     : 0.0;
-                final amountAfterVoucher = (cartState.subtotal - cartState.discountAmount)
-                    .clamp(0.0, double.infinity);
-                final effectivePointsDiscount =
-                    pointsDiscount.clamp(0.0, amountAfterVoucher);
+                final amountAfterVoucher =
+                    (cartState.subtotal - cartState.discountAmount).clamp(
+                      0.0,
+                      double.infinity,
+                    );
+                final effectivePointsDiscount = pointsDiscount.clamp(
+                  0.0,
+                  amountAfterVoucher,
+                );
                 final finalTotal = amountAfterVoucher - effectivePointsDiscount;
 
                 return Column(
@@ -201,13 +217,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             // ── 3. Nội dung chi tiết theo phương thức ───────
                             if (_paymentMethod == AppConstants.paymentCash) ...[
                               _buildCashSection(finalTotal, currency),
-                            ] else if (_paymentMethod == AppConstants.paymentQrCode) ...[
+                            ] else if (_paymentMethod ==
+                                AppConstants.paymentQrCode) ...[
                               _buildVietQrSection(finalTotal),
                             ],
 
                             const SizedBox(height: 16),
-
-
                           ],
                         ),
                       ),
@@ -261,11 +276,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             children: const [
               Text(
                 'Tiền khách đưa',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E293B)),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Color(0xFF1E293B),
+                ),
               ),
               Row(
                 children: [
-                  Icon(Icons.flash_on_rounded, size: 15, color: ColorPalette.appetizingOrange),
+                  Icon(
+                    Icons.flash_on_rounded,
+                    size: 15,
+                    color: ColorPalette.appetizingOrange,
+                  ),
                   SizedBox(width: 3),
                   Text(
                     'Gợi ý tiền chẵn nhanh',
@@ -297,14 +320,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(10),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
                   decoration: BoxDecoration(
                     gradient: _cashGiven == finalTotal
                         ? const LinearGradient(
-                            colors: [ColorPalette.appetizingOrange, Color(0xFFE65100)],
+                            colors: [
+                              ColorPalette.appetizingOrange,
+                              Color(0xFFE65100),
+                            ],
                           )
                         : null,
-                    color: _cashGiven == finalTotal ? null : const Color(0xFFFFF7ED),
+                    color: _cashGiven == finalTotal
+                        ? null
+                        : const Color(0xFFFFF7ED),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: ColorPalette.appetizingOrange,
@@ -313,10 +344,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     boxShadow: _cashGiven == finalTotal
                         ? [
                             BoxShadow(
-                              color: ColorPalette.appetizingOrange.withValues(alpha: 0.3),
+                              color: ColorPalette.appetizingOrange.withValues(
+                                alpha: 0.3,
+                              ),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
-                            )
+                            ),
                           ]
                         : [],
                   ),
@@ -326,7 +359,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       Icon(
                         Icons.check_circle_rounded,
                         size: 15,
-                        color: _cashGiven == finalTotal ? Colors.white : ColorPalette.appetizingOrange,
+                        color: _cashGiven == finalTotal
+                            ? Colors.white
+                            : ColorPalette.appetizingOrange,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -334,7 +369,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.bold,
-                          color: _cashGiven == finalTotal ? Colors.white : ColorPalette.appetizingOrange,
+                          color: _cashGiven == finalTotal
+                              ? Colors.white
+                              : ColorPalette.appetizingOrange,
                         ),
                       ),
                     ],
@@ -355,12 +392,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   borderRadius: BorderRadius.circular(10),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 9,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                      color: isSelected
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isSelected ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                        color: isSelected
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFE2E8F0),
                         width: 1,
                       ),
                       boxShadow: isSelected
@@ -369,7 +413,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 color: Colors.black.withValues(alpha: 0.15),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
-                              )
+                              ),
                             ]
                           : [],
                     ),
@@ -377,8 +421,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       currency.format(amount),
                       style: TextStyle(
                         fontSize: 12.5,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                        color: isSelected ? Colors.white : const Color(0xFF475569),
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w600,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF475569),
                       ),
                     ),
                   ),
@@ -393,10 +441,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             controller: _cashController,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
             decoration: InputDecoration(
               hintText: 'Nhập số tiền khác...',
-              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 15, fontWeight: FontWeight.normal),
+              hintStyle: const TextStyle(
+                color: Color(0xFF94A3B8),
+                fontSize: 15,
+                fontWeight: FontWeight.normal,
+              ),
               prefixIcon: Container(
                 margin: const EdgeInsets.all(8),
                 padding: const EdgeInsets.all(6),
@@ -411,9 +467,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               suffixText: 'VNĐ',
-              suffixStyle: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF64748B), fontSize: 13),
+              suffixStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF64748B),
+                fontSize: 13,
+              ),
               suffixIcon: IconButton(
-                icon: const Icon(Icons.cancel_rounded, size: 20, color: Color(0xFF94A3B8)),
+                icon: const Icon(
+                  Icons.cancel_rounded,
+                  size: 20,
+                  color: Color(0xFF94A3B8),
+                ),
                 onPressed: () {
                   setState(() {
                     _cashGiven = 0;
@@ -433,11 +497,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: ColorPalette.appetizingOrange, width: 2),
+                borderSide: const BorderSide(
+                  color: ColorPalette.appetizingOrange,
+                  width: 2,
+                ),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
-            onChanged: (v) => setState(() => _cashGiven = double.tryParse(v) ?? 0),
+            onChanged: (v) =>
+                setState(() => _cashGiven = double.tryParse(v) ?? 0),
           ),
           const SizedBox(height: 14),
 
@@ -459,12 +530,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isEnough ? const Color(0xFF86EFAC) : const Color(0xFFFCA5A5),
+                color: isEnough
+                    ? const Color(0xFF86EFAC)
+                    : const Color(0xFFFCA5A5),
                 width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (isEnough ? Colors.green : Colors.red).withValues(alpha: 0.05),
+                  color: (isEnough ? Colors.green : Colors.red).withValues(
+                    alpha: 0.05,
+                  ),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -478,32 +553,50 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: (isEnough ? const Color(0xFF16A34A) : const Color(0xFFDC2626)).withValues(alpha: 0.15),
+                        color:
+                            (isEnough
+                                    ? const Color(0xFF16A34A)
+                                    : const Color(0xFFDC2626))
+                                .withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        isEnough ? Icons.check_rounded : Icons.info_outline_rounded,
-                        color: isEnough ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                        isEnough
+                            ? Icons.check_rounded
+                            : Icons.info_outline_rounded,
+                        color: isEnough
+                            ? const Color(0xFF15803D)
+                            : const Color(0xFFB91C1C),
                         size: 18,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      isEnough ? 'Tiền thối lại cho khách:' : 'Khách còn thiếu:',
+                      isEnough
+                          ? 'Tiền thối lại cho khách:'
+                          : 'Khách còn thiếu:',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13.5,
-                        color: isEnough ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                        color: isEnough
+                            ? const Color(0xFF166534)
+                            : const Color(0xFF991B1B),
                       ),
                     ),
                   ],
                 ),
                 Text(
-                  currency.format(isEnough ? _getChange(finalTotal) : (finalTotal - _cashGiven)),
+                  currency.format(
+                    isEnough
+                        ? _getChange(finalTotal)
+                        : (finalTotal - _cashGiven),
+                  ),
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 18,
-                    color: isEnough ? const Color(0xFF15803D) : const Color(0xFFDC2626),
+                    color: isEnough
+                        ? const Color(0xFF15803D)
+                        : const Color(0xFFDC2626),
                     letterSpacing: -0.2,
                   ),
                 ),
@@ -535,7 +628,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
-              Icon(Icons.qr_code_2_rounded, color: ColorPalette.qrCodeColor, size: 20),
+              Icon(
+                Icons.qr_code_2_rounded,
+                color: ColorPalette.qrCodeColor,
+                size: 20,
+              ),
               SizedBox(width: 6),
               Text(
                 'Quét mã VietQR chuyển khoản nhanh',
@@ -558,28 +655,51 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                qrImageUrl,
-                width: 200,
-                height: 200,
-                fit: BoxFit.contain,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return const SizedBox(
-                    width: 200,
-                    height: 200,
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 200,
-                  height: 200,
-                  color: Colors.grey.shade100,
-                  child: const Center(
-                    child: Text('Không tải được mã QR', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ),
-                ),
-              ),
+              // Flutter Web nhận SVG từ VietQR API (do CORS), native nhận PNG.
+              child: kIsWeb
+                  ? SvgPicture.network(
+                      qrImageUrl,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.contain,
+                      placeholderBuilder: (_) => const SizedBox(
+                        width: 200,
+                        height: 200,
+                        child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        ),
+                      ),
+                    )
+                  : Image.network(
+                      qrImageUrl,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return const SizedBox(
+                          width: 200,
+                          height: 200,
+                          child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        debugPrint('QR Load Error: $error\nStack: $stackTrace');
+                        return Container(
+                          width: 200,
+                          height: 200,
+                          color: Colors.grey.shade100,
+                          child: const Center(
+                            child: Text(
+                              'Không tải được mã QR',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ),
           const SizedBox(height: 14),
@@ -638,24 +758,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         SizedBox(height: 1),
                         Text(
                           'Quét QR trên app ngân hàng / ví điện tử',
-                          style: TextStyle(fontSize: 11, color: Color(0xFF15803D)),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF15803D),
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
-                    icon: const Icon(Icons.flash_on_rounded, size: 15, color: Colors.white),
+                    icon: const Icon(
+                      Icons.flash_on_rounded,
+                      size: 15,
+                      color: Colors.white,
+                    ),
                     label: const Text(
                       'Khách đã CK',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF16A34A),
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     onPressed: () {
                       setState(() => _isQrPaid = true);
@@ -663,7 +798,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         SnackBar(
                           content: Row(
                             children: const [
-                              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                               SizedBox(width: 10),
                               Text(
                                 'Ghi nhận chuyển khoản thành công!',
@@ -674,7 +813,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           backgroundColor: const Color(0xFF16A34A),
                           duration: const Duration(seconds: 2),
                           behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       );
                     },
@@ -706,7 +847,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       color: Color(0xFF16A34A),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check_rounded, color: Colors.white, size: 16),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -724,7 +869,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         SizedBox(height: 2),
                         Text(
                           'Khách đã thanh toán đủ • Sẵn sàng xác nhận đơn',
-                          style: TextStyle(fontSize: 11, color: Color(0xFF166534)),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF166534),
+                          ),
                         ),
                       ],
                     ),
@@ -774,7 +922,7 @@ class _OrderSummaryCard extends StatelessWidget {
             color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 14,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -797,10 +945,16 @@ class _OrderSummaryCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: ColorPalette.appetizingOrange.withValues(alpha: 0.15),
+                          color: ColorPalette.appetizingOrange.withValues(
+                            alpha: 0.15,
+                          ),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.person_rounded, size: 18, color: ColorPalette.appetizingOrange),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          size: 18,
+                          color: ColorPalette.appetizingOrange,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Column(
@@ -808,18 +962,28 @@ class _OrderSummaryCard extends StatelessWidget {
                         children: [
                           Text(
                             '${customer.customerName} • ${customer.phone}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Color(0xFF1E293B)),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.5,
+                              color: Color(0xFF1E293B),
+                            ),
                           ),
                           const Text(
                             'Khách hàng thân thiết',
-                            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF64748B),
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: ColorPalette.appetizingOrange,
                       borderRadius: BorderRadius.circular(20),
@@ -858,7 +1022,11 @@ class _OrderSummaryCard extends StatelessWidget {
                   ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFF1F5F9),
+                  ),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -869,18 +1037,27 @@ class _OrderSummaryCard extends StatelessWidget {
                       children: [
                         const Text(
                           'Tổng thanh toán',
-                          style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF334155),
+                          ),
                         ),
                         const SizedBox(height: 4),
                         InkWell(
                           onTap: () => _showItemsPreview(context),
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFF7ED),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFFFEDD5)),
+                              border: Border.all(
+                                color: const Color(0xFFFFEDD5),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -894,7 +1071,11 @@ class _OrderSummaryCard extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(Icons.unfold_more_rounded, size: 14, color: ColorPalette.appetizingOrange),
+                                const Icon(
+                                  Icons.unfold_more_rounded,
+                                  size: 14,
+                                  color: ColorPalette.appetizingOrange,
+                                ),
                               ],
                             ),
                           ),
@@ -951,11 +1132,17 @@ class _OrderSummaryCard extends StatelessWidget {
                   children: [
                     const Text(
                       'Danh sách món thanh toán',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     Text(
                       '${cartState.itemCount} món',
-                      style: const TextStyle(fontWeight: FontWeight.w600, color: ColorPalette.appetizingOrange),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: ColorPalette.appetizingOrange,
+                      ),
                     ),
                   ],
                 ),
@@ -990,12 +1177,18 @@ class _OrderSummaryCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               item.productName,
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5,
+                              ),
                             ),
                           ),
                           Text(
                             currency.format(item.totalPrice),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       );
@@ -1025,7 +1218,13 @@ class _Row extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: ColorPalette.textSecondary)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: ColorPalette.textSecondary,
+            ),
+          ),
           Text(
             value,
             style: TextStyle(
@@ -1098,7 +1297,7 @@ class _ConfirmButton extends StatelessWidget {
                 color: Colors.black.withOpacity(0.04),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
-              )
+              ),
             ],
           ),
           child: SafeArea(
@@ -1107,27 +1306,38 @@ class _ConfirmButton extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: (_canConfirm && !isLoading) ? () => _confirm(context) : null,
+                onPressed: (_canConfirm && !isLoading)
+                    ? () => _confirm(context)
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ColorPalette.appetizingOrange,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: Colors.grey.shade300,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   elevation: 0,
                 ),
                 child: isLoading
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            _canConfirm ? Icons.check_circle : Icons.hourglass_top_rounded,
+                            _canConfirm
+                                ? Icons.check_circle
+                                : Icons.hourglass_top_rounded,
                             size: 20,
-                            color: _canConfirm ? Colors.white : Colors.grey.shade600,
+                            color: _canConfirm
+                                ? Colors.white
+                                : Colors.grey.shade600,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -1135,7 +1345,9 @@ class _ConfirmButton extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 15.5,
                               fontWeight: FontWeight.bold,
-                              color: _canConfirm ? Colors.white : Colors.grey.shade600,
+                              color: _canConfirm
+                                  ? Colors.white
+                                  : Colors.grey.shade600,
                             ),
                           ),
                         ],
@@ -1156,22 +1368,25 @@ class _ConfirmButton extends StatelessWidget {
         ? (customerState as CustomerSelected).pointsToRedeem
         : 0;
 
-    final amountAfterVoucher =
-        (cartState.subtotal - cartState.discountAmount).clamp(0.0, double.infinity);
-    final maxPointsNeeded =
-        (amountAfterVoucher / AppConstants.pointsToVndRate).ceil();
-    final actualPointsToSend =
-        pointsToRedeem > maxPointsNeeded ? maxPointsNeeded : pointsToRedeem;
+    final amountAfterVoucher = (cartState.subtotal - cartState.discountAmount)
+        .clamp(0.0, double.infinity);
+    final maxPointsNeeded = (amountAfterVoucher / AppConstants.pointsToVndRate)
+        .ceil();
+    final actualPointsToSend = pointsToRedeem > maxPointsNeeded
+        ? maxPointsNeeded
+        : pointsToRedeem;
 
-    context.read<OrderBloc>().add(CreateOrderEvent(
-          customerId: customer?.customerId,
-          promotionCode: cartState.appliedPromotion?.promotionCode,
-          paymentMethod: paymentMethod,
-          pointsToRedeem: actualPointsToSend,
-          cashGiven: paymentMethod == AppConstants.paymentCash ? cashGiven : null,
-          items: cartState.items
-              .map((i) => {'productId': i.productId, 'quantity': i.quantity})
-              .toList(),
-        ));
+    context.read<OrderBloc>().add(
+      CreateOrderEvent(
+        customerId: customer?.customerId,
+        promotionCode: cartState.appliedPromotion?.promotionCode,
+        paymentMethod: paymentMethod,
+        pointsToRedeem: actualPointsToSend,
+        cashGiven: paymentMethod == AppConstants.paymentCash ? cashGiven : null,
+        items: cartState.items
+            .map((i) => {'productId': i.productId, 'quantity': i.quantity})
+            .toList(),
+      ),
+    );
   }
 }
