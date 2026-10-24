@@ -3,6 +3,18 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
+// Auth
+import 'features/auth/data/datasources/auth_local_data_source.dart';
+import 'features/auth/data/datasources/auth_remote_data_source.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/forgot_password_usecase.dart';
+import 'features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/domain/usecases/logout_usecase.dart';
+import 'features/auth/domain/usecases/reset_password_usecase.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+
 import 'features/customers/data/datasources/customer_remote_data_source.dart';
 import 'features/customers/data/repositories/customer_repository_impl.dart';
 import 'features/customers/domain/repositories/customer_repository.dart';
@@ -135,6 +147,17 @@ Future<void> init() async {
   /// ==============================
   /// BLoC
   /// ==============================
+  sl.registerFactory(
+    () => AuthBloc(
+      loginUseCase: sl(),
+      logoutUseCase: sl(),
+      getCurrentUserUseCase: sl(),
+      forgotPasswordUseCase: sl(),
+      resetPasswordUseCase: sl(),
+      localDataSource: sl(),
+    ),
+  );
+
   sl.registerFactory(
     () => PromotionAdminBloc(
       getPromotionsUseCase: sl(),
@@ -286,6 +309,13 @@ Future<void> init() async {
   /// ==============================
   /// Use Cases
   /// ==============================
+  // Auth
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
+  sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
+
   // AI Expiry
   sl.registerLazySingleton(() => GetPendingRecordsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiExpirySummaryUseCase(sl()));
@@ -371,6 +401,13 @@ Future<void> init() async {
   /// ==============================
   /// Repository
   /// ==============================
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+    ),
+  );
+
   sl.registerLazySingleton<PromotionRepository>(
     () => PromotionRepositoryImpl(remoteDataSource: sl()),
   );
@@ -436,6 +473,14 @@ Future<void> init() async {
   /// ==============================
   /// Data Sources
   /// ==============================
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(secureStorage: sl()),
+  );
+
   sl.registerLazySingleton<PromotionRemoteDataSource>(
     () => PromotionRemoteDataSourceImpl(dioClient: sl()),
   );
