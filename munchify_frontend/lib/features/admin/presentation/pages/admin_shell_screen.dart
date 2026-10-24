@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../auth/presentation/screens/login_screen.dart';
 import '../../../staff/presentation/pages/staff_management_screen.dart';
 import '../../../categories/presentation/screens/manage_categories_screen.dart';
 import '../../../suppliers/presentation/screens/manage_suppliers_screen.dart';
@@ -14,6 +19,7 @@ import '../../../customers/presentation/screens/admin_customer_management_screen
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
 import '../../../promotions/presentation/pages/promotion_management_screen.dart';
+import '../../../main/presentation/screens/main_app_screen.dart';
 import '../../../../core/services/signalr_service.dart';
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
@@ -28,8 +34,60 @@ class AdminShellScreen extends StatefulWidget {
 
 class _AdminShellScreenState extends State<AdminShellScreen> {
   late String _currentTab;
-  String _selectedDateRange = 'today';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  void _showLogoutConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: ColorPalette.error),
+            SizedBox(width: 8),
+            Text(
+              'Xác nhận đăng xuất',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi trang Quản trị không?',
+          style: TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Hủy', style: TextStyle(color: ColorPalette.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<AuthBloc>().add(const LogoutRequestedEvent());
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorPalette.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getInitials(String fullName) {
+    final words = fullName.trim().split(' ').where((w) => w.isNotEmpty).toList();
+    if (words.isEmpty) return 'HM';
+    if (words.length == 1) return words[0].substring(0, words[0].length >= 2 ? 2 : 1).toUpperCase();
+    return '${words.first[0]}${words.last[0]}'.toUpperCase();
+  }
 
   @override
   void initState() {
@@ -283,12 +341,10 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     height: 44,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Chức năng Bán hàng tại quầy (POS) sẵn sàng mở.',
-                            ),
-                            duration: Duration(seconds: 2),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MainAppScreen(),
                           ),
                         );
                       },
@@ -616,7 +672,7 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
             ),
             const SizedBox(width: 8),
           ],
-          // Left Cluster: Breadcrumbs & Global Search
+          // Left Cluster: Breadcrumbs
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -647,278 +703,206 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
               ),
             ],
           ),
-          const SizedBox(width: 20),
-          // Global Search Bar
-          if (isDesktop)
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 220),
-              child: Container(
-                height: 38,
-                decoration: BoxDecoration(
-                  color: ColorPalette.webBgAdmin.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: ColorPalette.borderSubtle),
-                ),
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(
-                        Icons.search_rounded,
-                        size: 18,
-                        color: ColorPalette.textMuted,
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        style: AppTypography.inter(
-                          fontSize: 12,
-                          color: ColorPalette.onSurfaceDark,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Tìm nhanh... (Ctrl+K)',
-                          hintStyle: AppTypography.inter(
-                            fontSize: 12,
-                            color: ColorPalette.textMuted,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.only(bottom: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           const Spacer(),
-          // Right Cluster: Outlet Selector, Date Range, Export, Notifications, Profile
-          Flexible(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              reverse: true,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          // Right Cluster: Notifications & Profile
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Notification Bell with Red Badge
+              Stack(
                 children: [
-                  if (isDesktop) ...[
-                    // Outlet Chip
-                    Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.surfaceWhite,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: ColorPalette.borderSubtle),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.apartment_rounded,
-                            size: 16,
-                            color: ColorPalette.primaryContainer,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Tất cả chi nhánh',
-                            style: AppTypography.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: ColorPalette.onSurfaceDark,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 16,
-                            color: ColorPalette.textMuted,
-                          ),
-                        ],
-                      ),
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      size: 22,
+                      color: ColorPalette.textMuted,
                     ),
-                    const SizedBox(width: 8),
-                    // Date Range Selector Pill
-                    Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.surfaceWhite,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: ColorPalette.borderSubtle),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_rounded,
-                            size: 13,
-                            color: ColorPalette.secondary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '21/09/2026',
-                            style: AppTypography.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: ColorPalette.onSurfaceDark,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            width: 1,
-                            height: 14,
-                            color: ColorPalette.borderSubtle,
-                          ),
-                          const SizedBox(width: 4),
-                          _buildDateSubPill('today', 'Hôm nay'),
-                          _buildDateSubPill('7days', '7 ngày'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Export CTA
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.ios_share_rounded,
-                        size: 14,
-                        color: ColorPalette.tertiary,
-                      ),
-                      label: const Text('Xuất Excel'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: ColorPalette.onSurfaceDark,
-                        side: const BorderSide(
-                          color: ColorPalette.borderSubtle,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        textStyle: AppTypography.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 1,
-                      height: 20,
-                      color: ColorPalette.borderSubtle,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                  // Notification Bell with Red Badge
-                  Stack(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.notifications_outlined,
-                          size: 22,
-                          color: ColorPalette.textMuted,
-                        ),
-                        tooltip: 'Thông báo',
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(
-                            color: ColorPalette.dangerCrimson,
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: const Text(
-                            '2',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    tooltip: 'Thông báo',
                   ),
-                  const SizedBox(width: 6),
-                  // Admin Profile Avatar & Name
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 17,
-                        backgroundColor: ColorPalette.surfaceContainerHigh,
-                        child: Text(
-                          'HM',
-                          style: AppTypography.plusJakarta(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: ColorPalette.primaryContainer,
-                          ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: ColorPalette.dangerCrimson,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        '2',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
                       ),
-                      if (isDesktop) ...[
-                        const SizedBox(width: 8),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              // Admin Profile Avatar & Name with Logout Menu
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  String displayName = 'Hoàng Minh';
+                  String initials = 'HM';
+
+                  if (state is Authenticated) {
+                    displayName = state.user.fullName.isNotEmpty
+                        ? state.user.fullName
+                        : state.user.username;
+                    initials = _getInitials(displayName);
+                  }
+
+                  return PopupMenuButton<String>(
+                    tooltip: 'Tài khoản quản trị',
+                    offset: const Offset(0, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'pos') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MainAppScreen(),
+                          ),
+                        );
+                      } else if (value == 'logout') {
+                        _showLogoutConfirmDialog(context);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        enabled: false,
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hoàng Minh',
-                              style: AppTypography.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                              displayName,
+                              style: const TextStyle(
                                 color: ColorPalette.onSurfaceDark,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
                               ),
                             ),
-                            Text(
+                            const SizedBox(height: 2),
+                            const Text(
                               'Quản trị viên (Admin)',
-                              style: AppTypography.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
+                              style: TextStyle(
                                 color: ColorPalette.primaryContainer,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                      ],
+                      ),
+                      const PopupMenuDivider(),
+                      const PopupMenuItem<String>(
+                        value: 'pos',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.storefront_rounded,
+                              color: ColorPalette.onSurfaceDark,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Đến Quầy bán hàng (POS)',
+                              style: TextStyle(
+                                color: ColorPalette.onSurfaceDark,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuDivider(),
+                      const PopupMenuItem<String>(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.logout_rounded,
+                              color: ColorPalette.error,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Đăng xuất tài khoản',
+                              style: TextStyle(
+                                color: ColorPalette.error,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                  ),
-                ],
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 17,
+                            backgroundColor: ColorPalette.surfaceContainerHigh,
+                            child: Text(
+                              initials,
+                              style: AppTypography.plusJakarta(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: ColorPalette.primaryContainer,
+                              ),
+                            ),
+                          ),
+                          if (isDesktop) ...[
+                            const SizedBox(width: 8),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayName,
+                                  style: AppTypography.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: ColorPalette.onSurfaceDark,
+                                  ),
+                                ),
+                                Text(
+                                  'Quản trị viên (Admin)',
+                                  style: AppTypography.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: ColorPalette.primaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 16,
+                              color: ColorPalette.textMuted,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
+            ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDateSubPill(String key, String label) {
-    final isSelected = _selectedDateRange == key;
-    return InkWell(
-      onTap: () => setState(() => _selectedDateRange = key),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: isSelected ? ColorPalette.primaryFixed : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.inter(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? ColorPalette.primaryContainer
-                : ColorPalette.textMuted,
-          ),
-        ),
       ),
     );
   }
@@ -995,16 +979,37 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () => _onTabSelected('staff'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorPalette.primaryContainer,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _onTabSelected('dashboard'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorPalette.primaryContainer,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Quay lại Dashboard'),
                     ),
-                  ),
-                  child: const Text('Quay lại Quản lý Nhân viên'),
+                    OutlinedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MainAppScreen(),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Đến Quầy bán hàng (POS)'),
+                    ),
+                  ],
                 ),
               ],
             ),
