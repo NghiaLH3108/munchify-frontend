@@ -25,6 +25,13 @@ import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 import 'features/customers/presentation/bloc/customer_bloc.dart';
 import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
 
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/admin/presentation/pages/admin_shell_screen.dart';
+import 'core/theme/ColorPalette.dart';
+
 import 'core/services/signalr_service.dart';
 import 'injection_container.dart' as di;
 
@@ -46,6 +53,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<AuthBloc>(
+          create: (_) => di.sl<AuthBloc>()..add(const CheckAuthStatusEvent()),
+        ),
         BlocProvider<CategoryBloc>(create: (_) => di.sl<CategoryBloc>()),
         BlocProvider<SupplierBloc>(create: (_) => di.sl<SupplierBloc>()),
         BlocProvider<StaffBloc>(create: (_) => di.sl<StaffBloc>()),
@@ -73,8 +83,44 @@ class MyApp extends StatelessWidget {
         title: 'Munchify POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const MainAppScreen(),
+        home: const AuthGate(),
       ),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      buildWhen: (prev, curr) =>
+          curr is AuthLoading ||
+          curr is Authenticated ||
+          curr is Unauthenticated ||
+          curr is AuthFailureState,
+      builder: (context, state) {
+        if (state is Authenticated) {
+          if (state.user.isAdmin) {
+            return const AdminShellScreen(initialTab: 'dashboard');
+          }
+          return const MainAppScreen();
+        }
+
+        if (state is AuthLoading) {
+          return const Scaffold(
+            backgroundColor: ColorPalette.background,
+            body: Center(
+              child: CircularProgressIndicator(
+                color: ColorPalette.appetizingOrange,
+              ),
+            ),
+          );
+        }
+
+        return const LoginScreen();
+      },
     );
   }
 }

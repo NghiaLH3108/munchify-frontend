@@ -17,7 +17,7 @@ class StaffRepositoryImpl implements StaffRepository {
       final result = await remoteDataSource.getStaffList(role: role, isActive: isActive, searchKeyword: searchKeyword, page: page, pageSize: pageSize);
       return Right(result);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Server error'));
+      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra lại dịch vụ.'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -29,7 +29,7 @@ class StaffRepositoryImpl implements StaffRepository {
       final result = await remoteDataSource.createStaff(staffData);
       return Right(result);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Server error'));
+      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra lại dịch vụ.'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -41,7 +41,7 @@ class StaffRepositoryImpl implements StaffRepository {
       final result = await remoteDataSource.updateStaff(id, staffData);
       return Right(result);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Server error'));
+      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra lại dịch vụ.'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -53,7 +53,7 @@ class StaffRepositoryImpl implements StaffRepository {
       final result = await remoteDataSource.toggleStaffStatus(id);
       return Right(result);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Server error'));
+      return Left(ServerFailure(message: e.response?.data['message']?.toString() ?? e.message ?? 'Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra lại dịch vụ.'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
