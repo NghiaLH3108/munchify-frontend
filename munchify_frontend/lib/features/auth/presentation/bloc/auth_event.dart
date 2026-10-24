@@ -31,6 +31,32 @@ class LogoutRequestedEvent extends AuthEvent {
   const LogoutRequestedEvent();
 }
 
+/// Requests password reset OTP sent to specified email address.
+class ForgotPasswordEvent extends AuthEvent {
+  final String email;
+
+  const ForgotPasswordEvent({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
+/// Submits OTP and new password to complete password reset.
+class ResetPasswordEvent extends AuthEvent {
+  final String email;
+  final String otp;
+  final String newPassword;
+
+  const ResetPasswordEvent({
+    required this.email,
+    required this.otp,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object?> get props => [email, otp, newPassword];
+}
+
 /// Resets transient state flags (e.g. after showing error toast or navigating).
 class ResetAuthStatusEvent extends AuthEvent {
   const ResetAuthStatusEvent();

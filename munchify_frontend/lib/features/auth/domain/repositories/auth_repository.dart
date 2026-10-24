@@ -18,5 +18,14 @@ abstract class AuthRepository {
 
   /// Logs out current user and wipes stored tokens & session info.
   Future<Either<Failure, void>> logout();
-}
 
+  /// Requests password reset OTP sent to specified email.
+  Future<Either<Failure, String>> forgotPassword(String email);
+
+  /// Resets password using verification OTP and new password.
+  Future<Either<Failure, String>> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  });
+}

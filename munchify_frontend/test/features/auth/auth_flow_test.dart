@@ -7,9 +7,11 @@ import 'package:munchify_frontend/features/auth/data/models/user_model.dart';
 import 'package:munchify_frontend/features/auth/domain/entities/auth_result.dart';
 import 'package:munchify_frontend/features/auth/domain/entities/user_entity.dart';
 import 'package:munchify_frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:munchify_frontend/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:munchify_frontend/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:munchify_frontend/features/auth/domain/usecases/login_usecase.dart';
 import 'package:munchify_frontend/features/auth/domain/usecases/logout_usecase.dart';
+import 'package:munchify_frontend/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:munchify_frontend/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:munchify_frontend/features/auth/presentation/bloc/auth_event.dart';
 import 'package:munchify_frontend/features/auth/presentation/bloc/auth_state.dart';
@@ -61,9 +63,15 @@ class FakeAuthRepository implements AuthRepository {
   Either<Failure, AuthResult>? loginResult;
   Either<Failure, UserEntity>? getCurrentUserResult;
   Either<Failure, void>? logoutResult;
+  Either<Failure, String>? forgotPasswordResult;
+  Either<Failure, String>? resetPasswordResult;
 
   String? lastLoginUser;
   String? lastLoginPass;
+  String? lastForgotEmail;
+  String? lastResetEmail;
+  String? lastResetOtp;
+  String? lastResetNewPass;
 
   @override
   Future<Either<Failure, AuthResult>> login({
@@ -85,6 +93,26 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     return logoutResult ?? const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, String>> forgotPassword(String email) async {
+    lastForgotEmail = email;
+    return forgotPasswordResult ??
+        const Right('Mã xác thực OTP đã được gửi tới email của bạn.');
+  }
+
+  @override
+  Future<Either<Failure, String>> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    lastResetEmail = email;
+    lastResetOtp = otp;
+    lastResetNewPass = newPassword;
+    return resetPasswordResult ??
+        const Right('Đặt lại mật khẩu thành công.');
   }
 }
 
@@ -323,6 +351,32 @@ void main() {
         (user) => expect(user.username, 'admin'),
       );
     });
+
+    test('ForgotPasswordUseCase delegates email parameter to repository', () async {
+      repository.forgotPasswordResult = const Right('OTP đã gửi');
+      final useCase = ForgotPasswordUseCase(repository);
+
+      final result = await useCase('admin@munchify.vn');
+
+      expect(result.isRight(), isTrue);
+      expect(repository.lastForgotEmail, 'admin@munchify.vn');
+    });
+
+    test('ResetPasswordUseCase delegates email, otp, newPassword to repository', () async {
+      repository.resetPasswordResult = const Right('Thành công');
+      final useCase = ResetPasswordUseCase(repository);
+
+      final result = await useCase(
+        email: 'admin@munchify.vn',
+        otp: '123456',
+        newPassword: 'NewPassword@2026',
+      );
+
+      expect(result.isRight(), isTrue);
+      expect(repository.lastResetEmail, 'admin@munchify.vn');
+      expect(repository.lastResetOtp, '123456');
+      expect(repository.lastResetNewPass, 'NewPassword@2026');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -334,6 +388,8 @@ void main() {
     late LoginUseCase loginUseCase;
     late LogoutUseCase logoutUseCase;
     late GetCurrentUserUseCase getCurrentUserUseCase;
+    late ForgotPasswordUseCase forgotPasswordUseCase;
+    late ResetPasswordUseCase resetPasswordUseCase;
     late AuthBloc authBloc;
 
     setUp(() {
@@ -342,11 +398,15 @@ void main() {
       loginUseCase = LoginUseCase(repository);
       logoutUseCase = LogoutUseCase(repository);
       getCurrentUserUseCase = GetCurrentUserUseCase(repository);
+      forgotPasswordUseCase = ForgotPasswordUseCase(repository);
+      resetPasswordUseCase = ResetPasswordUseCase(repository);
 
       authBloc = AuthBloc(
         loginUseCase: loginUseCase,
         logoutUseCase: logoutUseCase,
         getCurrentUserUseCase: getCurrentUserUseCase,
+        forgotPasswordUseCase: forgotPasswordUseCase,
+        resetPasswordUseCase: resetPasswordUseCase,
         localDataSource: localDataSource,
       );
     });
@@ -471,6 +531,73 @@ void main() {
 
         expectLater(authBloc.stream, emitsInOrder(expected));
         authBloc.add(const LogoutRequestedEvent());
+      });
+    });
+
+    group('ForgotPasswordEvent', () {
+      test('emits [ForgotPasswordLoading, ForgotPasswordSuccess] on success', () async {
+        repository.forgotPasswordResult = const Right('OTP đã được gửi');
+
+        final expected = [
+          const ForgotPasswordLoading(),
+          const ForgotPasswordSuccess(
+            message: 'OTP đã được gửi',
+            email: 'admin@munchify.vn',
+          ),
+        ];
+
+        expectLater(authBloc.stream, emitsInOrder(expected));
+        authBloc.add(const ForgotPasswordEvent(email: 'admin@munchify.vn'));
+      });
+
+      test('emits [ForgotPasswordLoading, ForgotPasswordFailure] when email not found', () async {
+        repository.forgotPasswordResult = const Left(
+          ServerFailure(message: 'Email không tồn tại trong hệ thống'),
+        );
+
+        final expected = [
+          const ForgotPasswordLoading(),
+          const ForgotPasswordFailure('Email không tồn tại trong hệ thống'),
+        ];
+
+        expectLater(authBloc.stream, emitsInOrder(expected));
+        authBloc.add(const ForgotPasswordEvent(email: 'unknown@munchify.vn'));
+      });
+    });
+
+    group('ResetPasswordEvent', () {
+      test('emits [ResetPasswordLoading, ResetPasswordSuccess] on valid OTP and reset', () async {
+        repository.resetPasswordResult = const Right('Đặt lại mật khẩu thành công.');
+
+        final expected = [
+          const ResetPasswordLoading(),
+          const ResetPasswordSuccess('Đặt lại mật khẩu thành công.'),
+        ];
+
+        expectLater(authBloc.stream, emitsInOrder(expected));
+        authBloc.add(const ResetPasswordEvent(
+          email: 'admin@munchify.vn',
+          otp: '123456',
+          newPassword: 'NewPassword@2026!',
+        ));
+      });
+
+      test('emits [ResetPasswordLoading, ResetPasswordFailure] when OTP is expired/invalid', () async {
+        repository.resetPasswordResult = const Left(
+          ServerFailure(message: 'Mã OTP không hợp lệ hoặc đã hết hạn'),
+        );
+
+        final expected = [
+          const ResetPasswordLoading(),
+          const ResetPasswordFailure('Mã OTP không hợp lệ hoặc đã hết hạn'),
+        ];
+
+        expectLater(authBloc.stream, emitsInOrder(expected));
+        authBloc.add(const ResetPasswordEvent(
+          email: 'admin@munchify.vn',
+          otp: '000000',
+          newPassword: 'NewPassword@2026!',
+        ));
       });
     });
 

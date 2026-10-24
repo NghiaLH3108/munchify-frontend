@@ -11,6 +11,14 @@ abstract class AuthRemoteDataSource {
   });
 
   Future<UserModel> getCurrentUser();
+
+  Future<String> forgotPassword(String email);
+
+  Future<String> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -78,5 +86,55 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
   }
 
-}
+  @override
+  Future<String> forgotPassword(String email) async {
+    final response = await dioClient.dio.post(
+      ApiEndpoints.forgotPassword,
+      data: {
+        'email': email,
+      },
+    );
 
+    if (response.data != null && response.data is Map<String, dynamic>) {
+      final map = response.data as Map<String, dynamic>;
+      if (map['success'] == false) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: map['message'] ?? 'Yêu cầu đặt lại mật khẩu thất bại',
+        );
+      }
+      return (map['message'] ?? 'Mã xác nhận OTP đã được gửi đến email của bạn.').toString();
+    }
+    return 'Mã xác nhận OTP đã được gửi đến email của bạn.';
+  }
+
+  @override
+  Future<String> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    final response = await dioClient.dio.post(
+      ApiEndpoints.resetPassword,
+      data: {
+        'email': email,
+        'otp': otp,
+        'newPassword': newPassword,
+      },
+    );
+
+    if (response.data != null && response.data is Map<String, dynamic>) {
+      final map = response.data as Map<String, dynamic>;
+      if (map['success'] == false) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: map['message'] ?? 'Đặt lại mật khẩu thất bại',
+        );
+      }
+      return (map['message'] ?? 'Mật khẩu đã được đặt lại thành công.').toString();
+    }
+    return 'Mật khẩu đã được đặt lại thành công.';
+  }
+}
