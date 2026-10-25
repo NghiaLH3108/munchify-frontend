@@ -35,6 +35,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
         if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
         if (isActive != null) 'isActive': isActive,
         if (lowStockWarning != null && lowStockWarning) 'lowStockWarning': lowStockWarning,
+        'isCombo': false,
         'pageSize': 100, // Load enough items for admin table
       },
     );

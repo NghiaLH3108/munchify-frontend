@@ -118,6 +118,8 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
             return const Center(child: CircularProgressIndicator());
           } else if (state is PromotionsLoaded) {
             final items = state.promotionsData.items;
+            final kpiItems = state.kpiPromotions ?? items;
+            final kpiTotal = state.kpiTotalCount ?? state.promotionsData.totalCount;
             
             return SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -126,7 +128,7 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
                 children: [
                   _buildPageTitleBar(context),
                   const SizedBox(height: 20),
-                  PromotionStatCards(promotions: items, totalCount: state.promotionsData.totalCount),
+                  PromotionStatCards(promotions: kpiItems, totalCount: kpiTotal),
                   const SizedBox(height: 24),
                   Container(
                     decoration: BoxDecoration(
@@ -141,9 +143,16 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
                         ),
                       ],
                     ),
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (state.isRefreshing)
+                          const LinearProgressIndicator(
+                            minHeight: 2,
+                            color: ColorPalette.appetizingOrange,
+                            backgroundColor: Colors.transparent,
+                          ),
                         PromotionFilterBar(
                           searchController: _searchController,
                           hasSearchQuery: _searchQuery.isNotEmpty,

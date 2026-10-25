@@ -248,6 +248,7 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
           );
         } else if (state is UnitLoaded) {
           final allItems = state.units;
+          final kpiItems = state.kpiUnits;
 
           final filteredItems = allItems.where((u) {
             if (_searchQuery.isEmpty) return true;
@@ -263,9 +264,14 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
               children: [
                 _buildPageTitleBar(context),
                 const SizedBox(height: 20),
-                _buildKpiMetrics(allItems),
+                _buildKpiMetrics(kpiItems),
                 const SizedBox(height: 24),
-                _buildTableCard(context, filteredItems, state.isListEnd),
+                _buildTableCard(
+                  context,
+                  filteredItems,
+                  state.isListEnd,
+                  isRefreshing: state.isRefreshing,
+                ),
               ],
             ),
           );
@@ -988,8 +994,9 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
   Widget _buildTableCard(
     BuildContext context,
     List<UnitEntity> items,
-    bool isListEnd,
-  ) {
+    bool isListEnd, {
+    bool isRefreshing = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: ColorPalette.surfaceWhite,
@@ -1007,6 +1014,12 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (isRefreshing)
+            const LinearProgressIndicator(
+              minHeight: 2,
+              color: ColorPalette.appetizingOrange,
+              backgroundColor: Colors.transparent,
+            ),
           // Table Header Bar
           _buildTableHeaderBar(items.length),
           // Content

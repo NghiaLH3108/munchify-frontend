@@ -29,7 +29,19 @@ class ComboBloc extends Bloc<ComboEvent, ComboState> {
     Emitter<ComboState> emit,
   ) async {
     _lastQuery = event;
-    emit(ComboLoading());
+    final current = state;
+    if (current is ComboLoaded) {
+      emit(ComboLoaded(
+        combos: current.combos,
+        totalCount: current.totalCount,
+        page: current.page,
+        pageSize: current.pageSize,
+        isRefreshing: true,
+        stamp: DateTime.now().microsecondsSinceEpoch,
+      ));
+    } else {
+      emit(ComboLoading());
+    }
     await _fetch(emit);
   }
 
@@ -67,6 +79,7 @@ class ComboBloc extends Bloc<ComboEvent, ComboState> {
           pageSize: pageData.pageSize,
           successMessage: successMessage,
           errorMessage: errorMessage,
+          isRefreshing: false,
           stamp: DateTime.now().microsecondsSinceEpoch,
         ));
       },
@@ -123,6 +136,7 @@ class ComboBloc extends Bloc<ComboEvent, ComboState> {
             page: current.page,
             pageSize: current.pageSize,
             errorMessage: failure.message,
+            isRefreshing: false,
             stamp: DateTime.now().microsecondsSinceEpoch,
           ));
         } else {

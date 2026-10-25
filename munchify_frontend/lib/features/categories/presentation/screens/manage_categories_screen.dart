@@ -257,6 +257,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           );
         } else if (state is CategoryLoaded) {
           final allItems = state.categories;
+          final kpiItems = state.kpiCategories;
 
           final filteredItems = allItems.where((cat) {
             if (_searchQuery.isEmpty) return true;
@@ -272,9 +273,14 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               children: [
                 _buildPageTitleBar(context),
                 const SizedBox(height: 20),
-                _buildKpiMetrics(allItems),
+                _buildKpiMetrics(kpiItems),
                 const SizedBox(height: 24),
-                _buildTableCard(context, filteredItems, state.isListEnd),
+                _buildTableCard(
+                  context,
+                  filteredItems,
+                  state.isListEnd,
+                  isRefreshing: state.isRefreshing,
+                ),
               ],
             ),
           );
@@ -1079,9 +1085,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   Widget _buildTableCard(
     BuildContext context,
     List<CategoryEntity> items,
-    bool isListEnd,
-  ) {
-    if (items.isEmpty) {
+    bool isListEnd, {
+    bool isRefreshing = false,
+  }) {
+    if (items.isEmpty && !isRefreshing) {
       return Container(
         padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
@@ -1121,9 +1128,16 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (isRefreshing)
+            const LinearProgressIndicator(
+              minHeight: 2,
+              color: ColorPalette.appetizingOrange,
+              backgroundColor: Colors.transparent,
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
             child: Wrap(

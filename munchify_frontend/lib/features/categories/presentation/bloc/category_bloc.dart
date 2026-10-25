@@ -25,7 +25,17 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     LoadCategoriesEvent event,
     Emitter<CategoryState> emit,
   ) async {
-    emit(CategoryLoading());
+    final currentState = state;
+    if (currentState is CategoryLoaded) {
+      emit(CategoryLoaded(
+        categories: currentState.categories,
+        allCategories: currentState.allCategories,
+        isListEnd: currentState.isListEnd,
+        isRefreshing: true,
+      ));
+    } else {
+      emit(CategoryLoading());
+    }
 
     final result = await getCategories(
       searchTerm: event.searchTerm,
@@ -36,10 +46,19 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
 
     result.fold(
       (failure) => emit(CategoryError(failure.message)),
-      (categories) => emit(CategoryLoaded(
-        categories: categories,
-        isListEnd: categories.length < event.pageSize,
-      )),
+      (categories) {
+        final isUnfiltered = event.isActive == null &&
+            event.searchTerm.trim().isEmpty &&
+            event.page == 1;
+        final prevAll =
+            currentState is CategoryLoaded ? currentState.allCategories : null;
+        emit(CategoryLoaded(
+          categories: categories,
+          allCategories: isUnfiltered ? categories : (prevAll ?? categories),
+          isListEnd: categories.length < event.pageSize,
+          isRefreshing: false,
+        ));
+      },
     );
   }
 
@@ -47,10 +66,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     CreateCategoryEvent event,
     Emitter<CategoryState> emit,
   ) async {
-    // Keep track of current state if it's loaded
     final currentState = state;
-    
-    emit(CategoryLoading());
 
     final result = await createCategory(
       categoryName: event.categoryName,
@@ -62,14 +78,23 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       (failure) => emit(CategoryError(failure.message)),
       (newCategory) {
         if (currentState is CategoryLoaded) {
+          final updatedAll = [
+            newCategory,
+            ...(currentState.allCategories ?? currentState.categories),
+          ];
           emit(CategoryLoaded(
             categories: [newCategory, ...currentState.categories],
+            allCategories: updatedAll,
             isListEnd: currentState.isListEnd,
+            isRefreshing: false,
             successMessage: 'Đã thêm danh mục thành công.',
           ));
         } else {
-          // In case it wasn't loaded before
-          emit(CategoryLoaded(categories: [newCategory], successMessage: 'Đã thêm danh mục thành công.'));
+          emit(CategoryLoaded(
+            categories: [newCategory],
+            allCategories: [newCategory],
+            successMessage: 'Đã thêm danh mục thành công.',
+          ));
         }
       },
     );
@@ -80,8 +105,6 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     Emitter<CategoryState> emit,
   ) async {
     final currentState = state;
-    
-    emit(CategoryLoading());
 
     final result = await updateCategory(
       id: event.id,
@@ -97,14 +120,24 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
           final updatedCategories = currentState.categories.map((c) {
             return c.id == updatedCategory.id ? updatedCategory : c;
           }).toList();
+          final updatedAll =
+              (currentState.allCategories ?? currentState.categories).map((c) {
+            return c.id == updatedCategory.id ? updatedCategory : c;
+          }).toList();
 
           emit(CategoryLoaded(
             categories: updatedCategories,
+            allCategories: updatedAll,
             isListEnd: currentState.isListEnd,
+            isRefreshing: false,
             successMessage: 'Đã cập nhật danh mục thành công.',
           ));
         } else {
-          emit(CategoryLoaded(categories: [updatedCategory], successMessage: 'Đã cập nhật danh mục thành công.'));
+          emit(CategoryLoaded(
+            categories: [updatedCategory],
+            allCategories: [updatedCategory],
+            successMessage: 'Đã cập nhật danh mục thành công.',
+          ));
         }
       },
     );
@@ -115,8 +148,6 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     Emitter<CategoryState> emit,
   ) async {
     final currentState = state;
-    
-    emit(CategoryLoading());
 
     final result = await deleteCategory(event.id);
 
@@ -124,15 +155,26 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       (failure) => emit(CategoryError(failure.message)),
       (success) {
         if (currentState is CategoryLoaded) {
-          final updatedCategories = currentState.categories.where((c) => c.id != event.id).toList();
+          final updatedCategories =
+              currentState.categories.where((c) => c.id != event.id).toList();
+          final updatedAll =
+              (currentState.allCategories ?? currentState.categories)
+                  .where((c) => c.id != event.id)
+                  .toList();
 
           emit(CategoryLoaded(
             categories: updatedCategories,
+            allCategories: updatedAll,
             isListEnd: currentState.isListEnd,
+            isRefreshing: false,
             successMessage: 'Đã xóa danh mục.',
           ));
         } else {
-          emit(const CategoryLoaded(categories: [], successMessage: 'Đã xóa danh mục.'));
+          emit(const CategoryLoaded(
+            categories: [],
+            allCategories: [],
+            successMessage: 'Đã xóa danh mục.',
+          ));
         }
       },
     );

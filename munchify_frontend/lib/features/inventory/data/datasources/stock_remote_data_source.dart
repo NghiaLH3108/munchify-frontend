@@ -1,7 +1,7 @@
 import '../../../../core/constants/ApiEndpoints.dart';
 import '../models/stock_import_model.dart';
 import '../models/damaged_expired_record_model.dart';
-import 'package:munchify_frontend/core/network/DioClient.dart';
+import '../../../../core/network/DioClient.dart';
 
 
 

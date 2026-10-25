@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-import 'package:munchify_frontend/core/errors/Failures.dart';
-import 'package:munchify_frontend/features/inventory/domain/entities/stock_movement_entity.dart';
-import 'package:munchify_frontend/features/inventory/domain/repositories/inventory_repository.dart';
+import '../../../../core/errors/Failures.dart';
+import '../entities/stock_movement_entity.dart';
+import '../repositories/inventory_repository.dart';
 
 class AdjustStockUseCase {
   final InventoryRepository repository;

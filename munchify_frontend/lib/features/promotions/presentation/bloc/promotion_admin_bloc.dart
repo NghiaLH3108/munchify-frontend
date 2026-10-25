@@ -8,6 +8,8 @@ class PromotionAdminBloc extends Bloc<PromotionAdminEvent, PromotionAdminState> 
   final GetPromotionsUseCase getPromotionsUseCase;
   final TogglePromotionStatusUseCase togglePromotionStatusUseCase;
 
+  PromotionsLoaded? _lastLoadedState;
+
   PromotionAdminBloc({
     required this.getPromotionsUseCase,
     required this.togglePromotionStatusUseCase,
@@ -18,29 +20,53 @@ class PromotionAdminBloc extends Bloc<PromotionAdminEvent, PromotionAdminState> 
 
   Future<void> _onLoadPromotions(
       LoadPromotions event, Emitter<PromotionAdminState> emit) async {
-    emit(PromotionAdminLoading());
+    if (_lastLoadedState != null) {
+      emit(_lastLoadedState!.copyWith(
+        isRefreshing: true,
+        searchKeyword: event.searchKeyword,
+        pageIndex: event.pageIndex,
+      ));
+    } else {
+      emit(PromotionAdminLoading());
+    }
+
     final result = await getPromotionsUseCase(
         event.pageIndex, event.pageSize, event.searchKeyword);
 
     result.fold(
-      (failure) => emit(PromotionAdminError(failure.message)),
-      (data) => emit(PromotionsLoaded(
-        promotionsData: data,
-        searchKeyword: event.searchKeyword,
-        pageIndex: event.pageIndex,
-      )),
+      (failure) {
+        emit(PromotionAdminError(failure.message));
+        if (_lastLoadedState != null) {
+          emit(_lastLoadedState!.copyWith(isRefreshing: false));
+        }
+      },
+      (data) {
+        final isUnfiltered = (event.searchKeyword == null ||
+                event.searchKeyword!.trim().isEmpty) &&
+            event.pageIndex == 1;
+        final kpiItems = isUnfiltered
+            ? data.items
+            : (_lastLoadedState?.kpiPromotions ?? data.items);
+        final kpiTotal = isUnfiltered
+            ? data.totalCount
+            : (_lastLoadedState?.kpiTotalCount ?? data.totalCount);
+
+        final nextState = PromotionsLoaded(
+          promotionsData: data,
+          kpiPromotions: kpiItems,
+          kpiTotalCount: kpiTotal,
+          searchKeyword: event.searchKeyword,
+          pageIndex: event.pageIndex,
+          isRefreshing: false,
+        );
+        _lastLoadedState = nextState;
+        emit(nextState);
+      },
     );
   }
 
   Future<void> _onTogglePromotionStatus(
       TogglePromotionStatus event, Emitter<PromotionAdminState> emit) async {
-    // We could emit a loading state or just keep the current list and do a background update.
-    // For simplicity, let's do a full reload after toggle.
-    final currentState = state;
-    if (currentState is PromotionsLoaded) {
-      emit(PromotionAdminLoading());
-    }
-
     final result = await togglePromotionStatusUseCase(event.id);
     result.fold(
       (failure) => emit(PromotionAdminError(failure.message)),

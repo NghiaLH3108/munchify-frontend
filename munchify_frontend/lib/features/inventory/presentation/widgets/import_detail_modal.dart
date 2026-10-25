@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../bloc/stock_import_bloc.dart';
 import '../bloc/stock_import_event.dart';
 import '../../domain/entities/stock_import_entity.dart';
-import '../../../../../core/theme/ColorPalette.dart';
+import '../../../../core/theme/ColorPalette.dart';
 
 class ImportDetailModal extends StatelessWidget {
   final StockImportEntity importEntity;

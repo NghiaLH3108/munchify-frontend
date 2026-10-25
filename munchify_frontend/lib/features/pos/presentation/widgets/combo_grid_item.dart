@@ -13,7 +13,7 @@ class ComboGridItem extends StatelessWidget {
   final bool isHorizontal;
 
   const ComboGridItem({
-    Key? key, 
+    Key? key,
     required this.combo,
     this.isHorizontal = false,
   }) : super(key: key);
@@ -32,10 +32,10 @@ class ComboGridItem extends StatelessWidget {
   }
 
   Widget _buildHorizontalCard(
-    BuildContext context, 
-    NumberFormat currency, 
-    double saving, 
-    bool isAvailable
+    BuildContext context,
+    NumberFormat currency,
+    double saving,
+    bool isAvailable,
   ) {
     return GestureDetector(
       onTap: () {
@@ -114,11 +114,12 @@ class ComboGridItem extends StatelessWidget {
                   if (!isAvailable)
                     Container(
                       width: 120,
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withOpacity(0.45),
                       child: const Center(
                         child: Text(
-                          'Hết hàng',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          'Combo đã hết',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                     ),
@@ -279,10 +280,10 @@ class ComboGridItem extends StatelessWidget {
   }
 
   Widget _buildVerticalCard(
-    BuildContext context, 
-    NumberFormat currency, 
-    double saving, 
-    bool isAvailable
+    BuildContext context,
+    NumberFormat currency,
+    double saving,
+    bool isAvailable,
   ) {
     return GestureDetector(
       onTap: () {
@@ -323,13 +324,25 @@ class ComboGridItem extends StatelessWidget {
                     height: 100,
                     width: double.infinity,
                     color: isAvailable ? Colors.orange.shade50 : Colors.grey.shade100,
-                    child: Center(
-                      child: Icon(
-                        Icons.fastfood,
-                        size: 48,
-                        color: isAvailable ? Colors.orange.shade300 : Colors.grey.shade400,
-                      ),
-                    ),
+                    child: combo.imageUrl != null && combo.imageUrl!.isNotEmpty
+                        ? Image.network(
+                            combo.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Center(
+                              child: Icon(
+                                Icons.fastfood,
+                                size: 48,
+                                color: isAvailable ? Colors.orange.shade300 : Colors.grey.shade400,
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Icon(
+                              Icons.fastfood,
+                              size: 48,
+                              color: isAvailable ? Colors.orange.shade300 : Colors.grey.shade400,
+                            ),
+                          ),
                   ),
                   // Combo code badge
                   Positioned(
@@ -351,10 +364,10 @@ class ComboGridItem extends StatelessWidget {
                   if (!isAvailable)
                     Container(
                       height: 100,
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withOpacity(0.45),
                       child: const Center(
                         child: Text(
-                          'Hết hàng',
+                          'Combo đã hết',
                           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ),

@@ -7,8 +7,8 @@ import '../bloc/stock_import_state.dart';
 import '../../domain/entities/stock_import_entity.dart';
 import '../widgets/create_import_modal.dart';
 import '../widgets/import_detail_modal.dart';
-import '../../../../../core/theme/ColorPalette.dart';
-import '../../../../../core/services/signalr_service.dart';
+import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/services/signalr_service.dart';
 
 class InventoryScreen extends StatefulWidget {
   final bool embedInShell;

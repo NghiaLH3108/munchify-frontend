@@ -183,6 +183,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
           return _buildErrorState(state.message);
         } else if (state is StaffListLoaded) {
           final allItems = state.result.items;
+          final kpiItems = state.kpiItems;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -202,8 +203,17 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                   onStatusChanged: _onStatusFilterChanged,
                 ),
                 const SizedBox(height: 20),
-                StaffMetricCards(staffList: allItems),
+                StaffMetricCards(staffList: kpiItems),
                 const SizedBox(height: 24),
+                if (state.isRefreshing)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 4),
+                    child: LinearProgressIndicator(
+                      minHeight: 2,
+                      color: ColorPalette.appetizingOrange,
+                      backgroundColor: Colors.transparent,
+                    ),
+                  ),
                 StaffDataTable(
                   items: allItems,
                   currentPage: _currentPage,
