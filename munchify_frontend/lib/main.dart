@@ -24,6 +24,7 @@ import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 
 import 'features/customers/presentation/bloc/customer_bloc.dart';
 import 'features/customers/presentation/bloc/admin_customer_bloc.dart';
+import 'features/orders/presentation/bloc/admin_order_bloc.dart';
 
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
@@ -67,6 +68,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<OrderBloc>(
           create: (_) => di.sl<OrderBloc>(),
+        ),
+        BlocProvider<AdminOrderBloc>(
+          create: (_) => di.sl<AdminOrderBloc>(),
         ),
         BlocProvider<StockMovementBloc>(create: (_) => di.sl<StockMovementBloc>()),
         BlocProvider<StockImportBloc>(create: (_) => di.sl<StockImportBloc>()),

@@ -19,6 +19,7 @@ import '../../../customers/presentation/screens/admin_customer_management_screen
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
 import '../../../promotions/presentation/pages/promotion_management_screen.dart';
+import '../../../orders/presentation/screens/admin_order_inquiry_screen.dart';
 import '../../../main/presentation/screens/main_app_screen.dart';
 import '../../../../core/services/signalr_service.dart';
 
@@ -914,6 +915,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
     switch (_currentTab) {
       case 'dashboard':
         return const AnalyticsDashboardView();
+      case 'orders':
+        return const AdminOrderInquiryScreen(embedInShell: true);
       case 'products':
         return const ProductManagementScreen();
       case 'menu':

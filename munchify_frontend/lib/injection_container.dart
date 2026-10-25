@@ -85,6 +85,14 @@ import 'features/pos/domain/usecases/create_order_usecase.dart';
 import 'features/pos/domain/usecases/get_orders_usecase.dart';
 import 'features/pos/domain/usecases/apply_promotion_usecase.dart';
 import 'features/pos/domain/usecases/get_active_promotions_usecase.dart';
+
+// Admin Orders
+import 'features/orders/data/datasources/admin_order_remote_datasource.dart';
+import 'features/orders/data/repositories/admin_order_repository_impl.dart';
+import 'features/orders/domain/repositories/admin_order_repository.dart';
+import 'features/orders/domain/usecases/get_admin_orders_usecase.dart';
+import 'features/orders/domain/usecases/get_admin_order_detail_usecase.dart';
+import 'features/orders/presentation/bloc/admin_order_bloc.dart';
 import 'features/pos/presentation/bloc/cart_cubit.dart';
 import 'features/pos/presentation/bloc/order_bloc.dart';
 
@@ -271,6 +279,13 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => AdminOrderBloc(
+      getAdminOrdersUseCase: sl(),
+      getAdminOrderDetailUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => StockMovementBloc(
       getStockMovementsUseCase: sl(),
       adjustStockUseCase: sl(),
@@ -357,6 +372,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
   sl.registerLazySingleton(() => ApplyPromotionUseCase(sl()));
   sl.registerLazySingleton(() => GetActivePromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetAdminOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => GetAdminOrderDetailUseCase(sl()));
 
   // Customer
   sl.registerLazySingleton(() => SearchCustomerUseCase(sl()));
@@ -430,6 +447,10 @@ Future<void> init() async {
     () => OrderRepositoryImpl(remoteDataSource: sl()),
   );
 
+  sl.registerLazySingleton<AdminOrderRepository>(
+    () => AdminOrderRepositoryImpl(remoteDataSource: sl()),
+  );
+
   sl.registerLazySingleton<pos_promo.PromotionRepository>(
     () => pos_promo.PromotionRepositoryImpl(remoteDataSource: sl()),
   );
@@ -494,6 +515,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<OrderRemoteDataSource>(
     () => OrderRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<AdminOrderRemoteDataSource>(
+    () => AdminOrderRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<pos_promo.PromotionRemoteDataSource>(
