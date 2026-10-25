@@ -10,11 +10,16 @@ class SignalRService {
   final List<Function(String)> _lowStockWarningListeners = [];
   final List<Function(String)> _stockImportUpdateListeners = [];
 
-  Future<void> init() async {
+  /// Kết nối hub kèm JWT (hub yêu cầu đăng nhập). Gọi sau khi đăng nhập thành công.
+  Future<void> init({required String token}) async {
+    await stop();
     final serverUrl = "${AppConstants.baseUrl}/hubs/inventory"; // e.g., http://localhost:5000/hubs/inventory
 
     _hubConnection = HubConnectionBuilder()
-        .withUrl(serverUrl)
+        .withUrl(
+          serverUrl,
+          options: HttpConnectionOptions(accessTokenFactory: () async => token),
+        )
         .withAutomaticReconnect()
         .build();
 
@@ -32,6 +37,15 @@ class SignalRService {
     } catch (e) {
       debugPrint("SignalR Connection Error: $e");
     }
+  }
+
+  /// Ngắt kết nối (khi đăng xuất / hết phiên).
+  Future<void> stop() async {
+    final conn = _hubConnection;
+    _hubConnection = null;
+    try {
+      await conn?.stop();
+    } catch (_) {}
   }
 
   void _handleExpiryAlert(List<Object?>? parameters) {

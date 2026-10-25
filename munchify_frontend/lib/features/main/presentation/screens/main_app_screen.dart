@@ -3,11 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
-import '../../../admin/presentation/pages/admin_shell_screen.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../auth/presentation/screens/login_screen.dart';
 import '../../../pos/presentation/screens/order_history_screen.dart';
 import '../../../pos/presentation/screens/pos_home_screen.dart';
 
@@ -24,7 +22,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
   final List<Widget> _screens = [
     const PosHomeScreen(),
     const OrderHistoryScreen(),
-    const _PlaceholderScreen(title: 'Khách hàng'),
     const _AccountScreen(),
   ];
 
@@ -53,14 +50,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
             icon: Icon(Icons.receipt_long),
             label: 'Đơn hàng',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Khách hàng',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Tài khoản',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
         ],
       ),
     );
@@ -101,11 +91,6 @@ class _AccountScreen extends StatelessWidget {
             onPressed: () {
               Navigator.pop(dialogContext);
               context.read<AuthBloc>().add(const LogoutRequestedEvent());
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorPalette.error,
@@ -217,8 +202,12 @@ class _AccountScreen extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: role == 'ADMIN'
-                                    ? ColorPalette.adminPurple.withValues(alpha: 0.12)
-                                    : ColorPalette.appetizingOrange.withValues(alpha: 0.12),
+                                    ? ColorPalette.adminPurple.withValues(
+                                        alpha: 0.12,
+                                      )
+                                    : ColorPalette.appetizingOrange.withValues(
+                                        alpha: 0.12,
+                                      ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -279,33 +268,12 @@ class _AccountScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Action Buttons
-                if (role == 'ADMIN') ...[
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const AdminShellScreen(initialTab: 'dashboard'),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    label: const Text('Truy cập Admin Console'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorPalette.appetizingOrange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
                 OutlinedButton.icon(
                   onPressed: () => _showLogoutConfirmDialog(context),
-                  icon: const Icon(Icons.logout_rounded, color: ColorPalette.error),
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: ColorPalette.error,
+                  ),
                   label: const Text(
                     'Đăng xuất tài khoản',
                     style: TextStyle(

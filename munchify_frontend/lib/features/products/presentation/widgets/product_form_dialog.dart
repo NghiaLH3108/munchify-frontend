@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
-import 'dart:io';
+
 import '../../domain/entities/product_entity.dart';
 import '../../data/models/product_request_model.dart';
 import '../bloc/product_form_bloc.dart';
@@ -43,7 +43,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   int minStock = 0;
   String? selectedCategoryId;
   String? selectedUnitId;
-  
+
   String? uploadedImageUrl;
   bool isUploading = false;
 
@@ -73,11 +73,13 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     setState(() {
       catRes.fold((_) {}, (list) => categories = list);
       unitRes.fold((_) {}, (list) => units = list);
-      
-      if (selectedCategoryId != null && !categories.any((c) => c.id.toString() == selectedCategoryId)) {
+
+      if (selectedCategoryId != null &&
+          !categories.any((c) => c.id.toString() == selectedCategoryId)) {
         selectedCategoryId = null;
       }
-      if (selectedUnitId != null && !units.any((u) => u.id.toString() == selectedUnitId)) {
+      if (selectedUnitId != null &&
+          !units.any((u) => u.id.toString() == selectedUnitId)) {
         selectedUnitId = null;
       }
 
@@ -96,12 +98,15 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       PlatformFile? result = await FilePicker.pickFile(type: FileType.image);
       if (result != null) {
         setState(() => isUploading = true);
-        
+
         FormData formData;
         if (result.path != null) {
           // Desktop/Mobile support
           formData = FormData.fromMap({
-            "file": await MultipartFile.fromFile(result.path!, filename: result.name),
+            "file": await MultipartFile.fromFile(
+              result.path!,
+              filename: result.name,
+            ),
           });
         } else {
           // Web support
@@ -113,20 +118,25 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
         final dio = di.sl<Dio>();
         final response = await dio.post('/api/upload/image', data: formData);
-        
-        if (response.statusCode == 200 && response.data != null && response.data['url'] != null) {
+
+        if (response.statusCode == 200 &&
+            response.data != null &&
+            response.data['url'] != null) {
           setState(() {
             uploadedImageUrl = response.data['url'];
             isUploading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tải ảnh lên thành công')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tải ảnh lên thành công')),
+          );
         } else {
           throw Exception('Failed to upload image');
         }
       }
     } catch (e) {
       setState(() => isUploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
     }
   }
 
@@ -137,9 +147,11 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         if (state is ProductFormSuccess) {
           Navigator.of(context).pop();
           context.read<ProductAdminBloc>().add(const LoadProductsEvent());
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lưu thành công')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Lưu thành công')));
         } else if (state is ProductFormError) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.message)));
         }
       },
       child: Dialog(
@@ -156,8 +168,19 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(widget.product == null ? 'Thêm sản phẩm mới' : 'Chỉnh sửa sản phẩm', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+                    Text(
+                      widget.product == null
+                          ? 'Thêm sản phẩm mới'
+                          : 'Chỉnh sửa sản phẩm',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -175,21 +198,36 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey[300]!),
                         ),
-                        child: isUploading 
-                          ? const Center(child: CircularProgressIndicator()) 
-                          : uploadedImageUrl != null && uploadedImageUrl!.isNotEmpty
+                        child: isUploading
+                            ? const Center(child: CircularProgressIndicator())
+                            : uploadedImageUrl != null &&
+                                  uploadedImageUrl!.isNotEmpty
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(uploadedImageUrl!, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Center(child: Icon(Icons.error))),
+                                child: Image.network(
+                                  uploadedImageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      const Center(child: Icon(Icons.error)),
+                                ),
                               )
-                            : const Center(child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.add_a_photo, size: 48, color: Colors.grey),
-                                  SizedBox(height: 8),
-                                  Text('Bấm để chọn ảnh', style: TextStyle(color: Colors.grey)),
-                                ],
-                              )),
+                            : const Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.add_a_photo,
+                                      size: 48,
+                                      color: Colors.grey,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Bấm để chọn ảnh',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(width: 24),
@@ -199,21 +237,34 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                         children: [
                           TextFormField(
                             initialValue: name,
-                            decoration: const InputDecoration(labelText: 'Tên món / Sản phẩm', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                              labelText: 'Tên món / Sản phẩm',
+                              border: OutlineInputBorder(),
+                            ),
                             onSaved: (v) => name = v?.trim() ?? '',
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Vui lòng nhập tên';
-                              final regex = RegExp(r'^[\p{L}0-9\s]+$', unicode: true);
-                              if (!regex.hasMatch(v)) return 'Tên không chứa ký tự đặc biệt';
+                              if (v == null || v.trim().isEmpty)
+                                return 'Vui lòng nhập tên';
+                              final regex = RegExp(
+                                r'^[\p{L}0-9\s]+$',
+                                unicode: true,
+                              );
+                              if (!regex.hasMatch(v))
+                                return 'Tên không chứa ký tự đặc biệt';
                               return null;
                             },
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             initialValue: sku,
-                            decoration: const InputDecoration(labelText: 'Mã SKU', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                              labelText: 'Mã SKU',
+                              border: OutlineInputBorder(),
+                            ),
                             onSaved: (v) => sku = v?.trim() ?? '',
-                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Vui lòng nhập SKU' : null,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Vui lòng nhập SKU'
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           if (isLoadingOptions)
@@ -224,20 +275,44 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
                                     value: selectedCategoryId,
-                                    decoration: const InputDecoration(labelText: 'Danh mục', border: OutlineInputBorder()),
-                                    items: categories.map((c) => DropdownMenuItem(value: c.id.toString(), child: Text(c.categoryName))).toList(),
-                                    onChanged: (v) => setState(() => selectedCategoryId = v),
-                                    validator: (v) => v == null ? 'Chọn danh mục' : null,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Danh mục',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: categories
+                                        .map(
+                                          (c) => DropdownMenuItem(
+                                            value: c.id.toString(),
+                                            child: Text(c.categoryName),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) =>
+                                        setState(() => selectedCategoryId = v),
+                                    validator: (v) =>
+                                        v == null ? 'Chọn danh mục' : null,
                                   ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
                                     value: selectedUnitId,
-                                    decoration: const InputDecoration(labelText: 'Đơn vị tính', border: OutlineInputBorder()),
-                                    items: units.map((u) => DropdownMenuItem(value: u.id.toString(), child: Text(u.unitName))).toList(),
-                                    onChanged: (v) => setState(() => selectedUnitId = v),
-                                    validator: (v) => v == null ? 'Chọn đơn vị' : null,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Đơn vị tính',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: units
+                                        .map(
+                                          (u) => DropdownMenuItem(
+                                            value: u.id.toString(),
+                                            child: Text(u.unitName),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) =>
+                                        setState(() => selectedUnitId = v),
+                                    validator: (v) =>
+                                        v == null ? 'Chọn đơn vị' : null,
                                   ),
                                 ),
                               ],
@@ -247,14 +322,22 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                             children: [
                               Expanded(
                                 child: TextFormField(
-                                  initialValue: price > 0 ? price.toString() : '',
-                                  decoration: const InputDecoration(labelText: 'Giá niêm yết', border: OutlineInputBorder()),
+                                  initialValue: price > 0
+                                      ? price.toString()
+                                      : '',
+                                  decoration: const InputDecoration(
+                                    labelText: 'Giá niêm yết',
+                                    border: OutlineInputBorder(),
+                                  ),
                                   keyboardType: TextInputType.number,
-                                  onSaved: (v) => price = double.tryParse(v ?? '0') ?? 0,
+                                  onSaved: (v) =>
+                                      price = double.tryParse(v ?? '0') ?? 0,
                                   validator: (v) {
-                                    if (v == null || v.trim().isEmpty) return 'Không để trống';
+                                    if (v == null || v.trim().isEmpty)
+                                      return 'Không để trống';
                                     final val = double.tryParse(v);
-                                    if (val == null) return 'Chỉ nhập số, không nhập chữ';
+                                    if (val == null)
+                                      return 'Chỉ nhập số, không nhập chữ';
                                     if (val < 0) return 'Không nhập số âm';
                                     return null;
                                   },
@@ -263,21 +346,29 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextFormField(
-                                  initialValue: minStock > 0 ? minStock.toString() : '',
-                                  decoration: const InputDecoration(labelText: 'Ngưỡng cảnh báo', border: OutlineInputBorder()),
+                                  initialValue: minStock > 0
+                                      ? minStock.toString()
+                                      : '',
+                                  decoration: const InputDecoration(
+                                    labelText: 'Ngưỡng cảnh báo',
+                                    border: OutlineInputBorder(),
+                                  ),
                                   keyboardType: TextInputType.number,
-                                  onSaved: (v) => minStock = int.tryParse(v ?? '0') ?? 0,
+                                  onSaved: (v) =>
+                                      minStock = int.tryParse(v ?? '0') ?? 0,
                                   validator: (v) {
-                                    if (v == null || v.trim().isEmpty) return 'Không để trống';
+                                    if (v == null || v.trim().isEmpty)
+                                      return 'Không để trống';
                                     final val = int.tryParse(v);
-                                    if (val == null) return 'Chỉ nhập số, không nhập chữ';
+                                    if (val == null)
+                                      return 'Chỉ nhập số, không nhập chữ';
                                     if (val < 0) return 'Không nhập số âm';
                                     return null;
                                   },
                                 ),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -306,16 +397,20 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                             isActive: widget.product?.isActive ?? true,
                             imageUrl: uploadedImageUrl,
                           );
-                          context.read<ProductFormBloc>().add(SubmitProductFormEvent(
-                            productId: widget.product?.id,
-                            request: request,
-                          ));
+                          context.read<ProductFormBloc>().add(
+                            SubmitProductFormEvent(
+                              productId: widget.product?.id,
+                              request: request,
+                            ),
+                          );
                         }
                       },
-                      child: Text(widget.product == null ? 'Lưu món' : 'Cập nhật'),
+                      child: Text(
+                        widget.product == null ? 'Lưu món' : 'Cập nhật',
+                      ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

@@ -59,7 +59,10 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy', style: TextStyle(color: ColorPalette.textSecondary)),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(color: ColorPalette.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -74,7 +77,9 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorPalette.error,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Đăng xuất'),
           ),
@@ -84,9 +89,14 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
   }
 
   String _getInitials(String fullName) {
-    final words = fullName.trim().split(' ').where((w) => w.isNotEmpty).toList();
+    final words = fullName
+        .trim()
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .toList();
     if (words.isEmpty) return 'HM';
-    if (words.length == 1) return words[0].substring(0, words[0].length >= 2 ? 2 : 1).toUpperCase();
+    if (words.length == 1)
+      return words[0].substring(0, words[0].length >= 2 ? 2 : 1).toUpperCase();
     return '${words.first[0]}${words.last[0]}'.toUpperCase();
   }
 
@@ -150,8 +160,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'AI Cảnh Báo Cạn Kho';
       case 'ai_expiry':
         return 'AI Hàng Hỏng/Hết Hạn';
-      case 'cashbook':
-        return 'Sổ quỹ & Biến động';
       case 'loyalty':
         return 'Khách hàng thân thiết';
       case 'promotions':
@@ -160,8 +168,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'Đơn vị tính';
       case 'staff':
         return 'Nhân viên & Quyền';
-      case 'reports':
-        return 'Báo cáo & Thống kê';
       default:
         return 'Báo cáo tổng quan';
     }
@@ -335,48 +341,17 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  // Quick POS Trigger CTA Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 44,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const MainAppScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.point_of_sale_rounded, size: 20),
-                      label: const Text('+ Tạo đơn POS'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorPalette.primaryContainer,
-                        foregroundColor: Colors.white,
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        textStyle: AppTypography.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 26),
                   // Navigation Links
                   _buildSidebarItem(
                     key: 'dashboard',
                     icon: Icons.dashboard_rounded,
-                    title: 'Dashboard',
+                    title: 'Báo cáo tổng quan',
                   ),
                   _buildSidebarItem(
                     key: 'orders',
                     icon: Icons.receipt_long_rounded,
                     title: 'Đơn hàng',
-                    badge: '12 mới',
                     badgeColor: ColorPalette.primaryContainer,
                   ),
                   _buildSidebarItem(
@@ -413,20 +388,13 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'ai_low_stock',
                     icon: Icons.warning_amber_rounded,
                     title: 'AI Cảnh Báo Cạn Kho',
-                    badge: 'Mới',
                     badgeColor: ColorPalette.dangerCrimson,
                   ),
                   _buildSidebarItem(
                     key: 'ai_expiry',
                     icon: Icons.auto_awesome_rounded,
                     title: 'AI Hàng Hỏng/Hết Hạn',
-                    badge: 'Mới',
                     badgeColor: ColorPalette.dangerCrimson,
-                  ),
-                  _buildSidebarItem(
-                    key: 'cashbook',
-                    icon: Icons.account_balance_wallet_rounded,
-                    title: 'Sổ quỹ & Biến động',
                   ),
                   _buildSidebarItem(
                     key: 'loyalty',
@@ -442,11 +410,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'staff',
                     icon: Icons.badge_rounded,
                     title: 'Nhân viên & Quyền',
-                  ),
-                  _buildSidebarItem(
-                    key: 'reports',
-                    icon: Icons.analytics_rounded,
-                    title: 'Báo cáo & Thống kê',
                   ),
                 ],
               ),
@@ -498,7 +461,7 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                                 ),
                               ),
                               Text(
-                                'CN Quận 1 - Hồ Chí Minh',
+                                'Chi nhánh 1',
                                 style: AppTypography.inter(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,

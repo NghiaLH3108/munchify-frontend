@@ -704,6 +704,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           const SizedBox(height: 14),
 
+          // ── Thông tin tài khoản ngân hàng ──
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              children: [
+                _buildBankInfoRow('Ngân hàng', _bankName),
+                const SizedBox(height: 6),
+                _buildBankInfoRow('Số tài khoản', _accountNo),
+                const SizedBox(height: 6),
+                _buildBankInfoRow('Chủ tài khoản', _accountName),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // ── Khối trạng thái & Giả lập thanh toán VietQR (Sleek Minimal Fintech) ──
           if (!_isQrPaid) ...[
             Container(
@@ -883,6 +904,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildBankInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: ColorPalette.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

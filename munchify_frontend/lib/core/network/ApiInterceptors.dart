@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../features/auth/data/datasources/auth_local_data_source.dart';
 import '../constants/StorageKeys.dart';
+import 'session_events.dart';
 
 // ─── Auth Interceptor ────────────────────────────────────────────────────────
 
@@ -59,6 +60,12 @@ class AuthInterceptor extends Interceptor {
       try {
         await secureStorage.delete(key: StorageKeys.userName);
       } catch (_) {}
+      // Không phát sự kiện nếu lỗi đến từ chính request đăng nhập
+      if (!err.requestOptions.path.contains('/auth/login')) {
+        SessionEvents.notifyUnauthorized();
+      }
+    } else if (err.response?.statusCode == 403) {
+      SessionEvents.notifyForbidden();
     }
     return handler.next(err);
   }

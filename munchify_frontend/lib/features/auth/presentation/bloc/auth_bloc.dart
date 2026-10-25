@@ -7,6 +7,17 @@ import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
+import '../../../../core/utils/platform_helper.dart';
+import '../../domain/entities/user_entity.dart';
+
+const String _kStaffOnAdminPlatformMsg =
+    'Tài khoản nhân viên không có quyền truy cập trang quản trị. Vui lòng sử dụng ứng dụng di động.';
+
+/// Web/Windows chỉ dành cho ADMIN. App mobile cho phép cả STAFF và ADMIN (admin có toàn quyền).
+bool _isRoleAllowedOnPlatform(UserEntity user) {
+  if (PlatformHelper.isAdminPlatform) return user.isAdmin;
+  return user.isAdmin || user.isStaff;
+}
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
@@ -47,6 +58,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             emit(const Unauthenticated());
           },
           (user) async {
+            if (!_isRoleAllowedOnPlatform(user)) {
+              await localDataSource.clearAuthData();
+              emit(const Unauthenticated());
+              return;
+            }
             emit(Authenticated(user: user, token: token));
           },
         );
@@ -68,14 +84,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       password: event.password,
     );
 
-    result.fold(
-      (failure) => emit(AuthFailureState(failure.message)),
-      (authResult) => emit(
-        Authenticated(
-          user: authResult.user,
-          token: authResult.token,
-        ),
-      ),
+    await result.fold(
+      (failure) async => emit(AuthFailureState(failure.message)),
+      (authResult) async {
+        if (!_isRoleAllowedOnPlatform(authResult.user)) {
+          await localDataSource.clearAuthData();
+          emit(const AuthFailureState(_kStaffOnAdminPlatformMsg));
+          return;
+        }
+        emit(
+          Authenticated(
+            user: authResult.user,
+            token: authResult.token,
+          ),
+        );
+      },
     );
   }
 
