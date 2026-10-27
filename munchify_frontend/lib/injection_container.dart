@@ -37,6 +37,12 @@ import 'features/combos/domain/repositories/combo_repository.dart';
 import 'features/combos/domain/usecases/manage_combo_usecases.dart';
 import 'features/combos/presentation/bloc/combo_bloc.dart';
 import 'features/combos/presentation/bloc/combo_form_options_cubit.dart';
+// Reports
+import 'features/reports/data/datasources/report_remote_data_source.dart';
+import 'features/reports/data/repositories/report_repository_impl.dart';
+import 'features/reports/domain/repositories/report_repository.dart';
+import 'features/reports/domain/usecases/report_usecases.dart';
+import 'features/reports/presentation/bloc/report_bloc.dart';
 // Staff
 import 'features/staff/data/datasources/staff_remote_data_source.dart';
 import 'features/staff/data/repositories/staff_repository_impl.dart';
@@ -162,6 +168,14 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => ReportBloc(
+      getRevenueSummary: sl(),
+      getTopSelling: sl(),
+      exportToExcel: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => StaffBloc(
       getStaffList: sl(),
       createStaff: sl(),
@@ -236,6 +250,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteComboUseCase(sl()));
   sl.registerLazySingleton(() => GetComboFormOptionsUseCase(sl()));
 
+  // Reports
+  sl.registerLazySingleton(() => GetRevenueSummaryUseCase(sl()));
+  sl.registerLazySingleton(() => GetTopSellingUseCase(sl()));
+  sl.registerLazySingleton(() => ExportReportToExcelUseCase(sl()));
+
   // Staff
   sl.registerLazySingleton(() => GetStaffListUseCase(sl()));
   sl.registerLazySingleton(() => CreateStaffUseCase(sl()));
@@ -275,6 +294,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<UnitRepository>(
     () => UnitRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<ReportRepository>(
+    () => ReportRepositoryImpl(remoteDataSource: sl()),
   );
 
   sl.registerLazySingleton<ComboRepository>(
@@ -317,6 +340,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<UnitRemoteDataSource>(
     () => UnitRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<ReportRemoteDataSource>(
+    () => ReportRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<ComboRemoteDataSource>(

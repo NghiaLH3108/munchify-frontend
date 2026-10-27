@@ -17,6 +17,11 @@ class ApiEndpoints {
   static const String units = '/api/units';
   static const String combos = '/api/combos';
 
+  // ─── Reports (Admin) ──────────────────────────────────────────────────────
+  static const String reportsRevenue = '/api/reports/revenue';
+  static const String reportsTopSelling = '/api/reports/top-selling';
+  static const String reportsExport = '/api/reports/export';
+
   // ─── Orders & POS ─────────────────────────────────────────────────────────
   static const String orders = '/api/orders';
 
