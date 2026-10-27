@@ -147,9 +147,6 @@ import 'features/promotions/domain/usecases/toggle_promotion_status_usecase.dart
 import 'features/promotions/presentation/bloc/promotion_admin_bloc.dart';
 import 'features/promotions/presentation/bloc/promotion_form_bloc.dart';
 
-// Dashboard
-import 'features/admin/presentation/cubit/dashboard_cubit.dart';
-
 final sl = GetIt.instance; // sl = Service Locator
 
 Future<void> init() async {
@@ -274,10 +271,6 @@ Future<void> init() async {
       updateStaff: sl(),
       toggleStaffStatus: sl(),
     ),
-  );
-
-  sl.registerFactory(
-    () => DashboardCubit(dioClient: sl()),
   );
 
   sl.registerFactory(

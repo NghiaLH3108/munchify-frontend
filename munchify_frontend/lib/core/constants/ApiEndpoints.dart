@@ -50,8 +50,8 @@ class ApiEndpoints {
   // ─── Reports / Analytics ──────────────────────────────────────────────────
   static const String reports = '/api/reports';
 
-  // ─── Dashboard ───────────────────────────────────────────────────────────
-  static const String dashboardSummary = '/api/dashboard/summary';
+
+
 
   // ─── AI Expiry Insights ───────────────────────────────────────────────────
   static const String damagedExpiredRecords = '/api/DamagedExpiredRecords';
