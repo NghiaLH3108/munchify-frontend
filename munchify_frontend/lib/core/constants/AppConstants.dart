@@ -33,8 +33,11 @@ class AppConstants {
   static const String roleStaff = 'STAFF';
 
   // ─── Loyalty Points ────────────────────────────────────────────────────────
-  /// Exchange rate: 1 loyalty point = 1,000 VNĐ discount.
-  static const int pointsToVndRate = 1000;
+  /// Exchange rate: 10 loyalty points = 1,000 VNĐ discount (1 loyalty point = 100 VNĐ discount).
+  static const int pointsToVndRate = 100;
+
+  /// Earning rate: 10,000 VNĐ spent = 1 loyalty point earned.
+  static const int vndPerPointEarned = 10000;
 
   // ─── POS UX ────────────────────────────────────────────────────────────────
   /// Debounce delay for customer search input (ms).

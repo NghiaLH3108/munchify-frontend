@@ -14,17 +14,29 @@ class CategoryLoading extends CategoryState {}
 
 class CategoryLoaded extends CategoryState {
   final List<CategoryEntity> categories;
+  final List<CategoryEntity>? allCategories;
   final bool isListEnd;
+  final bool isRefreshing;
   final String? successMessage;
 
   const CategoryLoaded({
     required this.categories,
+    this.allCategories,
     this.isListEnd = false,
+    this.isRefreshing = false,
     this.successMessage,
   });
 
+  List<CategoryEntity> get kpiCategories => allCategories ?? categories;
+
   @override
-  List<Object?> get props => [categories, isListEnd, successMessage];
+  List<Object?> get props => [
+        categories,
+        allCategories,
+        isListEnd,
+        isRefreshing,
+        successMessage,
+      ];
 }
 
 class CategoryError extends CategoryState {

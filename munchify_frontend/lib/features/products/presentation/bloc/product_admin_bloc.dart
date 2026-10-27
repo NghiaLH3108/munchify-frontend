@@ -9,6 +9,10 @@ class ProductAdminBloc extends Bloc<ProductAdminEvent, ProductAdminState> {
   final GetProductsUseCase getProductsUseCase;
   final ToggleProductStatusUseCase toggleProductStatusUseCase;
 
+  int? _baselineTotalSkus;
+  int? _baselineActiveCount;
+  int? _baselineLowStockCount;
+
   ProductAdminBloc({
     required this.getProductsUseCase,
     required this.toggleProductStatusUseCase,
@@ -34,15 +38,25 @@ class ProductAdminBloc extends Bloc<ProductAdminEvent, ProductAdminState> {
     result.fold(
       (failure) => emit(ProductAdminError(failure.message)),
       (products) {
-        final totalSkus = products.length;
-        final activeCount = products.where((p) => p.isActive).length;
-        final lowStockCount = products.where((p) => p.stockQuantity <= p.minStockLevel).length;
+        final isUnfiltered = (event.search == null || event.search!.trim().isEmpty) &&
+            (event.categoryId == null || event.categoryId!.isEmpty) &&
+            event.isActive == null &&
+            (event.lowStockWarning == null || !event.lowStockWarning!);
+
+        if (isUnfiltered || _baselineTotalSkus == null) {
+          _baselineTotalSkus = products.length;
+          _baselineActiveCount = products.where((p) => p.isActive).length;
+          _baselineLowStockCount =
+              products.where((p) => p.stockQuantity <= p.minStockLevel).length;
+        }
 
         emit(ProductAdminLoaded(
           products: products,
-          totalSkus: totalSkus,
-          activeCount: activeCount,
-          lowStockCount: lowStockCount,
+          totalSkus: _baselineTotalSkus ?? products.length,
+          activeCount:
+              _baselineActiveCount ?? products.where((p) => p.isActive).length,
+          lowStockCount: _baselineLowStockCount ??
+              products.where((p) => p.stockQuantity <= p.minStockLevel).length,
         ));
       },
     );
@@ -54,7 +68,7 @@ class ProductAdminBloc extends Bloc<ProductAdminEvent, ProductAdminState> {
   ) async {
     if (state is ProductAdminLoaded) {
       final currentState = state as ProductAdminLoaded;
-      
+
       // Optimistic update
       final updatedProducts = currentState.products.map((p) {
         if (p.id == event.productId) {
@@ -79,20 +93,26 @@ class ProductAdminBloc extends Bloc<ProductAdminEvent, ProductAdminState> {
         return p;
       }).toList();
 
-      final activeCount = updatedProducts.where((p) => p.isActive).length;
+      final delta = event.isActive ? 1 : -1;
+      final nextActiveCount =
+          ((_baselineActiveCount ?? currentState.activeCount) + delta)
+              .clamp(0, currentState.totalSkus);
+      _baselineActiveCount = nextActiveCount;
 
       emit(ProductAdminLoaded(
         products: updatedProducts,
         totalSkus: currentState.totalSkus,
-        activeCount: activeCount,
+        activeCount: nextActiveCount,
         lowStockCount: currentState.lowStockCount,
       ));
 
       // Call API
-      final result = await toggleProductStatusUseCase(event.productId, event.isActive);
+      final result =
+          await toggleProductStatusUseCase(event.productId, event.isActive);
       result.fold(
         (failure) {
           // Revert on failure
+          _baselineActiveCount = currentState.activeCount;
           emit(currentState);
           emit(ProductAdminError(failure.message));
         },

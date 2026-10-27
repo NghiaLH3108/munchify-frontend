@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
+
 import '../../data/models/product_request_model.dart';
-import '../../domain/entities/product_entity.dart';
 
 abstract class ProductFormEvent extends Equatable {
   const ProductFormEvent();

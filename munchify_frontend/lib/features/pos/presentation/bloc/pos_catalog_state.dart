@@ -20,6 +20,7 @@ class PosCatalogLoaded extends PosCatalogState {
   final int? selectedCategoryId;
   final String? searchQuery;
   final String? selectedUnitName;
+  final bool isLowStockFilter;
 
   const PosCatalogLoaded({
     required this.categories,
@@ -28,11 +29,18 @@ class PosCatalogLoaded extends PosCatalogState {
     this.selectedCategoryId,
     this.searchQuery,
     this.selectedUnitName,
+    this.isLowStockFilter = false,
   });
 
   List<ProductEntity> get displayedProducts {
-    if (selectedUnitName == null) return products;
-    return products.where((p) => p.unitName == selectedUnitName).toList();
+    var list = products;
+    if (selectedUnitName != null) {
+      list = list.where((p) => p.unitName == selectedUnitName).toList();
+    }
+    if (isLowStockFilter) {
+      list = list.where((p) => p.stockQuantity <= 5).toList();
+    }
+    return list;
   }
 
   PosCatalogLoaded copyWith({
@@ -42,6 +50,7 @@ class PosCatalogLoaded extends PosCatalogState {
     int? selectedCategoryId,
     String? searchQuery,
     String? selectedUnitName,
+    bool? isLowStockFilter,
     bool clearUnitFilter = false,
     bool clearCategoryFilter = false,
   }) {
@@ -52,11 +61,20 @@ class PosCatalogLoaded extends PosCatalogState {
       selectedCategoryId: clearCategoryFilter ? null : (selectedCategoryId ?? this.selectedCategoryId),
       searchQuery: searchQuery ?? this.searchQuery,
       selectedUnitName: clearUnitFilter ? null : (selectedUnitName ?? this.selectedUnitName),
+      isLowStockFilter: isLowStockFilter ?? this.isLowStockFilter,
     );
   }
 
   @override
-  List<Object?> get props => [categories, products, combos, selectedCategoryId, searchQuery, selectedUnitName];
+  List<Object?> get props => [
+        categories,
+        products,
+        combos,
+        selectedCategoryId,
+        searchQuery,
+        selectedUnitName,
+        isLowStockFilter,
+      ];
 }
 
 class PosCatalogError extends PosCatalogState {

@@ -10,7 +10,7 @@ import '../bloc/pos_catalog_state.dart';
 class CategoryTabs extends StatelessWidget {
   final PosCatalogLoaded state;
 
-  const CategoryTabs({Key? key, required this.state}) : super(key: key);
+  const CategoryTabs({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +21,46 @@ class CategoryTabs extends StatelessWidget {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: categories.length + 1, // +1 for "All"
+        itemCount: categories.length + 2, // +1 for "All", +1 for "⚠️ Sắp hết"
         itemBuilder: (context, index) {
-          final isAllOption = index == 0;
-          final category = isAllOption ? null : categories[index - 1];
+          // Vị trí 0: Chip lọc "⚠️ Sắp hết / Hết hàng"
+          if (index == 0) {
+            final isLowStockActive = state.isLowStockFilter;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                avatar: Icon(
+                  Icons.warning_amber_rounded,
+                  size: 16,
+                  color: isLowStockActive ? Colors.white : Colors.orange.shade800,
+                ),
+                label: const Text('Sắp hết'),
+                selected: isLowStockActive,
+                onSelected: (_) {
+                  context.read<PosCatalogBloc>().add(ToggleLowStockFilterEvent());
+                },
+                selectedColor: const Color(0xFFE65100),
+                backgroundColor: Colors.orange.shade50,
+                labelStyle: TextStyle(
+                  color: isLowStockActive ? Colors.white : Colors.orange.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: isLowStockActive ? const Color(0xFFE65100) : Colors.orange.shade300,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          final categoryIndex = index - 1;
+          final isAllOption = categoryIndex == 0;
+          final category = isAllOption ? null : categories[categoryIndex - 1];
           final isSelected = isAllOption
-              ? state.selectedCategoryId == null
+              ? (state.selectedCategoryId == null && !state.isLowStockFilter)
               : state.selectedCategoryId == category?.id;
 
           return Padding(

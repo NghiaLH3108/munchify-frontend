@@ -25,7 +25,17 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
     LoadUnitsEvent event,
     Emitter<UnitState> emit,
   ) async {
-    emit(UnitLoading());
+    final currentState = state;
+    if (currentState is UnitLoaded) {
+      emit(UnitLoaded(
+        units: currentState.units,
+        allUnits: currentState.allUnits,
+        isListEnd: currentState.isListEnd,
+        isRefreshing: true,
+      ));
+    } else {
+      emit(UnitLoading());
+    }
 
     final result = await getUnits(
       searchTerm: event.searchTerm,
@@ -36,10 +46,19 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
 
     result.fold(
       (failure) => emit(UnitError(failure.message)),
-      (units) => emit(UnitLoaded(
-        units: units,
-        isListEnd: units.length < event.pageSize,
-      )),
+      (units) {
+        final isUnfiltered = event.isActive == null &&
+            event.searchTerm.trim().isEmpty &&
+            event.page == 1;
+        final prevAll =
+            currentState is UnitLoaded ? currentState.allUnits : null;
+        emit(UnitLoaded(
+          units: units,
+          allUnits: isUnfiltered ? units : (prevAll ?? units),
+          isListEnd: units.length < event.pageSize,
+          isRefreshing: false,
+        ));
+      },
     );
   }
 
@@ -48,8 +67,6 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
     Emitter<UnitState> emit,
   ) async {
     final currentState = state;
-
-    emit(UnitLoading());
 
     final result = await createUnit(
       unitName: event.unitName,
@@ -61,14 +78,23 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
       (failure) => emit(UnitError(failure.message)),
       (newUnit) {
         if (currentState is UnitLoaded) {
+          final updatedAll = [
+            newUnit,
+            ...(currentState.allUnits ?? currentState.units),
+          ];
           emit(UnitLoaded(
             units: [newUnit, ...currentState.units],
+            allUnits: updatedAll,
             isListEnd: currentState.isListEnd,
+            isRefreshing: false,
             successMessage: 'Đã thêm đơn vị tính thành công.',
           ));
         } else {
           emit(UnitLoaded(
-              units: [newUnit], successMessage: 'Đã thêm đơn vị tính thành công.'));
+            units: [newUnit],
+            allUnits: [newUnit],
+            successMessage: 'Đã thêm đơn vị tính thành công.',
+          ));
         }
       },
     );
@@ -79,8 +105,6 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
     Emitter<UnitState> emit,
   ) async {
     final currentState = state;
-
-    emit(UnitLoading());
 
     final result = await updateUnit(
       id: event.id,
@@ -96,16 +120,24 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
           final updated = currentState.units.map((u) {
             return u.id == updatedUnit.id ? updatedUnit : u;
           }).toList();
+          final updatedAll =
+              (currentState.allUnits ?? currentState.units).map((u) {
+            return u.id == updatedUnit.id ? updatedUnit : u;
+          }).toList();
 
           emit(UnitLoaded(
             units: updated,
+            allUnits: updatedAll,
             isListEnd: currentState.isListEnd,
+            isRefreshing: false,
             successMessage: 'Đã cập nhật đơn vị tính thành công.',
           ));
         } else {
           emit(UnitLoaded(
-              units: [updatedUnit],
-              successMessage: 'Đã cập nhật đơn vị tính thành công.'));
+            units: [updatedUnit],
+            allUnits: [updatedUnit],
+            successMessage: 'Đã cập nhật đơn vị tính thành công.',
+          ));
         }
       },
     );
@@ -117,8 +149,6 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
   ) async {
     final currentState = state;
 
-    emit(UnitLoading());
-
     final result = await deleteUnit(event.id);
 
     result.fold(
@@ -127,14 +157,24 @@ class UnitBloc extends Bloc<UnitEvent, UnitState> {
         if (currentState is UnitLoaded) {
           final updated =
               currentState.units.where((u) => u.id != event.id).toList();
+          final updatedAll =
+              (currentState.allUnits ?? currentState.units)
+                  .where((u) => u.id != event.id)
+                  .toList();
 
           emit(UnitLoaded(
             units: updated,
+            allUnits: updatedAll,
             isListEnd: currentState.isListEnd,
+            isRefreshing: false,
             successMessage: 'Đã xóa đơn vị tính.',
           ));
         } else {
-          emit(const UnitLoaded(units: [], successMessage: 'Đã xóa đơn vị tính.'));
+          emit(const UnitLoaded(
+            units: [],
+            allUnits: [],
+            successMessage: 'Đã xóa đơn vị tính.',
+          ));
         }
       },
     );

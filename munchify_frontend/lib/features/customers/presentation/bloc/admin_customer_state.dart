@@ -17,14 +17,42 @@ class AdminCustomerLoading extends AdminCustomerState {}
 class AdminCustomersLoaded extends AdminCustomerState {
   final PagedResult<CustomerEntity> customersData;
   final String? currentSearchKeyword;
+  final bool isRefreshing;
+  final List<CustomerEntity>? kpiCustomers;
+  final int? kpiTotalCount;
 
   const AdminCustomersLoaded({
     required this.customersData,
     this.currentSearchKeyword,
+    this.isRefreshing = false,
+    this.kpiCustomers,
+    this.kpiTotalCount,
   });
 
+  AdminCustomersLoaded copyWith({
+    PagedResult<CustomerEntity>? customersData,
+    String? currentSearchKeyword,
+    bool? isRefreshing,
+    List<CustomerEntity>? kpiCustomers,
+    int? kpiTotalCount,
+  }) {
+    return AdminCustomersLoaded(
+      customersData: customersData ?? this.customersData,
+      currentSearchKeyword: currentSearchKeyword ?? this.currentSearchKeyword,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      kpiCustomers: kpiCustomers ?? this.kpiCustomers,
+      kpiTotalCount: kpiTotalCount ?? this.kpiTotalCount,
+    );
+  }
+
   @override
-  List<Object?> get props => [customersData, currentSearchKeyword];
+  List<Object?> get props => [
+        customersData,
+        currentSearchKeyword,
+        isRefreshing,
+        kpiCustomers,
+        kpiTotalCount,
+      ];
 }
 
 class CustomerPointHistoryLoading extends AdminCustomerState {}

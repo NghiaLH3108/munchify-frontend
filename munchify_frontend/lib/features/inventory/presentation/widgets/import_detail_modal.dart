@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../bloc/stock_import_bloc.dart';
 import '../bloc/stock_import_event.dart';
 import '../../domain/entities/stock_import_entity.dart';
-import '../../../../../core/theme/ColorPalette.dart';
+import '../../../../core/theme/ColorPalette.dart';
 
 class ImportDetailModal extends StatelessWidget {
   final StockImportEntity importEntity;
@@ -13,6 +13,8 @@ class ImportDetailModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final totalQuantity = importEntity.details.fold<int>(0, (sum, item) => sum + item.quantity);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: Colors.white,
@@ -51,7 +53,7 @@ class ImportDetailModal extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text('Mã tham chiếu hệ thống: MNC-WH-${DateFormat('yyyyMMdd').format(importEntity.importDate)}-001', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                        Text('Mã tham chiếu hệ thống: MNC-WH-${DateFormat('yyyyMMdd').format(importEntity.importDate)}-${importEntity.importId.toString().padLeft(3, '0')}', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                       ],
                     ),
                   ],
@@ -97,7 +99,7 @@ class ImportDetailModal extends StatelessWidget {
                                   color: Colors.orange.shade50,
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Text('Đối tác uy tín', style: TextStyle(color: ColorPalette.appetizingOrange, fontSize: 12, fontWeight: FontWeight.w600)),
+                                child: Text('Mã NCC: #SUP-${importEntity.supplierId.toString().padLeft(3, '0')}', style: TextStyle(color: ColorPalette.appetizingOrange, fontSize: 12, fontWeight: FontWeight.w600)),
                               ),
                             ],
                           ),
@@ -118,14 +120,13 @@ class ImportDetailModal extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Số điện thoại liên hệ', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                                    Text('Mã nhà cung cấp', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        Icon(Icons.phone, size: 16, color: ColorPalette.appetizingOrange),
+                                        Icon(Icons.badge_outlined, size: 16, color: ColorPalette.appetizingOrange),
                                         const SizedBox(width: 4),
-                                        const Text('0988 123 456 ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                                        Text('(Anh Thuận Kho Vận)', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                                        Text('SUP-${importEntity.supplierId.toString().padLeft(3, '0')}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                                       ],
                                     ),
                                   ],
@@ -162,12 +163,9 @@ class ImportDetailModal extends StatelessWidget {
                                       children: [
                                         Icon(Icons.person_outline, size: 18, color: ColorPalette.appetizingOrange),
                                         const SizedBox(width: 4),
-                                        const Text('Admin Munchify', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(4)),
-                                          child: Text('Kho Trung Tâm', style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                                        Text(
+                                          importEntity.userName.isNotEmpty ? importEntity.userName : 'Admin (Hệ thống)', 
+                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                                         ),
                                       ],
                                     ),
@@ -281,7 +279,7 @@ class ImportDetailModal extends StatelessWidget {
                                     ),
                                   )),
                                   Expanded(flex: 2, child: Align(alignment: Alignment.centerRight, child: Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)))),
-                                  Expanded(flex: 2, child: Align(alignment: Alignment.centerRight, child: Text('${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0).format(item.importPrice)}', style: TextStyle(color: Colors.grey.shade700, fontSize: 14)))),
+                                  Expanded(flex: 2, child: Align(alignment: Alignment.centerRight, child: Text(NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0).format(item.importPrice), style: TextStyle(color: Colors.grey.shade700, fontSize: 14)))),
                                   Expanded(
                                     flex: 3, 
                                     child: Align(
@@ -295,7 +293,7 @@ class ImportDetailModal extends StatelessWidget {
                                 ],
                               ),
                             );
-                          }).toList(),
+                          }),
                           // Table Footer
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -310,7 +308,7 @@ class ImportDetailModal extends StatelessWidget {
                                 Row(
                                   children: [
                                     Text('Tổng số lượng: ', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                                    Text('217 sản phẩm ', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)), // Fake total for UI
+                                    Text('$totalQuantity sản phẩm ', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                                     Text('(${importEntity.details.length} mặt hàng)', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                                     const SizedBox(width: 16),
                                     Text('Thuế VAT (0%): ', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
@@ -319,9 +317,21 @@ class ImportDetailModal extends StatelessWidget {
                                 ),
                                 Row(
                                   children: [
-                                    Icon(Icons.verified_outlined, size: 16, color: Colors.grey.shade600),
+                                    Icon(
+                                      importEntity.status == 'COMPLETED' ? Icons.verified_outlined : Icons.pending_actions,
+                                      size: 16, 
+                                      color: importEntity.status == 'COMPLETED' ? Colors.green.shade700 : Colors.orange.shade700,
+                                    ),
                                     const SizedBox(width: 4),
-                                    Text('Đã đối chiếu chứng từ bên giao nhận', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                                    Text(
+                                      importEntity.status == 'COMPLETED' 
+                                          ? 'Đã hoàn tất kiểm đếm & nhập kho' 
+                                          : (importEntity.status == 'DRAFT' ? 'Phiếu nháp chờ kiểm đếm thực tế' : 'Phiếu đã hủy'),
+                                      style: TextStyle(
+                                        color: importEntity.status == 'COMPLETED' ? Colors.green.shade700 : Colors.grey.shade700, 
+                                        fontSize: 13,
+                                      ),
+                                    ),
                                   ],
                                 )
                               ],

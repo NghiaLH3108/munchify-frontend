@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/Failures.dart';
 import '../repositories/product_repository.dart';
 
 class ToggleProductStatusUseCase {

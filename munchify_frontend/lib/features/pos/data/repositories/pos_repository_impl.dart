@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/Failures.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/pos_repository.dart';

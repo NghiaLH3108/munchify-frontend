@@ -19,6 +19,7 @@ class ComboLoaded extends ComboState {
   final int pageSize;
   final String? successMessage;
   final String? errorMessage;
+  final bool isRefreshing;
 
   /// Forces re-emission when the same message repeats.
   final int stamp;
@@ -30,6 +31,7 @@ class ComboLoaded extends ComboState {
     required this.pageSize,
     this.successMessage,
     this.errorMessage,
+    this.isRefreshing = false,
     this.stamp = 0,
   });
 
@@ -43,6 +45,7 @@ class ComboLoaded extends ComboState {
         pageSize,
         successMessage,
         errorMessage,
+        isRefreshing,
         stamp,
       ];
 }

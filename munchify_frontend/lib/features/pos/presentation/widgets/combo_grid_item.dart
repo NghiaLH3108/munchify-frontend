@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/product_entity.dart';
+import '../bloc/cart_cubit.dart';
 import 'combo_detail_bottom_sheet.dart';
 
 /// Card hiển thị combo trong carousel POS Home.
@@ -11,7 +13,7 @@ class ComboGridItem extends StatelessWidget {
   final bool isHorizontal;
 
   const ComboGridItem({
-    Key? key, 
+    Key? key,
     required this.combo,
     this.isHorizontal = false,
   }) : super(key: key);
@@ -30,10 +32,10 @@ class ComboGridItem extends StatelessWidget {
   }
 
   Widget _buildHorizontalCard(
-    BuildContext context, 
-    NumberFormat currency, 
-    double saving, 
-    bool isAvailable
+    BuildContext context,
+    NumberFormat currency,
+    double saving,
+    bool isAvailable,
   ) {
     return GestureDetector(
       onTap: () {
@@ -112,11 +114,12 @@ class ComboGridItem extends StatelessWidget {
                   if (!isAvailable)
                     Container(
                       width: 120,
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withOpacity(0.45),
                       child: const Center(
                         child: Text(
-                          'Hết hàng',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          'Combo đã hết',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                     ),
@@ -239,7 +242,18 @@ class ComboGridItem extends StatelessWidget {
                           ],
                         ),
                         ElevatedButton.icon(
-                          onPressed: isAvailable ? () {} : null,
+                          onPressed: isAvailable
+                              ? () {
+                                  context.read<CartCubit>().addItem(combo);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Đã thêm ${combo.name} vào giỏ'),
+                                      duration: const Duration(seconds: 1),
+                                      backgroundColor: ColorPalette.success,
+                                    ),
+                                  );
+                                }
+                              : null,
                           icon: const Icon(Icons.add, size: 16),
                           label: const Text('Chọn', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
@@ -266,10 +280,10 @@ class ComboGridItem extends StatelessWidget {
   }
 
   Widget _buildVerticalCard(
-    BuildContext context, 
-    NumberFormat currency, 
-    double saving, 
-    bool isAvailable
+    BuildContext context,
+    NumberFormat currency,
+    double saving,
+    bool isAvailable,
   ) {
     return GestureDetector(
       onTap: () {
@@ -310,13 +324,25 @@ class ComboGridItem extends StatelessWidget {
                     height: 100,
                     width: double.infinity,
                     color: isAvailable ? Colors.orange.shade50 : Colors.grey.shade100,
-                    child: Center(
-                      child: Icon(
-                        Icons.fastfood,
-                        size: 48,
-                        color: isAvailable ? Colors.orange.shade300 : Colors.grey.shade400,
-                      ),
-                    ),
+                    child: combo.imageUrl != null && combo.imageUrl!.isNotEmpty
+                        ? Image.network(
+                            combo.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Center(
+                              child: Icon(
+                                Icons.fastfood,
+                                size: 48,
+                                color: isAvailable ? Colors.orange.shade300 : Colors.grey.shade400,
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Icon(
+                              Icons.fastfood,
+                              size: 48,
+                              color: isAvailable ? Colors.orange.shade300 : Colors.grey.shade400,
+                            ),
+                          ),
                   ),
                   // Combo code badge
                   Positioned(
@@ -338,10 +364,10 @@ class ComboGridItem extends StatelessWidget {
                   if (!isAvailable)
                     Container(
                       height: 100,
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withOpacity(0.45),
                       child: const Center(
                         child: Text(
-                          'Hết hàng',
+                          'Combo đã hết',
                           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ),
@@ -482,7 +508,18 @@ class ComboGridItem extends StatelessWidget {
                       disabledForegroundColor: ColorPalette.onPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: isAvailable ? () {} : null,
+                    onPressed: isAvailable
+                        ? () {
+                            context.read<CartCubit>().addItem(combo);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Đã thêm ${combo.name} vào giỏ'),
+                                duration: const Duration(seconds: 1),
+                                backgroundColor: ColorPalette.success,
+                              ),
+                            );
+                          }
+                        : null,
                   ),
                 ],
               ),

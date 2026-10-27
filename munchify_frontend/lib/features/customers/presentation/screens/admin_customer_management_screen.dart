@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,7 +10,6 @@ import '../bloc/admin_customer_bloc.dart';
 import '../bloc/admin_customer_event.dart';
 import '../bloc/admin_customer_state.dart';
 import '../widgets/customer_points_history_modal.dart';
-import '../widgets/customer_form_dialog.dart';
 
 class AdminCustomerManagementScreen extends StatefulWidget {
   final bool embedInShell;
@@ -30,6 +30,7 @@ class _AdminCustomerManagementScreenState
   String _lastSyncedTime = 'Vừa cập nhật';
 
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _AdminCustomerManagementScreenState
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -83,15 +85,6 @@ class _AdminCustomerManagementScreenState
           BlocProvider.value(value: context.read<AdminCustomerBloc>()),
         ],
         child: CustomerPointsHistoryModal(customer: customer),
-      ),
-    );
-  }
-
-  void _openCreateCustomerDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => CustomerFormDialog(
-        onSuccess: _loadData,
       ),
     );
   }
@@ -153,6 +146,8 @@ class _AdminCustomerManagementScreenState
           return _buildErrorState(state.message);
         } else if (state is AdminCustomersLoaded) {
           final allItems = state.customersData.items;
+          final kpiItems = state.kpiCustomers ?? allItems;
+          final kpiTotal = state.kpiTotalCount ?? state.customersData.totalCount;
 
           // Client-side filtering for points (Có điểm / Chưa có điểm)
           final filteredItems = allItems.where((customer) {
@@ -172,13 +167,14 @@ class _AdminCustomerManagementScreenState
               children: [
                 _buildPageTitleBar(context),
                 const SizedBox(height: 20),
-                _buildKpiMetrics(allItems, state.customersData.totalCount),
+                _buildKpiMetrics(kpiItems, kpiTotal),
                 const SizedBox(height: 24),
                 _buildCustomerTableCard(
                   context,
                   filteredItems,
                   state.customersData.totalPages,
                   state.customersData.totalCount,
+                  isRefreshing: state.isRefreshing,
                 ),
               ],
             ),
@@ -214,7 +210,7 @@ class _AdminCustomerManagementScreenState
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       decoration: BoxDecoration(
         color: ColorPalette.surface,
-        border: Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
+        border: const Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -291,7 +287,7 @@ class _AdminCustomerManagementScreenState
                             style: const TextStyle(fontSize: 13),
                             decoration: InputDecoration(
                               hintText: 'Tìm nhanh... (Ctrl+K)',
-                              hintStyle: TextStyle(
+                              hintStyle: const TextStyle(
                                   fontSize: 12, color: ColorPalette.textMuted),
                               prefixIcon: const Icon(Icons.search_rounded,
                                   size: 18, color: ColorPalette.textMuted),
@@ -302,13 +298,13 @@ class _AdminCustomerManagementScreenState
                                   horizontal: 14, vertical: 8),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide:
-                                    BorderSide(color: ColorPalette.borderSubtle),
+                                borderSide: const BorderSide(
+                                    color: ColorPalette.borderSubtle),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide:
-                                    BorderSide(color: ColorPalette.borderSubtle),
+                                borderSide: const BorderSide(
+                                    color: ColorPalette.borderSubtle),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -371,10 +367,10 @@ class _AdminCustomerManagementScreenState
                         ),
                         child: Row(
                           children: [
-                            CircleAvatar(
+                            const CircleAvatar(
                               radius: 14,
                               backgroundColor: ColorPalette.surfaceContainerHigh,
-                              child: const Text('HM',
+                              child: Text('HM',
                                   style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
@@ -382,11 +378,11 @@ class _AdminCustomerManagementScreenState
                             ),
                             if (!isVeryNarrow) ...[
                               const SizedBox(width: 8),
-                              Column(
+                              const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Hoàng Minh',
+                                  Text('Hoàng Minh',
                                       style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
@@ -469,22 +465,6 @@ class _AdminCustomerManagementScreenState
                     ],
                   ),
                   const SizedBox(width: 14),
-                  ElevatedButton.icon(
-                    onPressed: () => _openCreateCustomerDialog(context),
-                    icon: const Icon(Icons.person_add_rounded, size: 18),
-                    label: const Text('+ Thêm Khách Hàng'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorPalette.primaryContainer,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                      textStyle: AppTypography.inter(
-                          fontSize: 13, fontWeight: FontWeight.w700),
-                    ),
-                  ),
                 ],
               );
 
@@ -769,17 +749,16 @@ class _AdminCustomerManagementScreenState
       child: TextField(
         controller: _searchController,
         onChanged: (val) {
-          setState(() => _searchQuery = val.trim());
-          if (val.isEmpty) {
+          setState(() {});
+          _debounce?.cancel();
+          _debounce = Timer(const Duration(milliseconds: 350), () {
+            if (!mounted) return;
+            setState(() {
+              _searchQuery = val.trim();
+              _currentPage = 1;
+            });
             _loadData();
-          }
-        },
-        onSubmitted: (val) {
-          setState(() {
-            _searchQuery = val.trim();
-            _currentPage = 1;
           });
-          _loadData();
         },
         style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(
@@ -787,12 +766,16 @@ class _AdminCustomerManagementScreenState
           hintStyle: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
           prefixIcon: const Icon(Icons.search_rounded,
               size: 18, color: ColorPalette.textMuted),
-          suffixIcon: _searchQuery.isNotEmpty
+          suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear_rounded, size: 16),
                   onPressed: () {
+                    _debounce?.cancel();
                     _searchController.clear();
-                    setState(() => _searchQuery = '');
+                    setState(() {
+                      _searchQuery = '';
+                      _currentPage = 1;
+                    });
                     _loadData();
                   },
                 )
@@ -898,9 +881,14 @@ class _AdminCustomerManagementScreenState
   // ═══════════════════════════════════════════════════════════════════════════
   // DATA TABLE / CARD CONTAINER
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildCustomerTableCard(BuildContext context,
-      List<CustomerEntity> items, int totalPages, int totalCount) {
-    if (items.isEmpty) {
+  Widget _buildCustomerTableCard(
+    BuildContext context,
+    List<CustomerEntity> items,
+    int totalPages,
+    int totalCount, {
+    bool isRefreshing = false,
+  }) {
+    if (items.isEmpty && !isRefreshing) {
       return _buildEmptyState();
     }
 
@@ -917,9 +905,16 @@ class _AdminCustomerManagementScreenState
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (isRefreshing)
+            const LinearProgressIndicator(
+              minHeight: 2,
+              color: ColorPalette.appetizingOrange,
+              backgroundColor: Colors.transparent,
+            ),
           // Table Card Header Bar
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
@@ -963,7 +958,7 @@ class _AdminCustomerManagementScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Hiển thị trang $_currentPage / $totalPages — thông tin liên hệ và lịch sử giao dịch điểm.',
+                      'Hiển thị trang $_currentPage / ${totalPages == 0 ? 1 : totalPages} — thông tin liên hệ và lịch sử giao dịch điểm.',
                       style: AppTypography.inter(
                           fontSize: 12, color: ColorPalette.textMuted),
                     ),
@@ -999,23 +994,6 @@ class _AdminCustomerManagementScreenState
                         ],
                       ),
                     ),
-                    // Export button
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.ios_share_rounded,
-                          size: 16, color: ColorPalette.tertiary),
-                      label: const Text('Xuất Excel / PDF'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: ColorPalette.onSurfaceDark,
-                        side: const BorderSide(color: ColorPalette.borderSubtle),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        textStyle: AppTypography.inter(
-                            fontSize: 12, fontWeight: FontWeight.w600),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
                   ],
                 ),
               ],
@@ -1024,7 +1002,9 @@ class _AdminCustomerManagementScreenState
           const Divider(height: 1, color: ColorPalette.borderSubtle),
 
           // Main Content: Either Proportional Flex Table OR Modern Card Grid
-          if (!_isCardView)
+          if (items.isEmpty)
+            _buildEmptyState()
+          else if (!_isCardView)
             LayoutBuilder(
               builder: (context, constraints) {
                 final effectiveWidth = math.max(880.0, constraints.maxWidth);
@@ -1068,8 +1048,8 @@ class _AdminCustomerManagementScreenState
         color: ColorPalette.webBgAdmin.withValues(alpha: 0.8),
         border: const Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
       ),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 44, child: Text('#', style: AppTypography.tableHeader)),
           SizedBox(width: 12),
           Expanded(
@@ -1484,6 +1464,7 @@ class _AdminCustomerManagementScreenState
   // PAGINATION
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildPagination(int totalPages, int totalCount) {
+    final displayTotalPages = totalPages == 0 ? 1 : totalPages;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
       child: Wrap(
@@ -1493,7 +1474,7 @@ class _AdminCustomerManagementScreenState
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
-            'Hiển thị trang $_currentPage / $totalPages (Tổng $totalCount khách hàng)',
+            'Hiển thị trang $_currentPage / $displayTotalPages (Tổng $totalCount khách hàng)',
             style: AppTypography.dashboardSubtitle,
           ),
           Row(
@@ -1531,7 +1512,7 @@ class _AdminCustomerManagementScreenState
                 icon: Icons.chevron_right_rounded,
                 label: 'Sau',
                 isNext: true,
-                enabled: _currentPage < totalPages,
+                enabled: _currentPage < displayTotalPages,
                 onTap: () {
                   setState(() => _currentPage++);
                   _loadData();
@@ -1638,10 +1619,12 @@ class _AdminCustomerManagementScreenState
           const SizedBox(height: 20),
           OutlinedButton.icon(
             onPressed: () {
+              _debounce?.cancel();
               _searchController.clear();
               setState(() {
                 _searchQuery = '';
                 _selectedHasPoints = null;
+                _currentPage = 1;
               });
               _loadData();
             },

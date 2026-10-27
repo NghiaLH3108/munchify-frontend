@@ -8,6 +8,8 @@ class AdminCustomerBloc extends Bloc<AdminCustomerEvent, AdminCustomerState> {
   final GetCustomersUseCase getCustomersUseCase;
   final GetCustomerPointHistoryUseCase getCustomerPointHistoryUseCase;
 
+  AdminCustomersLoaded? _lastCustomersLoaded;
+
   AdminCustomerBloc({
     required this.getCustomersUseCase,
     required this.getCustomerPointHistoryUseCase,
@@ -20,7 +22,15 @@ class AdminCustomerBloc extends Bloc<AdminCustomerEvent, AdminCustomerState> {
     LoadAdminCustomers event,
     Emitter<AdminCustomerState> emit,
   ) async {
-    emit(AdminCustomerLoading());
+    if (_lastCustomersLoaded != null) {
+      emit(_lastCustomersLoaded!.copyWith(
+        isRefreshing: true,
+        currentSearchKeyword: event.searchKeyword,
+      ));
+    } else {
+      emit(AdminCustomerLoading());
+    }
+
     final result = await getCustomersUseCase(
       pageIndex: event.pageIndex,
       pageSize: event.pageSize,
@@ -28,11 +38,33 @@ class AdminCustomerBloc extends Bloc<AdminCustomerEvent, AdminCustomerState> {
     );
 
     result.fold(
-      (failure) => emit(AdminCustomerError(failure.message)),
-      (data) => emit(AdminCustomersLoaded(
-        customersData: data,
-        currentSearchKeyword: event.searchKeyword,
-      )),
+      (failure) {
+        if (_lastCustomersLoaded != null) {
+          emit(_lastCustomersLoaded!.copyWith(isRefreshing: false));
+        } else {
+          emit(AdminCustomerError(failure.message));
+        }
+      },
+      (data) {
+        final isUnfilteredSearch =
+            event.searchKeyword == null || event.searchKeyword!.trim().isEmpty;
+        final kpiItems = isUnfilteredSearch
+            ? data.items
+            : (_lastCustomersLoaded?.kpiCustomers ?? data.items);
+        final kpiTotal = isUnfilteredSearch
+            ? data.totalCount
+            : (_lastCustomersLoaded?.kpiTotalCount ?? data.totalCount);
+
+        final nextState = AdminCustomersLoaded(
+          customersData: data,
+          currentSearchKeyword: event.searchKeyword,
+          isRefreshing: false,
+          kpiCustomers: kpiItems,
+          kpiTotalCount: kpiTotal,
+        );
+        _lastCustomersLoaded = nextState;
+        emit(nextState);
+      },
     );
   }
 

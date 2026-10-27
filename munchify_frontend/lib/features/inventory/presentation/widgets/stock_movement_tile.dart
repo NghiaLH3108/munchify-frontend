@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:munchify_frontend/features/inventory/domain/entities/stock_movement_entity.dart';
+import '../../domain/entities/stock_movement_entity.dart';
 
 class StockMovementTile extends StatelessWidget {
   final StockMovementEntity movement;

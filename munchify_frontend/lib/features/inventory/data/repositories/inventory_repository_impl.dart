@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
-import 'package:munchify_frontend/core/errors/Failures.dart';
-import 'package:munchify_frontend/core/network/NetworkInfo.dart';
-import 'package:munchify_frontend/core/utils/PagedResult.dart';
-import 'package:munchify_frontend/features/inventory/data/datasources/inventory_remote_datasource.dart';
-import 'package:munchify_frontend/features/inventory/domain/entities/stock_movement_entity.dart';
-import 'package:munchify_frontend/features/inventory/domain/repositories/inventory_repository.dart';
+import '../../../../core/errors/Failures.dart';
+import '../../../../core/network/NetworkInfo.dart';
+import '../../../../core/utils/PagedResult.dart';
+import '../datasources/inventory_remote_datasource.dart';
+import '../../domain/entities/stock_movement_entity.dart';
+import '../../domain/repositories/inventory_repository.dart';
 
 class InventoryRepositoryImpl implements InventoryRepository {
   final InventoryRemoteDataSource remoteDataSource;

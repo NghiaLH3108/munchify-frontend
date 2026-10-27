@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../bloc/stock_import_bloc.dart';
 import '../bloc/stock_import_event.dart';
-import '../../../../../core/theme/ColorPalette.dart';
-import '../../../../../core/constants/ApiEndpoints.dart';
-import '../../../../../injection_container.dart' as di;
+import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/constants/ApiEndpoints.dart';
+import '../../../../injection_container.dart' as di;
 import 'package:dio/dio.dart';
 
 class CreateImportModal extends StatefulWidget {

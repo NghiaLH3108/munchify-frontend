@@ -19,6 +19,7 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
     on<SearchProductEvent>(_onSearchProduct);
     on<FilterByCategoryEvent>(_onFilterByCategory);
     on<FilterByUnitEvent>(_onFilterByUnit);
+    on<ToggleLowStockFilterEvent>(_onToggleLowStockFilter);
   }
 
   Future<void> _onLoadCatalog(
@@ -115,6 +116,18 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
       } else {
         emit(currentState.copyWith(selectedUnitName: event.unitName));
       }
+    }
+  }
+
+  void _onToggleLowStockFilter(
+    ToggleLowStockFilterEvent event,
+    Emitter<PosCatalogState> emit,
+  ) {
+    if (state is PosCatalogLoaded) {
+      final currentState = state as PosCatalogLoaded;
+      emit(currentState.copyWith(
+        isLowStockFilter: !currentState.isLowStockFilter,
+      ));
     }
   }
 }

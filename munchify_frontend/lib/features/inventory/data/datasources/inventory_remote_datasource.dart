@@ -1,7 +1,7 @@
-import 'package:munchify_frontend/core/constants/ApiEndpoints.dart';
-import 'package:munchify_frontend/core/network/DioClient.dart';
-import 'package:munchify_frontend/core/utils/PagedResult.dart';
-import 'package:munchify_frontend/features/inventory/data/models/stock_movement_model.dart';
+import '../../../../core/constants/ApiEndpoints.dart';
+import '../../../../core/network/DioClient.dart';
+import '../../../../core/utils/PagedResult.dart';
+import '../models/stock_movement_model.dart';
 
 abstract class InventoryRemoteDataSource {
   Future<PagedResult<StockMovementModel>> getStockMovements({

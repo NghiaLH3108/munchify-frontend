@@ -3,6 +3,18 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
+// Auth
+import 'features/auth/data/datasources/auth_local_data_source.dart';
+import 'features/auth/data/datasources/auth_remote_data_source.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/forgot_password_usecase.dart';
+import 'features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/domain/usecases/logout_usecase.dart';
+import 'features/auth/domain/usecases/reset_password_usecase.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+
 import 'features/customers/data/datasources/customer_remote_data_source.dart';
 import 'features/customers/data/repositories/customer_repository_impl.dart';
 import 'features/customers/domain/repositories/customer_repository.dart';
@@ -22,6 +34,13 @@ import 'features/categories/data/repositories/category_repository_impl.dart';
 import 'features/categories/domain/repositories/category_repository.dart';
 import 'features/categories/domain/usecases/manage_category_usecases.dart';
 import 'features/categories/presentation/bloc/category_bloc.dart';
+
+// Suppliers
+import 'features/suppliers/data/datasources/supplier_remote_data_source.dart';
+import 'features/suppliers/data/repositories/supplier_repository_impl.dart';
+import 'features/suppliers/domain/repositories/supplier_repository.dart';
+import 'features/suppliers/domain/usecases/manage_supplier_usecases.dart';
+import 'features/suppliers/presentation/bloc/supplier_bloc.dart';
 
 // Units
 import 'features/units/data/datasources/unit_remote_data_source.dart';
@@ -61,6 +80,28 @@ import 'features/pos/domain/usecases/get_products_usecase.dart';
 import 'features/pos/domain/usecases/get_combos_usecase.dart' as pos_uc;
 import 'features/pos/presentation/bloc/pos_catalog_bloc.dart';
 
+// POS – Cart & Orders
+import 'features/pos/data/datasources/order_remote_data_source.dart';
+import 'features/pos/data/datasources/promotion_remote_data_source.dart' as pos_promo;
+import 'features/pos/data/repositories/order_repository_impl.dart';
+import 'features/pos/data/repositories/promotion_repository_impl.dart' as pos_promo;
+import 'features/pos/domain/repositories/order_repository.dart';
+import 'features/pos/domain/repositories/promotion_repository.dart' as pos_promo;
+import 'features/pos/domain/usecases/create_order_usecase.dart';
+import 'features/pos/domain/usecases/get_orders_usecase.dart';
+import 'features/pos/domain/usecases/apply_promotion_usecase.dart';
+import 'features/pos/domain/usecases/get_active_promotions_usecase.dart';
+
+// Admin Orders
+import 'features/orders/data/datasources/admin_order_remote_datasource.dart';
+import 'features/orders/data/repositories/admin_order_repository_impl.dart';
+import 'features/orders/domain/repositories/admin_order_repository.dart';
+import 'features/orders/domain/usecases/get_admin_orders_usecase.dart';
+import 'features/orders/domain/usecases/get_admin_order_detail_usecase.dart';
+import 'features/orders/presentation/bloc/admin_order_bloc.dart';
+import 'features/pos/presentation/bloc/cart_cubit.dart';
+import 'features/pos/presentation/bloc/order_bloc.dart';
+
 // Inventory (Stock Imports & Movements)
 import 'features/inventory/data/datasources/stock_remote_data_source.dart';
 import 'features/inventory/data/repositories/stock_repository_impl.dart';
@@ -89,10 +130,25 @@ import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
 import 'features/inventory/domain/usecases/get_pending_records_usecase.dart';
 import 'features/inventory/domain/usecases/get_ai_expiry_summary_usecase.dart';
 import 'features/inventory/domain/usecases/approve_record_usecase.dart';
+import 'features/inventory/domain/usecases/report_damaged_expired_usecase.dart';
 
 import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
 import 'features/inventory/domain/usecases/get_forecasting_usecase.dart';
 import 'features/inventory/domain/usecases/generate_draft_imports_from_forecast_usecase.dart';
+
+import 'features/promotions/data/datasources/promotion_remote_data_source.dart';
+import 'features/promotions/data/repositories/promotion_repository_impl.dart';
+import 'features/promotions/domain/repositories/promotion_repository.dart';
+import 'features/promotions/domain/usecases/get_promotions_usecase.dart';
+import 'features/promotions/domain/usecases/get_promotion_by_id_usecase.dart';
+import 'features/promotions/domain/usecases/create_promotion_usecase.dart';
+import 'features/promotions/domain/usecases/update_promotion_usecase.dart';
+import 'features/promotions/domain/usecases/toggle_promotion_status_usecase.dart';
+import 'features/promotions/presentation/bloc/promotion_admin_bloc.dart';
+import 'features/promotions/presentation/bloc/promotion_form_bloc.dart';
+
+// Dashboard
+import 'features/admin/presentation/cubit/dashboard_cubit.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
 
@@ -100,6 +156,32 @@ Future<void> init() async {
   /// ==============================
   /// BLoC
   /// ==============================
+  sl.registerFactory(
+    () => AuthBloc(
+      loginUseCase: sl(),
+      logoutUseCase: sl(),
+      getCurrentUserUseCase: sl(),
+      forgotPasswordUseCase: sl(),
+      resetPasswordUseCase: sl(),
+      localDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => PromotionAdminBloc(
+      getPromotionsUseCase: sl(),
+      togglePromotionStatusUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => PromotionFormBloc(
+      createPromotionUseCase: sl(),
+      updatePromotionUseCase: sl(),
+      getProductsUseCase: sl<admin_get_products.GetProductsUseCase>(),
+    ),
+  );
+
   sl.registerFactory(
     () => CustomerBloc(
       searchCustomer: sl(),
@@ -111,6 +193,7 @@ Future<void> init() async {
       getPendingRecordsUseCase: sl(),
       getAiExpirySummaryUseCase: sl(),
       approveRecordUseCase: sl(),
+      reportDamagedExpiredUseCase: sl(),
     ),
   );
 
@@ -142,6 +225,15 @@ Future<void> init() async {
       createCategory: sl(),
       updateCategory: sl(),
       deleteCategory: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => SupplierBloc(
+      getSuppliersUseCase: sl(),
+      createSupplierUseCase: sl(),
+      updateSupplierUseCase: sl(),
+      deleteSupplierUseCase: sl(),
     ),
   );
 
@@ -185,10 +277,32 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => DashboardCubit(dioClient: sl()),
+  );
+
+  sl.registerFactory(
     () => PosCatalogBloc(
       getProductsUseCase: sl(),
       getCombosUseCase: sl(),
       repository: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => CartCubit(applyPromotionUseCase: sl()),
+  );
+
+  sl.registerFactory(
+    () => OrderBloc(
+      createOrderUseCase: sl(),
+      getOrdersUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => AdminOrderBloc(
+      getAdminOrdersUseCase: sl(),
+      getAdminOrderDetailUseCase: sl(),
     ),
   );
 
@@ -216,10 +330,18 @@ Future<void> init() async {
   /// ==============================
   /// Use Cases
   /// ==============================
+  // Auth
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
+  sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
+
   // AI Expiry
   sl.registerLazySingleton(() => GetPendingRecordsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiExpirySummaryUseCase(sl()));
   sl.registerLazySingleton(() => ApproveRecordUseCase(sl()));
+  sl.registerLazySingleton(() => ReportDamagedExpiredUseCase(sl()));
 
   // AI Low Stock
   sl.registerLazySingleton(() => GetForecastingUseCase(sl()));
@@ -236,6 +358,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CreateCategoryUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
+
+  // Supplier
+  sl.registerLazySingleton(() => GetSuppliersUseCase(sl()));
+  sl.registerLazySingleton(() => CreateSupplierUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateSupplierUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteSupplierUseCase(sl()));
 
   // Unit
   sl.registerLazySingleton(() => GetUnitsUseCase(sl()));
@@ -265,6 +393,14 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   sl.registerLazySingleton(() => pos_uc.GetCombosUseCase(sl()));
 
+  // POS – Orders & Promotions
+  sl.registerLazySingleton(() => CreateOrderUseCase(sl()));
+  sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => ApplyPromotionUseCase(sl()));
+  sl.registerLazySingleton(() => GetActivePromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetAdminOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => GetAdminOrderDetailUseCase(sl()));
+
   // Customer
   sl.registerLazySingleton(() => SearchCustomerUseCase(sl()));
   sl.registerLazySingleton(() => CreateCustomerUseCase(sl()));
@@ -281,15 +417,40 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
   sl.registerLazySingleton(() => ToggleProductStatusUseCase(sl()));
 
+  // Promotions
+  sl.registerLazySingleton(() => GetPromotionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetPromotionByIdUseCase(sl()));
+  sl.registerLazySingleton(() => CreatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => UpdatePromotionUseCase(sl()));
+  sl.registerLazySingleton(() => TogglePromotionStatusUseCase(sl()));
+
   /// ==============================
   /// Repository
   /// ==============================
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<PromotionRepository>(
+    () => PromotionRepositoryImpl(remoteDataSource: sl()),
+  );
+
   sl.registerLazySingleton<StockRepository>(
     () => StockRepositoryImpl(remoteDataSource: sl()),
   );
   
   sl.registerLazySingleton<CategoryRepository>(
     () => CategoryRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<SupplierRepository>(
+    () => SupplierRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
   );
 
   sl.registerLazySingleton<UnitRepository>(
@@ -312,6 +473,18 @@ Future<void> init() async {
     () => PosRepositoryImpl(remoteDataSource: sl()),
   );
 
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<AdminOrderRepository>(
+    () => AdminOrderRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<pos_promo.PromotionRepository>(
+    () => pos_promo.PromotionRepositoryImpl(remoteDataSource: sl()),
+  );
+
   sl.registerLazySingleton<CustomerRepository>(
     () => CustomerRepositoryImpl(remoteDataSource: sl()),
   );
@@ -330,12 +503,28 @@ Future<void> init() async {
   /// ==============================
   /// Data Sources
   /// ==============================
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(secureStorage: sl()),
+  );
+
+  sl.registerLazySingleton<PromotionRemoteDataSource>(
+    () => PromotionRemoteDataSourceImpl(dioClient: sl()),
+  );
+
   sl.registerLazySingleton<StockRemoteDataSource>(
     () => StockRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<CategoryRemoteDataSource>(
     () => CategoryRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<SupplierRemoteDataSource>(
+    () => SupplierRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<UnitRemoteDataSource>(
@@ -356,6 +545,18 @@ Future<void> init() async {
 
   sl.registerLazySingleton<PosRemoteDataSource>(
     () => PosRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<AdminOrderRemoteDataSource>(
+    () => AdminOrderRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<pos_promo.PromotionRemoteDataSource>(
+    () => pos_promo.PromotionRemoteDataSourceImpl(dioClient: sl()),
   );
   
   sl.registerLazySingleton<CustomerRemoteDataSource>(

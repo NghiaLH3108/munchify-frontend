@@ -1,7 +1,7 @@
 import '../../../../core/constants/ApiEndpoints.dart';
 import '../models/stock_import_model.dart';
 import '../models/damaged_expired_record_model.dart';
-import 'package:munchify_frontend/core/network/DioClient.dart';
+import '../../../../core/network/DioClient.dart';
 
 
 
@@ -16,9 +16,10 @@ abstract class StockRemoteDataSource {
   Future<bool> cancelImport(int id);
   
   // AI Expiry Insights
-  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords();
+  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords({String status = 'ALL'});
   Future<AiExpirySummaryModel> getAiExpirySummaryMetrics();
   Future<bool> approveDamagedExpiredRecord(int id);
+  Future<DamagedExpiredRecordModel> createStaffDamageReport(int productId, int quantity, String reportType, String reason);
 
   // AI Low Stock Warning
   Future<List<ForecastItemModel>> getForecasting({int daysHistory = 30});
@@ -66,8 +67,11 @@ class StockRemoteDataSourceImpl implements StockRemoteDataSource {
   }
 
   @override
-  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords() async {
-    final response = await dioClient.dio.get(ApiEndpoints.damagedExpiredPending());
+  Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords({String status = 'ALL'}) async {
+    final response = await dioClient.dio.get(
+      ApiEndpoints.damagedExpiredPending(), 
+      queryParameters: {'status': status},
+    );
     final data = response.data['data'] as List;
     return data.map((json) => DamagedExpiredRecordModel.fromJson(json)).toList();
   }
@@ -82,6 +86,20 @@ class StockRemoteDataSourceImpl implements StockRemoteDataSource {
   Future<bool> approveDamagedExpiredRecord(int id) async {
     final response = await dioClient.dio.put(ApiEndpoints.damagedExpiredApprove(id));
     return response.data['data'] as bool;
+  }
+
+  @override
+  Future<DamagedExpiredRecordModel> createStaffDamageReport(int productId, int quantity, String reportType, String reason) async {
+    final response = await dioClient.dio.post(
+      ApiEndpoints.damagedExpiredReport,
+      data: {
+        'productId': productId,
+        'quantity': quantity,
+        'reportType': reportType,
+        'reason': reason,
+      },
+    );
+    return DamagedExpiredRecordModel.fromJson(response.data['data']);
   }
 
   @override

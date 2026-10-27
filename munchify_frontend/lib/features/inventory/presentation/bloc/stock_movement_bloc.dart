@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:munchify_frontend/features/inventory/domain/usecases/get_stock_movements_usecase.dart';
-import 'package:munchify_frontend/features/inventory/domain/usecases/adjust_stock_usecase.dart';
+import '../../domain/usecases/get_stock_movements_usecase.dart';
+import '../../domain/usecases/adjust_stock_usecase.dart';
 import 'stock_movement_event.dart';
 import 'stock_movement_state.dart';
 

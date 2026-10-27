@@ -373,8 +373,15 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: ColorPalette.borderSubtle),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
+          if (state.isRefreshing)
+            const LinearProgressIndicator(
+              minHeight: 2,
+              color: ColorPalette.appetizingOrange,
+              backgroundColor: Colors.transparent,
+            ),
           LayoutBuilder(
             builder: (context, constraints) {
               const minWidth = 980.0;
@@ -566,16 +573,16 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
       spacing: 6,
       runSpacing: 6,
       children: combo.items.map((i) {
-        final isOutOfStock = i.componentStockQuantity <= 0;
+        final isOutOfStock = i.componentStockQuantity < i.quantity;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: isOutOfStock 
-                ? ColorPalette.dangerCrimson.withValues(alpha: 0.1) 
+            color: isOutOfStock
+                ? ColorPalette.dangerCrimson.withValues(alpha: 0.1)
                 : ColorPalette.surfaceVariant,
             borderRadius: BorderRadius.circular(8),
-            border: isOutOfStock 
-                ? Border.all(color: ColorPalette.dangerCrimson.withValues(alpha: 0.3)) 
+            border: isOutOfStock
+                ? Border.all(color: ColorPalette.dangerCrimson.withValues(alpha: 0.3))
                 : null,
           ),
           child: Text(
@@ -594,8 +601,8 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
 
   Widget _buildStatusBadge(ComboEntity combo) {
     final active = combo.isActive;
-    final isOutOfStock = combo.items.any((i) => i.componentStockQuantity <= 0);
-    
+    final isOutOfStock = combo.isOutOfStock;
+
     final color = active ? ColorPalette.success : ColorPalette.textMuted;
     return Align(
       alignment: Alignment.centerLeft,
@@ -632,13 +639,13 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
           ),
           if (active && isOutOfStock) ...[
             const SizedBox(height: 4),
-            Row(
+            const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 12, color: ColorPalette.dangerCrimson),
-                const SizedBox(width: 4),
-                const Text(
-                  'Thiếu hàng',
+                Icon(Icons.warning_amber_rounded, size: 12, color: ColorPalette.dangerCrimson),
+                SizedBox(width: 4),
+                Text(
+                  'Combo đã hết',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,

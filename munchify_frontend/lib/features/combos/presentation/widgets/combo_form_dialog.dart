@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:dio/dio.dart';
+import '../../../../injection_container.dart' as di;
 
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/combo_entity.dart';
@@ -63,6 +66,7 @@ class _ComboFormDialogState extends State<ComboFormDialog> {
   bool _saving = false;
   String? _serverError;
   String? _itemsError;
+  bool _isUploading = false;
 
   bool get _isEdit => widget.combo != null;
 
@@ -113,6 +117,50 @@ class _ComboFormDialogState extends State<ComboFormDialog> {
   double get _discountPercent => double.tryParse(_discountCtrl.text.trim()) ?? 0;
   double get _retailTotal => _lines.fold(0.0, (s, l) => s + l.total);
   double get _comboPrice => _retailTotal * (1 - (_discountPercent / 100));
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      PlatformFile? result = await FilePicker.pickFile(type: FileType.image);
+      if (result != null) {
+        setState(() => _isUploading = true);
+
+        FormData formData;
+        if (result.path != null) {
+          formData = FormData.fromMap({
+            "file": await MultipartFile.fromFile(
+              result.path!,
+              filename: result.name,
+            ),
+          });
+        } else {
+          final bytes = await result.readAsBytes();
+          formData = FormData.fromMap({
+            "file": MultipartFile.fromBytes(bytes, filename: result.name),
+          });
+        }
+
+        final dio = di.sl<Dio>();
+        final response = await dio.post('/api/upload/image', data: formData);
+
+        if (response.statusCode == 200 &&
+            response.data != null &&
+            response.data['url'] != null) {
+          setState(() {
+            _imageCtrl.text = response.data['url'];
+            _isUploading = false;
+          });
+        } else {
+          throw Exception('Failed to upload image');
+        }
+      }
+    } catch (e) {
+      setState(() => _isUploading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
+      }
+    }
+  }
 
   void _addProduct(ComponentProductEntity p) {
     setState(() {
@@ -390,10 +438,74 @@ class _ComboFormDialogState extends State<ComboFormDialog> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _label('Ảnh (URL)'),
-              TextFormField(
-                controller: _imageCtrl,
-                decoration: _decoration('https://...'),
+              _label('Ảnh combo'),
+              GestureDetector(
+                onTap: _isUploading ? null : _pickAndUploadImage,
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ColorPalette.borderSubtle),
+                  ),
+                  child: _isUploading
+                      ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: ColorPalette.appetizingOrange,
+                            ),
+                          ),
+                        )
+                      : _imageCtrl.text.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.network(
+                                    _imageCtrl.text,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Center(
+                                      child: Icon(Icons.broken_image_rounded,
+                                          size: 32, color: ColorPalette.textMuted),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: InkWell(
+                                      onTap: () => setState(() => _imageCtrl.clear()),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black54,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.cloud_upload_outlined,
+                                      size: 28, color: ColorPalette.textMuted),
+                                  SizedBox(height: 4),
+                                  Text('Nhấn để tải ảnh lên',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: ColorPalette.textMuted)),
+                                ],
+                              ),
+                            ),
+                ),
               ),
             ],
           ),

@@ -8,7 +8,7 @@ class GetStaffListUseCase {
 
   GetStaffListUseCase(this.repository);
 
-  Future<Either<Failure, PagedStaffResult>> call({String? role, bool? isActive, int page = 1, int pageSize = 10}) {
-    return repository.getStaffList(role: role, isActive: isActive, page: page, pageSize: pageSize);
+  Future<Either<Failure, PagedStaffResult>> call({String? role, bool? isActive, String? searchKeyword, int page = 1, int pageSize = 10}) {
+    return repository.getStaffList(role: role, isActive: isActive, searchKeyword: searchKeyword, page: page, pageSize: pageSize);
   }
 }

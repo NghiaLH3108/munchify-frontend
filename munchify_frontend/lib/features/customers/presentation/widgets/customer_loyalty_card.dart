@@ -12,12 +12,13 @@ import '../bloc/customer_state.dart';
 /// Compact loyalty card shown on POS Home when a customer is selected.
 /// Displays customer info, loyalty points, and redemption toggle.
 class CustomerLoyaltyCard extends StatelessWidget {
-  const CustomerLoyaltyCard({Key? key}) : super(key: key);
+  const CustomerLoyaltyCard({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CustomerBloc, CustomerState>(
-      buildWhen: (prev, curr) => curr is CustomerSelected,
+      buildWhen: (prev, curr) =>
+          curr is CustomerSelected || curr is CustomerInitial,
       builder: (context, state) {
         if (state is! CustomerSelected) {
           return const SizedBox.shrink();

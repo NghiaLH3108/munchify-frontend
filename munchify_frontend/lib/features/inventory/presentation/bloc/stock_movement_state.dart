@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:munchify_frontend/features/inventory/domain/entities/stock_movement_entity.dart';
+import '../../domain/entities/stock_movement_entity.dart';
 
 abstract class StockMovementState extends Equatable {
   const StockMovementState();

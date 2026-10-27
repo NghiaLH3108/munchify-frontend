@@ -74,6 +74,10 @@ class ComboEntity extends Equatable {
   double get savingAmount =>
       (retailTotal - price).clamp(0.0, double.infinity).toDouble();
 
+  /// True when any component product has insufficient stock (stock < quantity needed).
+  bool get isOutOfStock =>
+      items.any((item) => item.componentStockQuantity < item.quantity);
+
   @override
   List<Object?> get props => [
         id,
