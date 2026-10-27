@@ -22,6 +22,7 @@ import '../../../promotions/presentation/pages/promotion_management_screen.dart'
 import '../../../orders/presentation/screens/admin_order_inquiry_screen.dart';
 import '../../../main/presentation/screens/main_app_screen.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 /// Admin Shell Screen that hosts the full Munchify POS Web Admin interface
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
@@ -117,19 +118,10 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
 
   void _onAiAlertReceived(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text(message)),
-            ],
-          ),
-          backgroundColor: Colors.redAccent,
-          duration: const Duration(seconds: 5),
-          behavior: SnackBarBehavior.floating,
-        ),
+      AppToast.warning(
+        message,
+        context: context,
+        duration: const Duration(seconds: 5),
       );
     }
   }

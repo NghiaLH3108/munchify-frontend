@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../../../admin/presentation/pages/admin_shell_screen.dart';
 import '../../../main/presentation/screens/main_app_screen.dart';
 import '../bloc/auth_bloc.dart';
@@ -48,22 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthFailureState) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.white),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(state.message)),
-                  ],
-                ),
-                backgroundColor: ColorPalette.error,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            );
+            AppToast.error(state.message, context: context);
           } else if (state is Authenticated) {
             if (state.user.isAdmin) {
               Navigator.pushAndRemoveUntil(

@@ -16,6 +16,7 @@ import '../bloc/combo_form_options_cubit.dart';
 import '../bloc/combo_state.dart';
 import '../widgets/combo_delete_confirm_dialog.dart';
 import '../widgets/combo_form_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ManageCombosScreen extends StatefulWidget {
   final bool embedInShell;
@@ -165,28 +166,11 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
   }
 
   void _showSnack(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError
-                  ? Icons.error_outline_rounded
-                  : Icons.check_circle_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-                child: Text(message, style: const TextStyle(fontSize: 13))),
-          ],
-        ),
-        backgroundColor: isError ? ColorPalette.error : ColorPalette.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    if (isError) {
+      AppToast.error(message, context: context);
+    } else {
+      AppToast.success(message, context: context);
+    }
   }
 
   @override

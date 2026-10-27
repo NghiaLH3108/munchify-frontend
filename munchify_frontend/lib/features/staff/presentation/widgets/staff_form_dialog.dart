@@ -6,6 +6,7 @@ import '../../../../core/utils/Validators.dart';
 import '../../domain/entities/staff_entity.dart';
 import '../bloc/staff_bloc.dart';
 import '../bloc/staff_event.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class StaffFormDialog extends StatefulWidget {
   final StaffEntity? staffToEdit;
@@ -49,14 +50,7 @@ class _StaffFormDialogState extends State<StaffFormDialog> {
 
       if (widget.staffToEdit == null) {
         if (_password == null || _password!.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Vui lòng nhập mật khẩu cho tài khoản mới'),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-          );
+          AppToast.error('Vui lòng nhập mật khẩu cho tài khoản mới', context: context);
           return;
         }
         staffData['password'] = _password!;
