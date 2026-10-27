@@ -18,6 +18,7 @@ import '../../../combos/presentation/screens/manage_combos_screen.dart';
 import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
+import '../../../reports/presentation/screens/reports_screen.dart';
 import '../../../promotions/presentation/pages/promotion_management_screen.dart';
 import '../../../orders/presentation/screens/admin_order_inquiry_screen.dart';
 import '../../../main/presentation/screens/main_app_screen.dart';
@@ -900,6 +901,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const LowStockScreen(embedInShell: true);
       case 'ai_expiry':
         return const AiExpiryScreen(embedInShell: true);
+      case 'reports':
+        return const ReportsScreen(embedInShell: true);
       case 'promotions':
         return const PromotionManagementScreen(embedInShell: true);
       default:
