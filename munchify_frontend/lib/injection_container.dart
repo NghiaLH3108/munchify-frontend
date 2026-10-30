@@ -56,6 +56,12 @@ import 'features/combos/domain/repositories/combo_repository.dart';
 import 'features/combos/domain/usecases/manage_combo_usecases.dart';
 import 'features/combos/presentation/bloc/combo_bloc.dart';
 import 'features/combos/presentation/bloc/combo_form_options_cubit.dart';
+// Reports
+import 'features/reports/data/datasources/report_remote_data_source.dart';
+import 'features/reports/data/repositories/report_repository_impl.dart';
+import 'features/reports/domain/repositories/report_repository.dart';
+import 'features/reports/domain/usecases/report_usecases.dart';
+import 'features/reports/presentation/bloc/report_bloc.dart';
 // Staff
 import 'features/staff/data/datasources/staff_remote_data_source.dart';
 import 'features/staff/data/repositories/staff_repository_impl.dart';
@@ -140,9 +146,6 @@ import 'features/promotions/domain/usecases/update_promotion_usecase.dart';
 import 'features/promotions/domain/usecases/toggle_promotion_status_usecase.dart';
 import 'features/promotions/presentation/bloc/promotion_admin_bloc.dart';
 import 'features/promotions/presentation/bloc/promotion_form_bloc.dart';
-
-// Dashboard
-import 'features/admin/presentation/cubit/dashboard_cubit.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
 
@@ -254,16 +257,20 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => ReportBloc(
+      getRevenueSummary: sl(),
+      getTopSelling: sl(),
+      exportToExcel: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => StaffBloc(
       getStaffList: sl(),
       createStaff: sl(),
       updateStaff: sl(),
       toggleStaffStatus: sl(),
     ),
-  );
-
-  sl.registerFactory(
-    () => DashboardCubit(dioClient: sl()),
   );
 
   sl.registerFactory(
@@ -364,6 +371,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteComboUseCase(sl()));
   sl.registerLazySingleton(() => GetComboFormOptionsUseCase(sl()));
 
+  // Reports
+  sl.registerLazySingleton(() => GetRevenueSummaryUseCase(sl()));
+  sl.registerLazySingleton(() => GetTopSellingUseCase(sl()));
+  sl.registerLazySingleton(() => ExportReportToExcelUseCase(sl()));
+
   // Staff
   sl.registerLazySingleton(() => GetStaffListUseCase(sl()));
   sl.registerLazySingleton(() => CreateStaffUseCase(sl()));
@@ -438,6 +450,10 @@ Future<void> init() async {
     () => UnitRepositoryImpl(remoteDataSource: sl()),
   );
 
+  sl.registerLazySingleton<ReportRepository>(
+    () => ReportRepositoryImpl(remoteDataSource: sl()),
+  );
+
   sl.registerLazySingleton<ComboRepository>(
     () => ComboRepositoryImpl(remoteDataSource: sl()),
   );
@@ -506,6 +522,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<UnitRemoteDataSource>(
     () => UnitRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<ReportRemoteDataSource>(
+    () => ReportRemoteDataSourceImpl(dioClient: sl()),
   );
 
   sl.registerLazySingleton<ComboRemoteDataSource>(

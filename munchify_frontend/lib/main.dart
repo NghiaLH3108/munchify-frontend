@@ -172,7 +172,7 @@ class _AuthGateState extends State<AuthGate> {
             return const RoleGuard(
               allowedRoles: ['ADMIN'],
               fallback: LoginScreen(),
-              child: AdminShellScreen(initialTab: 'dashboard'),
+              child: AdminShellScreen(initialTab: 'reports'),
             );
           }
 

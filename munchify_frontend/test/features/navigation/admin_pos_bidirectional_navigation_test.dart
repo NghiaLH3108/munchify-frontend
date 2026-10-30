@@ -152,7 +152,7 @@ void main() {
       expect(find.text('+ Tạo đơn POS'), findsOneWidget);
 
       // Verify the placeholder screen navigation buttons exist
-      expect(find.text('Quay lại Dashboard'), findsOneWidget);
+      expect(find.text('Quay lại Báo cáo & Thống kê'), findsOneWidget);
       expect(find.text('Đến Quầy bán hàng (POS)'), findsOneWidget);
     });
   });

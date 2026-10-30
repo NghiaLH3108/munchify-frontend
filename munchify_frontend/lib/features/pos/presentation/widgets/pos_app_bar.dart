@@ -164,7 +164,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const AdminShellScreen(initialTab: 'dashboard'),
+                      builder: (_) => const AdminShellScreen(initialTab: 'reports'),
                     ),
                   );
                 } else if (value == 'logout') {

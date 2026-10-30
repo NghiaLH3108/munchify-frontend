@@ -11,13 +11,13 @@ import '../../../staff/presentation/pages/staff_management_screen.dart';
 import '../../../categories/presentation/screens/manage_categories_screen.dart';
 import '../../../suppliers/presentation/screens/manage_suppliers_screen.dart';
 import '../../../products/presentation/screens/product_management_screen.dart';
-import '../widgets/analytics_dashboard_view.dart';
 import '../../../inventory/presentation/screens/inventory_screen.dart';
 import '../../../units/presentation/screens/manage_units_screen.dart';
 import '../../../combos/presentation/screens/manage_combos_screen.dart';
 import '../../../customers/presentation/screens/admin_customer_management_screen.dart';
 import '../../../inventory/presentation/screens/low_stock_screen.dart';
 import '../../../inventory/presentation/screens/ai_expiry_screen.dart';
+import '../../../reports/presentation/screens/reports_screen.dart';
 import '../../../promotions/presentation/pages/promotion_management_screen.dart';
 import '../../../orders/presentation/screens/admin_order_inquiry_screen.dart';
 import '../../../main/presentation/screens/main_app_screen.dart';
@@ -134,8 +134,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
 
   String get _currentTabTitle {
     switch (_currentTab) {
-      case 'dashboard':
-        return 'Báo cáo tổng quan';
       case 'orders':
         return 'Đơn hàng';
       case 'products':
@@ -160,8 +158,10 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return 'Đơn vị tính';
       case 'staff':
         return 'Nhân viên & Quyền';
+      case 'reports':
+        return 'Báo cáo & Thống kê';
       default:
-        return 'Báo cáo tổng quan';
+        return 'Báo cáo & Thống kê';
     }
   }
 
@@ -336,11 +336,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   const SizedBox(height: 26),
                   // Navigation Links
                   _buildSidebarItem(
-                    key: 'dashboard',
-                    icon: Icons.dashboard_rounded,
-                    title: 'Báo cáo tổng quan',
-                  ),
-                  _buildSidebarItem(
                     key: 'orders',
                     icon: Icons.receipt_long_rounded,
                     title: 'Đơn hàng',
@@ -402,6 +397,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'staff',
                     icon: Icons.badge_rounded,
                     title: 'Nhân viên & Quyền',
+                  ),
+                  _buildSidebarItem(
+                    key: 'reports',
+                    icon: Icons.badge_rounded,
+                    title: 'Báo cáo & Thống kê',
                   ),
                 ],
               ),
@@ -868,8 +868,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildActiveView() {
     switch (_currentTab) {
-      case 'dashboard':
-        return const AnalyticsDashboardView();
       case 'orders':
         return const AdminOrderInquiryScreen(embedInShell: true);
       case 'products':
@@ -892,6 +890,8 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
         return const LowStockScreen(embedInShell: true);
       case 'ai_expiry':
         return const AiExpiryScreen(embedInShell: true);
+      case 'reports':
+        return const ReportsScreen(embedInShell: true);
       case 'promotions':
         return const PromotionManagementScreen(embedInShell: true);
       default:
@@ -943,7 +943,7 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   alignment: WrapAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () => _onTabSelected('dashboard'),
+                      onPressed: () => _onTabSelected('reports'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorPalette.primaryContainer,
                         foregroundColor: Colors.white,
@@ -951,7 +951,7 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Quay lại Dashboard'),
+                      child: const Text('Quay lại Báo cáo & Thống kê'),
                     ),
                     OutlinedButton(
                       onPressed: () => Navigator.push(

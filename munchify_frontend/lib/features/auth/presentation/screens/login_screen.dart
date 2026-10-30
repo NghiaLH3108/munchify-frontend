@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const AdminShellScreen(initialTab: 'dashboard'),
+                  builder: (_) => const AdminShellScreen(initialTab: 'reports'),
                 ),
                 (route) => false,
               );
