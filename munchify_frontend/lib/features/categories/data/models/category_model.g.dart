@@ -12,7 +12,7 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) =>
       categoryName: json['categoryName'] as String,
       description: json['description'] as String?,
       isActive: json['isActive'] as bool,
-      productCount: (json['productCount'] as num).toInt(),
+      productCount: (json['productCount'] as num?)?.toInt() ?? 0,
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),

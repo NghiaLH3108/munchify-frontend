@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../domain/entities/product_entity.dart';
@@ -16,7 +17,8 @@ class ProductManagementScreen extends StatefulWidget {
   const ProductManagementScreen({super.key});
 
   @override
-  State<ProductManagementScreen> createState() => _ProductManagementScreenState();
+  State<ProductManagementScreen> createState() =>
+      _ProductManagementScreenState();
 }
 
 class _ProductManagementScreenState extends State<ProductManagementScreen> {
@@ -33,7 +35,7 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorPalette.webBgAdmin,
-      body: BlocBuilder<ProductAdminBloc, ProductAdminState>(
+      body: BlocConsumer<ProductAdminBloc, ProductAdminState>(
         listener: (context, state) {
           if (state is ProductAdminLoaded && state.successMessage != null) {
             AppToast.success(state.successMessage!, context: context);
@@ -49,7 +51,12 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
           if (state is ProductAdminLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is ProductAdminError) {
-            return Center(child: Text('Error: ${state.message}', style: const TextStyle(color: Colors.red)));
+            return Center(
+              child: Text(
+                'Error: ${state.message}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
           } else if (state is ProductAdminLoaded) {
             return _buildContent(context, state);
           }
@@ -66,7 +73,9 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
     if (_currentPage > totalPages) _currentPage = totalPages;
     final startIndex = (_currentPage - 1) * _pageSize;
     final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
-    final paginatedProducts = totalCount > 0 ? allProducts.sublist(startIndex, endIndex) : <ProductEntity>[];
+    final paginatedProducts = totalCount > 0
+        ? allProducts.sublist(startIndex, endIndex)
+        : <ProductEntity>[];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -94,7 +103,7 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
             lowStockCount: state.lowStockCount,
           ),
           const SizedBox(height: 20),
-          
+
           // Data Table
           ProductDataTable(
             products: paginatedProducts,

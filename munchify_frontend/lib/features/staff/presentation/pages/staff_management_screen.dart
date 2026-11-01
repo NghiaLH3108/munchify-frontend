@@ -1,6 +1,8 @@
 ﻿import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
@@ -13,7 +15,6 @@ import '../widgets/staff_filter_bar.dart';
 import '../widgets/staff_form_dialog.dart';
 import '../widgets/staff_metric_cards.dart';
 import '../../../../core/widgets/app_pagination_bar.dart';
-import '../widgets/staff_pagination.dart';
 import '../../../../core/widgets/app_toast.dart';
 
 /// Orchestrator screen for Staff Management and Authorization:
@@ -51,14 +52,14 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
 
   void _loadData() {
     context.read<StaffBloc>().add(
-          LoadStaffList(
-            page: _currentPage,
-            pageSize: _pageSize,
-            role: _selectedRole,
-            isActive: _selectedStatus,
-            searchKeyword: _searchQuery.isNotEmpty ? _searchQuery : null,
-          ),
-        );
+      LoadStaffList(
+        page: _currentPage,
+        pageSize: _pageSize,
+        role: _selectedRole,
+        isActive: _selectedStatus,
+        searchKeyword: _searchQuery.isNotEmpty ? _searchQuery : null,
+      ),
+    );
   }
 
   void _onSearchChanged(String val) {
@@ -139,8 +140,10 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('Đang đồng bộ danh sách nhân viên...',
-                    style: AppTypography.dashboardSubtitle),
+                Text(
+                  'Đang đồng bộ danh sách nhân viên...',
+                  style: AppTypography.dashboardSubtitle,
+                ),
               ],
             ),
           );
@@ -186,14 +189,13 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                   totalPages: state.result.totalPages,
                   totalCount: state.result.totalCount,
                   isCardView: _isCardView,
-                  onToggleViewMode: (val) =>
-                      setState(() => _isCardView = val),
+                  onToggleViewMode: (val) => setState(() => _isCardView = val),
                   onEditStaff: (staff) =>
                       _openStaffDialog(context, staffToEdit: staff),
                   onToggleStatus: (staff) {
-                    context
-                        .read<StaffBloc>()
-                        .add(ToggleStaffStatusEvent(staff.userId));
+                    context.read<StaffBloc>().add(
+                      ToggleStaffStatusEvent(staff.userId),
+                    );
                   },
                   paginationWidget: AppPaginationBar(
                     currentPage: _currentPage,
@@ -260,8 +262,11 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                   color: ColorPalette.appetizingOrange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.lunch_dining_rounded,
-                    color: ColorPalette.appetizingOrange, size: 22),
+                child: const Icon(
+                  Icons.lunch_dining_rounded,
+                  color: ColorPalette.appetizingOrange,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -277,25 +282,36 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                 const SizedBox(width: 10),
                 Row(
                   children: [
-                    const Icon(Icons.chevron_right_rounded,
-                        size: 18, color: ColorPalette.textMuted),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: ColorPalette.textMuted,
+                    ),
                     const SizedBox(width: 4),
-                    Text('Trang chủ',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: ColorPalette.textMuted,
-                          decoration: TextDecoration.none,
-                        )),
+                    Text(
+                      'Trang chủ',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: ColorPalette.textMuted,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: Text('/',
-                          style: TextStyle(
-                              color: ColorPalette.textMuted, fontSize: 12)),
+                      child: Text(
+                        '/',
+                        style: TextStyle(
+                          color: ColorPalette.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                    Text('Nhân viên & Quyền',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: ColorPalette.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        )),
+                    Text(
+                      'Nhân viên & Quyền',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: ColorPalette.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -310,10 +326,11 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                       if (!isVeryNarrow) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
-                            color:
-                                ColorPalette.success.withValues(alpha: 0.08),
+                            color: ColorPalette.success.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -323,15 +340,19 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                                 width: 7,
                                 height: 7,
                                 decoration: const BoxDecoration(
-                                    color: ColorPalette.success,
-                                    shape: BoxShape.circle),
+                                  color: ColorPalette.success,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                               const SizedBox(width: 6),
-                              const Text('Online',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: ColorPalette.success)),
+                              const Text(
+                                'Online',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorPalette.success,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -339,19 +360,25 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                       ],
                       IconButton(
                         onPressed: _loadData,
-                        icon: const Icon(Icons.refresh_rounded,
-                            size: 20, color: ColorPalette.textMuted),
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          size: 20,
+                          color: ColorPalette.textMuted,
+                        ),
                         tooltip: 'Tải lại danh sách',
                         style: IconButton.styleFrom(
                           backgroundColor: ColorPalette.webBgAdmin,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: ColorPalette.borderSubtle),
                           borderRadius: BorderRadius.circular(10),
@@ -362,11 +389,14 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                               radius: 14,
                               backgroundColor:
                                   ColorPalette.surfaceContainerHigh,
-                              child: Text('HM',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorPalette.appetizingOrange)),
+                              child: Text(
+                                'HM',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorPalette.appetizingOrange,
+                                ),
+                              ),
                             ),
                             if (!isVeryNarrow) ...[
                               const SizedBox(width: 8),
@@ -374,22 +404,30 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Hoàng Minh',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: ColorPalette.textPrimary)),
-                                  Text('Admin',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color:
-                                              ColorPalette.appetizingOrange)),
+                                  Text(
+                                    'Hoàng Minh',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: ColorPalette.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Admin',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: ColorPalette.appetizingOrange,
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(width: 6),
-                              const Icon(Icons.keyboard_arrow_down_rounded,
-                                  size: 16, color: ColorPalette.textMuted),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 16,
+                                color: ColorPalette.textMuted,
+                              ),
                             ],
                           ],
                         ),
@@ -409,16 +447,18 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
     return AdminPageHeader(
       icon: Icons.badge_rounded,
       title: 'Quản lý Nhân sự & Phân quyền',
-      subtitle:
-          'Phân quyền tài khoản, cấu hình thông tin nhân sự và giám sát trạng thái hoạt động.',
+      subtitle: 'Phân quyền tài khoản, cấu hình thông tin nhân sự và giám sát trạng thái hoạt động.',
       addButtonText: 'Thêm Nhân Viên',
       onAddPressed: () => _openStaffDialog(context),
       extraActions: [
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.sync_rounded,
-                size: 16, color: ColorPalette.tertiary),
+            const Icon(
+              Icons.sync_rounded,
+              size: 16,
+              color: ColorPalette.tertiary,
+            ),
             const SizedBox(width: 6),
             Text(
               'Đồng bộ lúc 14:28:10',
@@ -446,16 +486,23 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                 color: ColorPalette.error.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.cloud_off_rounded,
-                  color: ColorPalette.error, size: 44),
+              child: const Icon(
+                Icons.cloud_off_rounded,
+                color: ColorPalette.error,
+                size: 44,
+              ),
             ),
             const SizedBox(height: 16),
-            Text('Không thể tải dữ liệu',
-                style: AppTypography.dashboardHeadline),
+            Text(
+              'Không thể tải dữ liệu',
+              style: AppTypography.dashboardHeadline,
+            ),
             const SizedBox(height: 8),
-            Text(message,
-                style: AppTypography.dashboardSubtitle,
-                textAlign: TextAlign.center),
+            Text(
+              message,
+              style: AppTypography.dashboardSubtitle,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: _loadData,
@@ -465,7 +512,8 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                 backgroundColor: ColorPalette.appetizingOrange,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ],

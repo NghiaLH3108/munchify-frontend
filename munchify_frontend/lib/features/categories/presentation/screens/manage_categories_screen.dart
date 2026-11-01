@@ -531,7 +531,8 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
         AdminPageHeader(
           icon: Icons.category_rounded,
           title: 'Quản lý Danh mục',
-          subtitle: 'Quản lý các nhóm sản phẩm trong thực đơn và điểm bán.',
+          subtitle:
+              'Quản lý các nhóm danh mục sản phẩm trong thực đơn và điểm bán.',
           addButtonText: 'Thêm Danh mục',
           onAddPressed: _showAddCategory,
         ),
@@ -576,6 +577,15 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               width: cardWidth,
             ),
             AdminKpiCard(
+              title: 'TỔNG SẢN PHẨM',
+              value: totalProducts.toString(),
+              subtitle: 'Trong tất cả danh mục',
+              icon: Icons.fastfood_rounded,
+              iconColor: ColorPalette.adminPurple,
+              iconBg: ColorPalette.adminPurple.withValues(alpha: 0.1),
+              width: cardWidth,
+            ),
+            AdminKpiCard(
               title: 'ĐANG KINH DOANH',
               value: active.toString(),
               subtitle:
@@ -586,15 +596,6 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               width: cardWidth,
               showTrendIcon: true,
               trendPositive: true,
-            ),
-            AdminKpiCard(
-              title: 'TỔNG SẢN PHẨM',
-              value: totalProducts.toString(),
-              subtitle: 'Trong tất cả danh mục',
-              icon: Icons.fastfood_rounded,
-              iconColor: ColorPalette.adminPurple,
-              iconBg: ColorPalette.adminPurple.withValues(alpha: 0.1),
-              width: cardWidth,
             ),
             AdminKpiCard(
               title: 'TẠM NGƯNG',
@@ -1328,5 +1329,4 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
       },
     );
   }
-
 }

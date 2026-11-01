@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
 import '../bloc/stock_import_bloc.dart';
 import '../bloc/stock_import_event.dart';
 import '../bloc/stock_import_state.dart';
@@ -15,11 +16,8 @@ import '../../../../core/widgets/app_toast.dart';
 
 class InventoryScreen extends StatefulWidget {
   final bool embedInShell;
-  
-  const InventoryScreen({
-    super.key,
-    this.embedInShell = false,
-  });
+
+  const InventoryScreen({super.key, this.embedInShell = false});
 
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
@@ -84,7 +82,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
       },
       builder: (context, state) {
         if (state is StockImportLoading || state is StockImportInitial) {
-          return const Center(child: CircularProgressIndicator(color: ColorPalette.appetizingOrange));
+          return const Center(
+            child: CircularProgressIndicator(
+              color: ColorPalette.appetizingOrange,
+            ),
+          );
         } else if (state is StockImportsLoaded) {
           return _buildContent(state.imports);
         }
@@ -123,7 +125,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: bodyContent,
@@ -143,10 +145,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
       bool matchesSearch = true;
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
-        matchesSearch = item.importCode.toLowerCase().contains(query) || 
-                        item.supplierName.toLowerCase().contains(query);
+        matchesSearch =
+            item.importCode.toLowerCase().contains(query) ||
+            item.supplierName.toLowerCase().contains(query);
       }
-      
+
       // Filter Status
       bool matchesStatus = true;
       if (_filterStatus != 'ALL') {
@@ -156,11 +159,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
       // Date Filter
       bool matchesDate = true;
       if (_selectedDate != null) {
-        matchesDate = item.importDate.year == _selectedDate!.year &&
-                      item.importDate.month == _selectedDate!.month &&
-                      item.importDate.day == _selectedDate!.day;
+        matchesDate =
+            item.importDate.year == _selectedDate!.year &&
+            item.importDate.month == _selectedDate!.month &&
+            item.importDate.day == _selectedDate!.day;
       }
-      
+
       return matchesSearch && matchesStatus && matchesDate;
     }).toList();
 
@@ -169,7 +173,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
     if (_currentPage > totalPages) _currentPage = totalPages;
     final startIndex = (_currentPage - 1) * _pageSize;
     final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
-    final paginatedImports = totalCount > 0 ? filteredImports.sublist(startIndex, endIndex) : <StockImportEntity>[];
+    final paginatedImports = totalCount > 0
+        ? filteredImports.sublist(startIndex, endIndex)
+        : <StockImportEntity>[];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -196,12 +202,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
               AdminDropdownFilter<String>(
                 value: _filterStatus,
                 items: const [
-                  DropdownMenuItem(value: 'ALL', child: Text('Tất cả trạng thái')),
+                  DropdownMenuItem(
+                    value: 'ALL',
+                    child: Text('Tất cả trạng thái'),
+                  ),
                   DropdownMenuItem(value: 'DRAFT', child: Text('Chờ duyệt')),
-                  DropdownMenuItem(value: 'COMPLETED', child: Text('Hoàn thành')),
+                  DropdownMenuItem(
+                    value: 'COMPLETED',
+                    child: Text('Hoàn thành'),
+                  ),
                   DropdownMenuItem(value: 'CANCELLED', child: Text('Đã huỷ')),
                 ],
-                onChanged: (status) => setState(() => _filterStatus = status ?? 'ALL'),
+                onChanged: (status) =>
+                    setState(() => _filterStatus = status ?? 'ALL'),
               ),
               OutlinedButton.icon(
                 onPressed: () async {
@@ -213,15 +226,27 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   );
                   setState(() => _selectedDate = picked);
                 },
-                icon: const Icon(Icons.calendar_today_rounded, color: ColorPalette.appetizingOrange, size: 16),
+                icon: const Icon(
+                  Icons.calendar_today_rounded,
+                  color: ColorPalette.appetizingOrange,
+                  size: 16,
+                ),
                 label: Text(
-                  _selectedDate == null ? 'Chọn ngày' : DateFormat('dd/MM/yyyy').format(_selectedDate!),
-                  style: const TextStyle(color: Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.w500),
+                  _selectedDate == null
+                      ? 'Chọn ngày'
+                      : DateFormat('dd/MM/yyyy').format(_selectedDate!),
+                  style: const TextStyle(
+                    color: Color(0xFF1E293B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFFBF8),
                   side: const BorderSide(color: Color(0xFFFFE0B2)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   minimumSize: const Size(0, 40),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                 ),
@@ -233,8 +258,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
           // 3. 4 Summary Cards (dùng AdminKpiCard chung)
           LayoutBuilder(
             builder: (context, constraints) {
-              final count = constraints.maxWidth >= 1000 ? 4 : (constraints.maxWidth >= 600 ? 2 : 1);
-              final cardWidth = (constraints.maxWidth - (count - 1) * 16) / count;
+              final count = constraints.maxWidth >= 1000
+                  ? 4
+                  : (constraints.maxWidth >= 600 ? 2 : 1);
+              final cardWidth =
+                  (constraints.maxWidth - (count - 1) * 16) / count;
               return Wrap(
                 spacing: 16,
                 runSpacing: 16,
@@ -274,7 +302,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   AdminKpiCard(
                     width: cardWidth,
                     title: 'TỔNG CHI NHẬP HÀNG',
-                    value: NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(totalAmount),
+                    value: NumberFormat.currency(
+                      locale: 'vi_VN',
+                      symbol: 'đ',
+                    ).format(totalAmount),
                     subtitle: 'Tổng giá trị nhập hàng',
                     subTextColor: const Color(0xFF7C3AED),
                     icon: Icons.attach_money_rounded,
@@ -296,11 +327,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
               border: Border.all(color: const Color(0xFFE5E7EB)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
-                )
-              ]
+                ),
+              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -308,60 +339,122 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   DataTable(
-                headingRowColor: MaterialStateProperty.all(const Color(0xFFF9FAFB)),
-                columns: const [
-                  DataColumn(label: Text('Mã Phiếu', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Ngày Nhập', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Nhà Cung Cấp', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Mặt Hàng', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Tổng Tiền', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Trạng Thái', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Thao Tác', style: TextStyle(fontWeight: FontWeight.bold))),
-                ],
-                rows: paginatedImports.map((item) {
-                  return DataRow(
-                    cells: [
-                      DataCell(Text(item.importCode, style: const TextStyle(fontWeight: FontWeight.w600))),
-                      DataCell(Text(DateFormat('dd/MM/yyyy HH:mm').format(item.importDate))),
-                      DataCell(Text(item.supplierName)),
-                      DataCell(Text('${item.details.length} mặt hàng')),
-                      DataCell(Text(
-                        NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(item.totalAmount),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      )),
-                      DataCell(_buildStatusBadge(item.status)),
-                      DataCell(
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove_red_eye_outlined, color: Colors.blue),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => BlocProvider.value(
-                                    value: context.read<StockImportBloc>(),
-                                    child: ImportDetailModal(importEntity: item),
-                                  ),
-                                ],
-                              )
-                            ),
-                          ],
-                        )
+                    headingRowColor: WidgetStateProperty.all(
+                      const Color(0xFFF9FAFB),
+                    ),
+                    columns: const [
+                      DataColumn(
+                        label: Text(
+                          'Mã Phiếu',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    ]
-                  );
-                }).toList(),
-              ),
-              AppPaginationBar(
-                currentPage: _currentPage,
-                totalPages: totalPages,
-                totalCount: totalCount,
-                itemLabel: 'phiếu nhập',
-                startIndex: totalCount > 0 ? startIndex + 1 : 0,
-                endIndex: endIndex,
-                onPageChanged: (page) => setState(() => _currentPage = page),
-              ),
+                      DataColumn(
+                        label: Text(
+                          'Ngày Nhập',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Nhà Cung Cấp',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Mặt Hàng',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Tổng Tiền',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Trạng Thái',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Thao Tác',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                    rows: paginatedImports.map((item) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              item.importCode,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              DateFormat('dd/MM/yyyy HH:mm')
+                                  .format(item.importDate),
+                            ),
+                          ),
+                          DataCell(Text(item.supplierName)),
+                          DataCell(Text('${item.details.length} mặt hàng')),
+                          DataCell(
+                            Text(
+                              NumberFormat.currency(
+                                locale: 'vi_VN',
+                                symbol: 'đ',
+                              ).format(item.totalAmount),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          DataCell(_buildStatusBadge(item.status)),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.remove_red_eye_outlined,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => BlocProvider.value(
+                                        value: context.read<StockImportBloc>(),
+                                        child: ImportDetailModal(
+                                          importEntity: item,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                  AppPaginationBar(
+                    currentPage: _currentPage,
+                    totalPages: totalPages,
+                    totalCount: totalCount,
+                    itemLabel: 'phiếu nhập',
+                    startIndex: totalCount > 0 ? startIndex + 1 : 0,
+                    endIndex: endIndex,
+                    onPageChanged: (page) =>
+                        setState(() => _currentPage = page),
+                  ),
                 ],
               ),
             ),
@@ -371,7 +464,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -380,11 +478,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
-          )
-        ]
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,7 +498,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),

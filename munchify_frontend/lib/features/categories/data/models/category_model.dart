@@ -18,7 +18,7 @@ class CategoryModel extends CategoryEntity {
   @JsonKey(name: 'isActive')
   final bool isActive;
   @override
-  @JsonKey(name: 'productCount')
+  @JsonKey(name: 'productCount', defaultValue: 0)
   final int productCount;
   @override
   @JsonKey(name: 'createdAt')
@@ -29,7 +29,7 @@ class CategoryModel extends CategoryEntity {
     required this.categoryName,
     this.description,
     required this.isActive,
-    required this.productCount,
+    this.productCount = 0,
     this.createdAt,
   }) : super(
           id: id,
