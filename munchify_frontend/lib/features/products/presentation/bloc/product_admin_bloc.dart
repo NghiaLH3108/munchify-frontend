@@ -113,10 +113,26 @@ class ProductAdminBloc extends Bloc<ProductAdminEvent, ProductAdminState> {
         (failure) {
           // Revert on failure
           _baselineActiveCount = currentState.activeCount;
-          emit(currentState);
-          emit(ProductAdminError(failure.message));
+          emit(ProductAdminLoaded(
+            products: currentState.products,
+            totalSkus: currentState.totalSkus,
+            activeCount: currentState.activeCount,
+            lowStockCount: currentState.lowStockCount,
+            errorMessage: failure.message,
+            stamp: DateTime.now().microsecondsSinceEpoch,
+          ));
         },
-        (_) {},
+        (_) {
+          emit(ProductAdminLoaded(
+            products: updatedProducts,
+            totalSkus: currentState.totalSkus,
+            activeCount: nextActiveCount,
+            lowStockCount: currentState.lowStockCount,
+            successMessage:
+                'Đã cập nhật trạng thái món/sản phẩm sang ${event.isActive ? "Đang bán" : "Ngừng bán"}.',
+            stamp: DateTime.now().microsecondsSinceEpoch,
+          ));
+        },
       );
     }
   }

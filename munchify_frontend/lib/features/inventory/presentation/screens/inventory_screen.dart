@@ -10,6 +10,7 @@ import '../widgets/import_detail_modal.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/services/signalr_service.dart';
 import '../../../../core/widgets/app_pagination_bar.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class InventoryScreen extends StatefulWidget {
   final bool embedInShell;
@@ -44,19 +45,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
       // Tự động làm mới danh sách phiếu nhập kho
       context.read<StockImportBloc>().add(FetchStockImportsEvent());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.sync, color: Colors.lightGreenAccent, size: 20),
-              const SizedBox(width: 8),
-              Expanded(child: Text('[SignalR Realtime] $message')),
-            ],
-          ),
-          backgroundColor: const Color(0xFF1B1C1A),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.info(
+        '[SignalR Realtime] $message',
+        context: context,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -72,13 +64,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final bodyContent = BlocConsumer<StockImportBloc, StockImportState>(
       listener: (context, state) {
         if (state is StockImportActionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.green),
-          );
+          AppToast.success(state.message, context: context);
         } else if (state is StockImportError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       builder: (context, state) {

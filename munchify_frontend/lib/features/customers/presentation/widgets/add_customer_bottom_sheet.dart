@@ -7,6 +7,7 @@ import '../../../../core/utils/Validators.dart';
 import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class AddCustomerBottomSheet extends StatefulWidget {
   final String? initialPhone;
@@ -76,29 +77,11 @@ class _AddCustomerBottomSheetState extends State<AddCustomerBottomSheet> {
       child: BlocListener<CustomerBloc, CustomerState>(
         listener: (context, state) {
           if (state is CustomerCreated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Thêm khách hàng thành công!'),
-                backgroundColor: ColorPalette.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            );
+            AppToast.success('Thêm khách hàng thành công!', context: context);
             Navigator.of(context).pop();
           } else if (state is CustomerError) {
             setState(() => _isSubmitting = false);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: ColorPalette.error,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            );
+            AppToast.error(state.message, context: context);
           }
         },
         child: Padding(

@@ -62,3 +62,16 @@ class DeleteComboEvent extends ComboEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class ToggleComboStatusEvent extends ComboEvent {
+  final int id;
+  final bool currentIsActive;
+
+  const ToggleComboStatusEvent({
+    required this.id,
+    required this.currentIsActive,
+  });
+
+  @override
+  List<Object?> get props => [id, currentIsActive];
+}

@@ -17,16 +17,30 @@ class ProductAdminLoaded extends ProductAdminState {
   final int totalSkus;
   final int activeCount;
   final int lowStockCount;
+  final String? successMessage;
+  final String? errorMessage;
+  final int? stamp;
 
   const ProductAdminLoaded({
     required this.products,
     required this.totalSkus,
     required this.activeCount,
     required this.lowStockCount,
+    this.successMessage,
+    this.errorMessage,
+    this.stamp,
   });
 
   @override
-  List<Object?> get props => [products, totalSkus, activeCount, lowStockCount];
+  List<Object?> get props => [
+        products,
+        totalSkus,
+        activeCount,
+        lowStockCount,
+        successMessage,
+        errorMessage,
+        stamp,
+      ];
 }
 
 class ProductAdminError extends ProductAdminState {

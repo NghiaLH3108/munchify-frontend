@@ -13,6 +13,7 @@ import '../widgets/promotion_stat_cards.dart';
 import '../widgets/promotion_filter_bar.dart';
 import '../widgets/promotion_data_table.dart';
 import '../widgets/promotion_form_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class PromotionManagementScreen extends StatefulWidget {
   final bool embedInShell;
@@ -73,9 +74,7 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
       result.fold(
         (failure) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(failure.message), backgroundColor: ColorPalette.error),
-            );
+            AppToast.error(failure.message, context: context);
           }
         },
         (detail) {
@@ -108,9 +107,9 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
       child: BlocConsumer<PromotionAdminBloc, PromotionAdminState>(
         listener: (context, state) {
           if (state is PromotionAdminError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: ColorPalette.error),
-            );
+            AppToast.error(state.message, context: context);
+          } else if (state is PromotionsLoaded && state.successMessage != null) {
+            AppToast.success(state.successMessage!, context: context);
           }
         },
         builder: (context, state) {

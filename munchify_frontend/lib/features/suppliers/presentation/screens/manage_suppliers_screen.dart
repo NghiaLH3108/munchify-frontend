@@ -10,6 +10,7 @@ import '../bloc/supplier_bloc.dart';
 import '../bloc/supplier_event.dart';
 import '../bloc/supplier_state.dart';
 import '../widgets/supplier_form_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ManageSuppliersScreen extends StatefulWidget {
   final bool embedInShell;
@@ -146,35 +147,9 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
     return BlocListener<SupplierBloc, SupplierState>(
       listener: (context, state) {
         if (state is SupplierActionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Text(state.message),
-                ],
-              ),
-              backgroundColor: const Color(0xFF059669),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          AppToast.success(state.message, context: context, duration: const Duration(seconds: 3));
         } else if (state is SupplierError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: const Color(0xFFDC2626),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
-            ),
-          );
+          AppToast.error(state.message, context: context, duration: const Duration(seconds: 4));
         }
       },
       child: Scaffold(

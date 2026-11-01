@@ -64,3 +64,13 @@ class GetComboFormOptionsUseCase {
     return repository.getFormOptions();
   }
 }
+
+class ToggleComboStatusUseCase {
+  final ComboRepository repository;
+
+  ToggleComboStatusUseCase(this.repository);
+
+  Future<Either<Failure, bool>> call(int id) {
+    return repository.toggleComboStatus(id);
+  }
+}

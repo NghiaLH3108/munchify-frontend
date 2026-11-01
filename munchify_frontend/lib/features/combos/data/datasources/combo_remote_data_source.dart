@@ -30,6 +30,7 @@ abstract class ComboRemoteDataSource {
   Future<ComboModel> updateCombo(int id, ComboInput input);
   Future<String> deleteCombo(int id);
   Future<ComboFormOptionsEntity> getFormOptions();
+  Future<bool> toggleComboStatus(int id);
 }
 
 class ComboRemoteDataSourceImpl implements ComboRemoteDataSource {
@@ -118,6 +119,17 @@ class ComboRemoteDataSourceImpl implements ComboRemoteDataSource {
       return (response.data['message'] as String?) ?? 'Đã xóa combo.';
     }
     throw Exception(response.data?['message'] ?? 'Không thể xóa combo');
+  }
+
+  @override
+  Future<bool> toggleComboStatus(int id) async {
+    final response =
+        await dioClient.dio.patch('${ApiEndpoints.combos}/$id/status');
+    if (response.data != null && response.data['success'] == true) {
+      return true;
+    }
+    throw Exception(
+        response.data?['message'] ?? 'Không thể cập nhật trạng thái combo');
   }
 
   @override

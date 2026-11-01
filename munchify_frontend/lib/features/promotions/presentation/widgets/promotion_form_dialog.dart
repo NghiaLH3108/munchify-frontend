@@ -7,6 +7,7 @@ import '../../domain/entities/promotion_entity.dart';
 import '../bloc/promotion_form_bloc.dart';
 import '../bloc/promotion_form_event.dart';
 import '../bloc/promotion_form_state.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class PromotionFormDialog extends StatefulWidget {
   final PromotionEntity? promotionToEdit;
@@ -120,11 +121,9 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
             .toList();
 
     if (_scopeType == 1 && productIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng chọn ít nhất một món áp dụng hoặc chuyển sang "Toàn bộ menu"'),
-          backgroundColor: ColorPalette.error,
-        ),
+      AppToast.error(
+        'Vui lòng chọn ít nhất một món áp dụng hoặc chuyển sang "Toàn bộ menu"',
+        context: context,
       );
       return;
     }
@@ -152,16 +151,13 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
     return BlocListener<PromotionFormBloc, PromotionFormState>(
       listener: (context, state) {
         if (state is PromotionFormSuccess) {
+          AppToast.success('Lưu khuyến mãi thành công!', context: context);
           widget.onSuccess();
           Navigator.pop(context);
         } else if (state is PromotionFormError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: ColorPalette.error),
-          );
+          AppToast.error(state.message, context: context);
         } else if (state is PromotionFormValidationFailed) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: ColorPalette.error),
-          );
+          AppToast.error(state.message, context: context);
         } else if (state is PromotionFormProductsLoading) {
           setState(() => _isLoadingProducts = true);
         } else if (state is PromotionFormProductsLoaded) {

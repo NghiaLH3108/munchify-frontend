@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 import '../../../../injection_container.dart' as di;
+import '../../../../core/widgets/app_toast.dart';
 
 import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/combo_entity.dart';
@@ -156,8 +157,7 @@ class _ComboFormDialogState extends State<ComboFormDialog> {
     } catch (e) {
       setState(() => _isUploading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
+        AppToast.error('Lỗi tải ảnh: $e', context: context);
       }
     }
   }

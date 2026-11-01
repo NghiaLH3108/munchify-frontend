@@ -11,6 +11,7 @@ import '../bloc/admin_customer_bloc.dart';
 import '../bloc/admin_customer_event.dart';
 import '../bloc/admin_customer_state.dart';
 import '../widgets/customer_points_history_modal.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class AdminCustomerManagementScreen extends StatefulWidget {
   final bool embedInShell;
@@ -95,26 +96,7 @@ class _AdminCustomerManagementScreenState
     final bodyContent = BlocConsumer<AdminCustomerBloc, AdminCustomerState>(
       listener: (context, state) {
         if (state is AdminCustomerError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded,
-                      color: Colors.white, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(state.message,
-                        style: const TextStyle(fontSize: 13)),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       buildWhen: (previous, current) =>

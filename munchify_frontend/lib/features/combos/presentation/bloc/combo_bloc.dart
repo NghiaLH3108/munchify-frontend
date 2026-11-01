@@ -8,6 +8,7 @@ class ComboBloc extends Bloc<ComboEvent, ComboState> {
   final CreateComboUseCase createCombo;
   final UpdateComboUseCase updateCombo;
   final DeleteComboUseCase deleteCombo;
+  final ToggleComboStatusUseCase toggleComboStatus;
 
   // Last query, reused to refresh the list after a mutation.
   LoadCombosEvent _lastQuery = const LoadCombosEvent();
@@ -17,11 +18,13 @@ class ComboBloc extends Bloc<ComboEvent, ComboState> {
     required this.createCombo,
     required this.updateCombo,
     required this.deleteCombo,
+    required this.toggleComboStatus,
   }) : super(ComboInitial()) {
     on<LoadCombosEvent>(_onLoadCombos);
     on<CreateComboEvent>(_onCreateCombo);
     on<UpdateComboEvent>(_onUpdateCombo);
     on<DeleteComboEvent>(_onDeleteCombo);
+    on<ToggleComboStatusEvent>(_onToggleComboStatus);
   }
 
   Future<void> _onLoadCombos(
@@ -144,6 +147,38 @@ class ComboBloc extends Bloc<ComboEvent, ComboState> {
         }
       },
       (message) async => _fetch(emit, successMessage: message),
+    );
+  }
+
+  Future<void> _onToggleComboStatus(
+    ToggleComboStatusEvent event,
+    Emitter<ComboState> emit,
+  ) async {
+    final result = await toggleComboStatus(event.id);
+    await result.fold(
+      (failure) async {
+        final current = state;
+        if (current is ComboLoaded) {
+          emit(ComboLoaded(
+            combos: current.combos,
+            totalCount: current.totalCount,
+            page: current.page,
+            pageSize: current.pageSize,
+            errorMessage: failure.message,
+            isRefreshing: false,
+            stamp: DateTime.now().microsecondsSinceEpoch,
+          ));
+        } else {
+          emit(ComboError(failure.message));
+        }
+      },
+      (_) async {
+        await _fetch(
+          emit,
+          successMessage:
+              'Đã cập nhật trạng thái combo sang ${!event.currentIsActive ? "Đang bán" : "Ngừng bán"}.',
+        );
+      },
     );
   }
 }

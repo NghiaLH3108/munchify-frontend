@@ -10,6 +10,7 @@ import '../../domain/entities/damaged_expired_record_entity.dart';
 import '../bloc/ai_expiry/ai_expiry_bloc.dart';
 import '../bloc/ai_expiry/ai_expiry_event.dart';
 import '../bloc/ai_expiry/ai_expiry_state.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class StaffDamageReportScreen extends StatefulWidget {
   const StaffDamageReportScreen({super.key});
@@ -70,33 +71,19 @@ class _StaffDamageReportScreenState extends State<StaffDamageReportScreen>
 
   void _submitReport() {
     if (_selectedProduct == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng chọn sản phẩm gặp sự cố.'),
-          backgroundColor: ColorPalette.error,
-        ),
-      );
+      AppToast.error('Vui lòng chọn sản phẩm gặp sự cố.', context: context);
       return;
     }
 
     if (_quantity <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Số lượng phải lớn hơn 0.'),
-          backgroundColor: ColorPalette.error,
-        ),
-      );
+      AppToast.error('Số lượng phải lớn hơn 0.', context: context);
       return;
     }
 
     if (_quantity > _selectedProduct!.stockQuantity) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Số lượng báo cáo ($_quantity) không được vượt quá tồn kho (${_selectedProduct!.stockQuantity}).',
-          ),
-          backgroundColor: ColorPalette.error,
-        ),
+      AppToast.error(
+        'Số lượng báo cáo ($_quantity) không được vượt quá tồn kho (${_selectedProduct!.stockQuantity}).',
+        context: context,
       );
       return;
     }
@@ -171,29 +158,11 @@ class _StaffDamageReportScreenState extends State<StaffDamageReportScreen>
       body: BlocConsumer<AiExpiryBloc, AiExpiryState>(
         listener: (context, state) {
           if (state is AiExpiryReportSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.check_circle_rounded, color: Colors.white),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(state.message)),
-                  ],
-                ),
-                backgroundColor: const Color(0xFF2E7D32),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppToast.success(state.message, context: context);
             _resetForm();
             _tabController.animateTo(1); // Chuyển sang xem lịch sử
           } else if (state is AiExpiryError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: ColorPalette.error,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppToast.error(state.message, context: context);
           }
         },
         builder: (context, state) {

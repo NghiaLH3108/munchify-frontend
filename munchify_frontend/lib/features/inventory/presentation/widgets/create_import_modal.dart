@@ -5,6 +5,7 @@ import '../bloc/stock_import_bloc.dart';
 import '../bloc/stock_import_event.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/constants/ApiEndpoints.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../../../../injection_container.dart' as di;
 import 'package:dio/dio.dart';
 
@@ -251,24 +252,18 @@ class _CreateImportModalState extends State<CreateImportModal> {
 
   void _submitDraft() {
     if (_selectedItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ít nhất 1 mặt hàng', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
-      );
+      AppToast.error('Vui lòng chọn ít nhất 1 mặt hàng', context: context);
       return;
     }
 
     if (_selectedSupplierId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn nhà cung cấp', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
-      );
+      AppToast.error('Vui lòng chọn nhà cung cấp', context: context);
       return;
     }
 
     bool hasMissingExpiryDate = _selectedItems.any((item) => item['expiryDate'] == null);
     if (hasMissingExpiryDate) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn Hạn Sử Dụng (HSD) cho tất cả sản phẩm!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
-      );
+      AppToast.error('Vui lòng chọn Hạn Sử Dụng (HSD) cho tất cả sản phẩm!', context: context);
       return;
     }
 

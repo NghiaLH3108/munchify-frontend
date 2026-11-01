@@ -5,6 +5,7 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/product_entity.dart';
 import '../bloc/cart_cubit.dart';
 import 'combo_detail_bottom_sheet.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 /// Card hiển thị combo trong carousel POS Home.
 /// Layout 3 vùng cố định: Image (100px) → Content (co giãn) → Price (cố định dưới cùng)
@@ -245,12 +246,10 @@ class ComboGridItem extends StatelessWidget {
                           onPressed: isAvailable
                               ? () {
                                   context.read<CartCubit>().addItem(combo);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Đã thêm ${combo.name} vào giỏ'),
-                                      duration: const Duration(seconds: 1),
-                                      backgroundColor: ColorPalette.success,
-                                    ),
+                                  AppToast.success(
+                                    'Đã thêm ${combo.name} vào giỏ',
+                                    context: context,
+                                    duration: const Duration(seconds: 1),
                                   );
                                 }
                               : null,
@@ -511,12 +510,10 @@ class ComboGridItem extends StatelessWidget {
                     onPressed: isAvailable
                         ? () {
                             context.read<CartCubit>().addItem(combo);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Đã thêm ${combo.name} vào giỏ'),
-                                duration: const Duration(seconds: 1),
-                                backgroundColor: ColorPalette.success,
-                              ),
+                            AppToast.success(
+                              'Đã thêm ${combo.name} vào giỏ',
+                              context: context,
+                              duration: const Duration(seconds: 1),
                             );
                           }
                         : null,
