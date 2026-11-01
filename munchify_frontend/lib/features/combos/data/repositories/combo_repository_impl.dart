@@ -96,4 +96,16 @@ class ComboRepositoryImpl implements ComboRepository {
       return Left(UnexpectedFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> toggleComboStatus(int id) async {
+    try {
+      final result = await remoteDataSource.toggleComboStatus(id);
+      return Right(result);
+    } on DioException catch (e) {
+      return Left(_mapDio(e));
+    } catch (e) {
+      return Left(UnexpectedFailure(message: e.toString()));
+    }
+  }
 }

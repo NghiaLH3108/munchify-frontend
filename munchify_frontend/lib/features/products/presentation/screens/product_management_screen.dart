@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../bloc/product_admin_bloc.dart';
 import '../bloc/product_admin_event.dart';
 import '../bloc/product_admin_state.dart';
@@ -26,7 +27,18 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: BlocBuilder<ProductAdminBloc, ProductAdminState>(
+      body: BlocConsumer<ProductAdminBloc, ProductAdminState>(
+        listener: (context, state) {
+          if (state is ProductAdminLoaded && state.successMessage != null) {
+            AppToast.success(state.successMessage!, context: context);
+          }
+          if (state is ProductAdminLoaded && state.errorMessage != null) {
+            AppToast.error(state.errorMessage!, context: context);
+          }
+          if (state is ProductAdminError) {
+            AppToast.error(state.message, context: context);
+          }
+        },
         builder: (context, state) {
           if (state is ProductAdminLoading) {
             return const Center(child: CircularProgressIndicator());

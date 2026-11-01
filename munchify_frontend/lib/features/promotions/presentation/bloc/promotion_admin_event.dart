@@ -11,15 +11,17 @@ class LoadPromotions extends PromotionAdminEvent {
   final int pageIndex;
   final int pageSize;
   final String? searchKeyword;
+  final String? successMessage;
 
   const LoadPromotions({
     required this.pageIndex,
     required this.pageSize,
     this.searchKeyword,
+    this.successMessage,
   });
 
   @override
-  List<Object?> get props => [pageIndex, pageSize, searchKeyword];
+  List<Object?> get props => [pageIndex, pageSize, searchKeyword, successMessage];
 }
 
 class TogglePromotionStatus extends PromotionAdminEvent {

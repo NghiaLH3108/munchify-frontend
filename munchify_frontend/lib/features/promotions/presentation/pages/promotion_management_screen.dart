@@ -108,6 +108,8 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
         listener: (context, state) {
           if (state is PromotionAdminError) {
             AppToast.error(state.message, context: context);
+          } else if (state is PromotionsLoaded && state.successMessage != null) {
+            AppToast.success(state.successMessage!, context: context);
           }
         },
         builder: (context, state) {
