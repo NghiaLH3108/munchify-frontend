@@ -130,6 +130,7 @@ import 'features/inventory/presentation/bloc/ai_expiry/ai_expiry_bloc.dart';
 import 'features/inventory/domain/usecases/get_pending_records_usecase.dart';
 import 'features/inventory/domain/usecases/get_ai_expiry_summary_usecase.dart';
 import 'features/inventory/domain/usecases/approve_record_usecase.dart';
+import 'features/inventory/domain/usecases/analyze_damaged_expired_usecase.dart';
 import 'features/inventory/domain/usecases/report_damaged_expired_usecase.dart';
 
 import 'features/inventory/presentation/bloc/low_stock/low_stock_bloc.dart';
@@ -334,6 +335,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetPendingRecordsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiExpirySummaryUseCase(sl()));
   sl.registerLazySingleton(() => ApproveRecordUseCase(sl()));
+  sl.registerLazySingleton(() => AnalyzeDamagedExpiredUseCase(sl()));
   sl.registerLazySingleton(() => ReportDamagedExpiredUseCase(sl()));
 
   // AI Low Stock

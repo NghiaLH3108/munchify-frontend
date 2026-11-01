@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../domain/entities/staff_entity.dart';
 
-/// KPI metric cards displaying staff statistics:
+/// KPI metric cards displaying staff statistics using shared [AdminKpiCard]:
 /// - Total staff
 /// - Active staff
 /// - Administrators
@@ -35,7 +35,7 @@ class StaffMetricCards extends StatelessWidget {
           spacing: gap,
           runSpacing: gap,
           children: [
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TỔNG NHÂN SỰ',
               value: total.toString(),
               subtitle: 'Tất cả tài khoản hệ thống',
@@ -44,7 +44,7 @@ class StaffMetricCards extends StatelessWidget {
               iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
               width: cardWidth,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'ĐANG HOẠT ĐỘNG',
               value: active.toString(),
               subtitle:
@@ -53,10 +53,10 @@ class StaffMetricCards extends StatelessWidget {
               iconColor: ColorPalette.tertiary,
               iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
               width: cardWidth,
-              trendValue: '+${active > 0 ? active : 0}',
+              showTrendIcon: true,
               trendPositive: true,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'QUẢN TRỊ VIÊN',
               value: admins.toString(),
               subtitle: 'Quyền hạn ADMIN',
@@ -65,7 +65,7 @@ class StaffMetricCards extends StatelessWidget {
               iconBg: ColorPalette.adminPurple.withValues(alpha: 0.1),
               width: cardWidth,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TẠM KHÓA',
               value: locked.toString(),
               subtitle: 'Bị vô hiệu hóa',
@@ -78,156 +78,6 @@ class StaffMetricCards extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required double width,
-    String? trendValue,
-    bool trendPositive = true,
-    bool isWarning = false,
-  }) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: ColorPalette.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          if (isWarning)
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                width: 4,
-                color: ColorPalette.warningTangerine,
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: AppTypography.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: ColorPalette.textMuted,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            value,
-                            style: AppTypography.plusJakarta(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: isWarning && int.tryParse(value) != 0
-                                  ? ColorPalette.dangerCrimson
-                                  : ColorPalette.onSurfaceDark,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: iconBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: iconColor, size: 22),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.only(top: 12),
-                  decoration: const BoxDecoration(
-                    border: Border(top: BorderSide(color: ColorPalette.borderSubtle)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        subtitle,
-                        style: AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
-                      ),
-                      if (trendValue != null)
-                        Container(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: trendPositive
-                                ? ColorPalette.success.withValues(alpha: 0.08)
-                                : ColorPalette.error.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                trendPositive
-                                    ? Icons.trending_up_rounded
-                                    : Icons.trending_down_rounded,
-                                size: 14,
-                                color: trendPositive
-                                    ? ColorPalette.success
-                                    : ColorPalette.error,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                trendValue,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: trendPositive
-                                      ? ColorPalette.success
-                                      : ColorPalette.error,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (isWarning)
-                        const Icon(
-                          Icons.warning_amber_rounded,
-                          size: 16,
-                          color: ColorPalette.warning,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

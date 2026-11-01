@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'product_form_dialog.dart';
+import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 
 class ProductStatCards extends StatelessWidget {
   final int totalSkus;
@@ -7,111 +8,67 @@ class ProductStatCards extends StatelessWidget {
   final int lowStockCount;
 
   const ProductStatCards({
-    Key? key,
+    super.key,
     required this.totalSkus,
     required this.activeCount,
-    required this.lowStockCount,
-  }) : super(key: key);
+    this.lowStockCount = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final inactive = totalSkus >= activeCount ? totalSkus - activeCount : 0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 900
+            ? 3
+            : (constraints.maxWidth > 500 ? 2 : 1);
+        const gap = 16.0;
+        final cardWidth =
+            (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
+                crossAxisCount;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
           children: [
-            Row(
-              children: [
-                Text(
-                  'Product Management',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                AdminKpiCard(
+                  title: 'TỔNG MÓN / SKUS',
+                  value: '$totalSkus món',
+                  subtitle: 'Tất cả sản phẩm trong thực đơn',
+                  icon: Icons.restaurant_menu_rounded,
+                  iconColor: ColorPalette.primaryContainer,
+                  iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
+                  width: cardWidth,
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'POS Thực đơn',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                AdminKpiCard(
+                  title: 'ĐANG KINH DOANH',
+                  value: activeCount.toString(),
+                  subtitle: totalSkus > 0
+                      ? 'Chiếm ${((activeCount / totalSkus) * 100).round()}% thực đơn'
+                      : 'Đang mở bán',
+                  icon: Icons.check_circle_outline_rounded,
+                  iconColor: ColorPalette.tertiary,
+                  iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
+                  width: cardWidth,
+                  showTrendIcon: true,
+                  trendPositive: true,
+                ),
+                AdminKpiCard(
+                  title: 'NGỪNG KINH DOANH',
+                  value: inactive.toString(),
+                  subtitle: inactive > 0
+                      ? 'Tạm ngưng phục vụ'
+                      : 'Tất cả món đang mở bán',
+                  icon: Icons.pause_circle_outline_rounded,
+                  iconColor: ColorPalette.textMuted,
+                  iconBg: const Color(0xFFF1F5F9),
+                  width: cardWidth,
+                  isWarning: inactive > 0,
                 ),
               ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Quản lý danh sách thực đơn, đơn giá niêm yết, cảnh báo định mức...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  _buildStatItem('Tổng SKUs', '$totalSkus món', Colors.black),
-                  _buildDivider(),
-                  _buildStatItem('Đang bán', '$activeCount', Colors.green),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                ProductFormDialog.show(context);
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Thêm món mới'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget _buildStatItem(String label, String value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-        Text(
-          value,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDivider() {
-    return Container(
-      height: 32,
-      width: 1,
-      color: Colors.grey[300],
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+            );
+      },
     );
   }
 }

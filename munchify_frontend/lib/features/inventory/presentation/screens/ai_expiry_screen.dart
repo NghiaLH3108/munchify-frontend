@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/ai_expiry/ai_expiry_bloc.dart';
 import '../bloc/ai_expiry/ai_expiry_event.dart';
 import '../bloc/ai_expiry/ai_expiry_state.dart';
-import 'widgets/ai_insight_dialog.dart';
+import '../widgets/ai_insight_dialog.dart';
 import '../../domain/entities/damaged_expired_record_entity.dart';
 import '../../domain/entities/ai_expiry_summary_entity.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/utils/CurrencyFormatter.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 
 class AiExpiryScreen extends StatefulWidget {
   final bool embedInShell;
@@ -17,6 +20,7 @@ class AiExpiryScreen extends StatefulWidget {
 }
 
 class _AiExpiryScreenState extends State<AiExpiryScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filterStatus = 'ALL'; // 'ALL', 'PENDING', 'APPROVED', 'REJECTED'
 
@@ -54,6 +58,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     signalRService.removeExpiryAlertListener(_onSignalRAlert);
     super.dispose();
   }
@@ -61,8 +66,7 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBF9F5), // surface
-      appBar: widget.embedInShell ? null : _buildAppBar(),
+      backgroundColor: ColorPalette.webBgAdmin,
       body: BlocConsumer<AiExpiryBloc, AiExpiryState>(
         listener: (context, state) {
           if (state is AiExpiryApproveSuccess) {
@@ -100,12 +104,16 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeader(),
-                const SizedBox(height: 24),
-                if (summary != null) _buildSummaryMetrics(summary),
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
+                _buildFilterBar(),
+                const SizedBox(height: 20),
+                if (summary != null) ...[
+                  _buildSummaryMetrics(summary),
+                  const SizedBox(height: 20),
+                ],
                 _buildDataTable(state, records),
               ],
             ),
@@ -115,192 +123,99 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
     );
   }
 
-  AppBar _buildAppBar() {
-    return AppBar(
-      backgroundColor: const Color(0xFFFBF9F5).withOpacity(0.9),
-      elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.1),
-      title: Row(
-        children: [
-          Text('Trang chủ', style: TextStyle(color: const Color(0xFF5A4138), fontSize: 12, fontWeight: FontWeight.w600)),
-          const Icon(Icons.chevron_right, size: 16, color: Color(0xFFE3BFB2)),
-          Text('Kho & Hàng hủy', style: TextStyle(color: const Color(0xFF5A4138), fontSize: 12, fontWeight: FontWeight.w600)),
-          const Icon(Icons.chevron_right, size: 16, color: Color(0xFFE3BFB2)),
-          Text('AI Expiry Insights & Write-offs', style: TextStyle(color: const Color(0xFFA43700), fontSize: 12, fontWeight: FontWeight.bold)),
-        ],
-      ),
-      actions: [
-        const Icon(Icons.notifications, color: Color(0xFF5A4138)),
-        const SizedBox(width: 16),
-        Row(
-          children: [
-            CircleAvatar(backgroundColor: const Color(0xFFA43700), radius: 16, child: Icon(Icons.person, size: 18, color: Colors.white)),
-            const SizedBox(width: 8),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('Admin Munchify', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1B1C1A))),
-                Text('Quản lý hệ thống', style: TextStyle(fontSize: 11, color: Color(0xFF5A4138))),
-              ],
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.expand_more, size: 18, color: Color(0xFF5A4138)),
-          ],
+  Widget _buildHeader() {
+    return AdminPageHeader(
+      icon: Icons.auto_awesome_rounded,
+      title: 'AI Expiry Insights & Write-offs',
+      subtitle: 'Giám sát cảnh báo cận date, tồn kho hết hạn và đề xuất chiến lược tối ưu hao hụt từ AI cho toàn chuỗi F&B.',
+      extraActions: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFA43700).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFA43700), shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              const Text('AI REALTIME ACTIVE', style: TextStyle(color: Color(0xFFA43700), fontSize: 11, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ),
-        const SizedBox(width: 24),
       ],
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFA43700).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFA43700), shape: BoxShape.circle)),
-                  const SizedBox(width: 6),
-                  const Text('AI REALTIME ACTIVE', style: TextStyle(color: Color(0xFFA43700), fontSize: 11, fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text('AI Expiry Insights & Write-offs', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Color(0xFF1B1C1A))),
-            const SizedBox(height: 4),
-            const Text(
-              'Giám sát cảnh báo cận date, tồn kho hết hạn và đề xuất chiến lược tối ưu hao hụt từ AI cho toàn chuỗi F&B.',
-              style: TextStyle(color: Color(0xFF5A4138), fontSize: 14),
-            ),
+  Widget _buildFilterBar() {
+    return AdminFilterBar(
+      searchController: _searchController,
+      searchHint: 'Tìm kiếm tên sản phẩm, mã lô...',
+      onSearchChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+      onClearSearch: () => setState(() => _searchQuery = ''),
+      filters: [
+        AdminDropdownFilter<String>(
+          value: _filterStatus,
+          items: const [
+            DropdownMenuItem(value: 'ALL', child: Text('Tất cả trạng thái')),
+            DropdownMenuItem(value: 'PENDING', child: Text('Chờ duyệt (Pending)')),
+            DropdownMenuItem(value: 'APPROVED', child: Text('Đã trừ kho (Approved)')),
           ],
+          onChanged: (val) => setState(() => _filterStatus = val ?? 'ALL'),
         ),
-
       ],
     );
   }
 
   Widget _buildSummaryMetrics(AiExpirySummaryEntity summary) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildMetricCard(
-            title: 'Tổng số cảnh báo đang chờ xử lý',
-            value: '${summary.totalPendingAlerts} lô cảnh báo',
-            icon: Icons.warning,
-            iconColor: const Color(0xFFBA1A1A),
-            iconBg: const Color(0xFFFFDAD6),
-            bottomWidget: Row(
-              children: [
-                Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFFBA1A1A), shape: BoxShape.circle)),
-                const SizedBox(width: 8),
-                Text('${summary.urgentPendingAlerts} lô cần tiêu hủy khẩn cấp', style: const TextStyle(color: Color(0xFFBA1A1A), fontSize: 11, fontWeight: FontWeight.bold)),
-                const Spacer(),
-                const Text('Ưu tiên cao', style: TextStyle(color: Color(0xFF5A4138), fontSize: 12)),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildMetricCard(
-            title: 'Ước tính thiệt hại tài chính',
-            value: '\$${summary.estFinancialLoss.toStringAsFixed(2)}',
-            icon: Icons.trending_up,
-            iconColor: const Color(0xFF7E5700),
-            iconBg: const Color(0xFFFEB300).withOpacity(0.4),
-            bottomWidget: Row(
-              children: [
-                Icon(summary.lossTrendPercent >= 0 ? Icons.arrow_upward : Icons.arrow_downward, size: 16, color: const Color(0xFFA43700)),
-                const SizedBox(width: 4),
-                Text('${summary.lossTrendPercent >= 0 ? '+' : ''}${summary.lossTrendPercent}%', style: const TextStyle(color: Color(0xFFA43700), fontSize: 11, fontWeight: FontWeight.bold)),
-                const SizedBox(width: 6),
-                const Text('so với tuần trước', style: TextStyle(color: Color(0xFF5A4138), fontSize: 12)),
-                const Spacer(),
-                const Text('Q1/2026', style: TextStyle(color: Color(0xFF5A4138), fontSize: 11, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildMetricCard(
-            title: 'Đã tự động giải quyết trong tháng này',
-            value: '${summary.autoResolvedThisMonth} lô đã xử lý',
-            icon: Icons.task_alt,
-            iconColor: const Color(0xFF005AB7),
-            iconBg: const Color(0xFFD7E2FF),
-            bottomWidget: Row(
-              children: [
-                const Icon(Icons.check_circle_outline, size: 16, color: Color(0xFF005AB7)),
-                const SizedBox(width: 6),
-                const Text('Đã trừ tồn kho tự động', style: TextStyle(color: Color(0xFF1B1C1A), fontSize: 11, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 768;
+        final cardWidth = isWide ? (constraints.maxWidth - 32) / 3 : constraints.maxWidth;
 
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required Widget bottomWidget,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5A4138), letterSpacing: 0.5)),
-                    const SizedBox(height: 4),
-                    Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF1B1C1A))),
-                  ],
-                ),
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)),
-                  child: Icon(icon, color: iconColor, size: 26),
-                ),
-              ],
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            AdminKpiCard(
+              width: cardWidth,
+              title: 'TỔNG SỐ CẢNH BÁO ĐANG CHỜ XỬ LÝ',
+              value: '${summary.totalPendingAlerts} lô cảnh báo',
+              subtitle: 'Cần kiểm tra & phê duyệt xử lý',
+              subTextColor: const Color(0xFFBA1A1A),
+              isWarning: summary.totalPendingAlerts > 0,
+              icon: Icons.warning_rounded,
+              iconColor: const Color(0xFFBA1A1A),
+              iconBg: const Color(0xFFFFDAD6),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F3EF),
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12)),
+            AdminKpiCard(
+              width: cardWidth,
+              title: 'ƯỚC TÍNH THIỆT HẠI TÀI CHÍNH',
+              value: CurrencyFormatter.format(summary.estFinancialLoss),
+              subtitle: 'Giá trị hàng cận date & hư hỏng',
+              subTextColor: const Color(0xFFD97706),
+              showTrendIcon: true,
+              trendPositive: false,
+              icon: Icons.trending_up_rounded,
+              iconColor: const Color(0xFF7E5700),
+              iconBg: const Color(0xFFFEF3C7),
             ),
-            child: bottomWidget,
-          )
-        ],
-      ),
+            AdminKpiCard(
+              width: cardWidth,
+              title: 'ĐÃ TỰ ĐỘNG GIẢI QUYẾT TRONG THÁNG NÀY',
+              value: '${summary.autoResolvedThisMonth} lô đã xử lý',
+              subtitle: 'Đã duyệt tiêu hủy & đồng bộ kho',
+              subTextColor: const Color(0xFF059669),
+              showTrendIcon: true,
+              trendPositive: true,
+              icon: Icons.task_alt_rounded,
+              iconColor: const Color(0xFF005AB7),
+              iconBg: const Color(0xFFD7E2FF),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -313,63 +228,6 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       ),
       child: Column(
         children: [
-          // Toolbar
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F3EF).withOpacity(0.4),
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 280,
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          icon: Icon(Icons.search, size: 18, color: Color(0xFF8F7066)),
-                          hintText: 'Tìm kiếm tên sản phẩm, mã lô...',
-                          hintStyle: TextStyle(fontSize: 12, color: Colors.grey),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value.toLowerCase();
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    _buildFilterBtn('Tất cả kho', Icons.store, false),
-                  ],
-                ),
-                // Tab lọc trạng thái
-                Container(
-                  height: 40,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE4E2DE)),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildStatusTab('Tất cả', 'ALL'),
-                      _buildStatusTab('Chờ duyệt (Pending)', 'PENDING'),
-                      _buildStatusTab('Đã trừ kho (Approved)', 'APPROVED'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
           // Table header
           _buildTableHeader(),
           // Table contents
@@ -416,48 +274,6 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
     );
   }
 
-  Widget _buildStatusTab(String title, String status) {
-    final isSelected = _filterStatus == status;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _filterStatus = status;
-        });
-      },
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFA43700) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF5A4138),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterBtn(String text, IconData icon, bool isPrimary) {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: isPrimary ? const Color(0xFFA43700) : const Color(0xFF5A4138)),
-          const SizedBox(width: 8),
-          Text(text, style: TextStyle(fontSize: 12, fontWeight: isPrimary ? FontWeight.bold : FontWeight.normal, color: isPrimary ? const Color(0xFFA43700) : const Color(0xFF1B1C1A))),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTableHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -491,7 +307,6 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Icon(Icons.check_box, color: Color(0xFFA43700), size: 20),
           const SizedBox(width: 16),
           // Product Info
           Expanded(
@@ -531,26 +346,21 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('BATCH-${record.createdAt.year}-P${record.productId}', style: const TextStyle(fontSize: 14, fontFamily: 'monospace', fontWeight: FontWeight.w500, color: Color(0xFF1B1C1A))),
-                Text('Tạo ${record.createdAt.day.toString().padLeft(2, '0')}/${record.createdAt.month.toString().padLeft(2, '0')}/${record.createdAt.year}', style: const TextStyle(fontSize: 11, color: Color(0xFF5A4138))),
+                Text(
+                  record.batchCode ??
+                      (record.importDetailId != null
+                          ? 'IMP-${record.importDetailId.toString().padLeft(3, '0')}'
+                          : 'LÔ-P${record.productId.toString().padLeft(3, '0')}'),
+                  style: const TextStyle(fontSize: 14, fontFamily: 'monospace', fontWeight: FontWeight.bold, color: Color(0xFF1B1C1A)),
+                ),
+                Text('Tạo ${_formatDate(record.createdAt)}', style: const TextStyle(fontSize: 11, color: Color(0xFF5A4138))),
               ],
             ),
           ),
           // Expiry Info
           Expanded(
             flex: 2,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: const Color(0xFFFFDAD6).withOpacity(0.6), borderRadius: BorderRadius.circular(16)),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFBA1A1A), shape: BoxShape.circle)),
-                  const SizedBox(width: 6),
-                  const Text('Quá hạn / Hết đát', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF93000A))),
-                ],
-              ),
-            ),
+            child: _buildConditionBadge(record),
           ),
           // Quantity
           Expanded(
@@ -600,12 +410,14 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
                     )
                   : ElevatedButton.icon(
                       onPressed: () {
-                        showDialog(
+                        showDialog<bool>(
                           context: context,
                           builder: (_) => AiInsightDialog(record: record),
                         ).then((approved) {
                           if (approved == true) {
                             context.read<AiExpiryBloc>().add(ApproveRecordEvent(record.recordId));
+                          } else {
+                            context.read<AiExpiryBloc>().add(FetchPendingRecordsEvent());
                           }
                         });
                       },
@@ -666,4 +478,118 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       ),
     );
   }
+
+  Widget _buildConditionBadge(DamagedExpiredRecordEntity record) {
+    final isDamaged = record.reportType.toUpperCase() == 'DAMAGED';
+    if (isDamaged) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFEDD5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFFDBA74).withOpacity(0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFEA580C), shape: BoxShape.circle)),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                record.reason != null && record.reason!.isNotEmpty
+                    ? 'Hỏng: ${record.reason}'
+                    : 'Hàng hỏng / Bể vỡ',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC2410C)),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Cận date / Hết hạn (EXPIRED)
+    final expiry = record.expiryDate;
+    if (expiry != null) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final expDay = DateTime(expiry.year, expiry.month, expiry.day);
+      final daysDiff = expDay.difference(today).inDays;
+
+      if (daysDiff < 0) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFDAD6).withOpacity(0.8),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFBA1A1A), shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              Text(
+                'Quá hạn (${_formatDate(expiry)})',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF93000A)),
+              ),
+            ],
+          ),
+        );
+      } else if (daysDiff <= 3) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFDAD6).withOpacity(0.6),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFBA1A1A), shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              Text(
+                daysDiff == 0 ? 'Hết hạn hôm nay' : 'Khẩn cấp ($daysDiff ngày)',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFBA1A1A)),
+              ),
+            ],
+          ),
+        );
+      } else {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFEF3C7),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFD97706), shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              Text(
+                'Cận date ($daysDiff ngày)',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: const Color(0xFFFFDAD6).withOpacity(0.6), borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFBA1A1A), shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          const Text('Cận date / Hết hạn', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF93000A))),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime dt) =>
+      '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
 }

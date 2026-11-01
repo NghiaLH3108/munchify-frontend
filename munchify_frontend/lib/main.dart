@@ -37,6 +37,7 @@ import 'core/theme/ColorPalette.dart';
 
 import 'core/services/signalr_service.dart';
 import 'core/network/session_events.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'core/utils/platform_helper.dart';
 import 'core/widgets/role_guard.dart';
 import 'injection_container.dart' as di;
@@ -44,6 +45,7 @@ import 'injection_container.dart' as di;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  await initializeDateFormatting('vi_VN', null);
   await di.init();
 
   // SignalR được khởi tạo sau khi đăng nhập (hub yêu cầu JWT) – xem AuthGate.

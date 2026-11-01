@@ -113,6 +113,19 @@ class StockRepositoryImpl implements StockRepository {
   }
 
   @override
+  Future<Either<Failure, DamagedExpiredRecordEntity>> analyzeDamagedExpiredRecord(int id) async {
+    try {
+      final result = await remoteDataSource.analyzeDamagedExpiredRecord(id);
+      return Right(result);
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Lỗi khi phân tích AI';
+      return Left(ServerFailure(message: msg.toString()));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, DamagedExpiredRecordEntity>> createStaffDamageReport(int productId, int quantity, String reportType, String reason) async {
     try {
       final result = await remoteDataSource.createStaffDamageReport(productId, quantity, reportType, reason);

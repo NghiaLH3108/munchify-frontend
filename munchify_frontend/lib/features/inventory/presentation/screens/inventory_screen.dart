@@ -8,6 +8,7 @@ import '../../domain/entities/stock_import_entity.dart';
 import '../widgets/create_import_modal.dart';
 import '../widgets/import_detail_modal.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../../../core/services/signalr_service.dart';
 
 class InventoryScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filterStatus = 'ALL';
   DateTime? _selectedDate;
@@ -60,8 +62,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     signalRService.removeStockImportUpdateListener(_onStockImportUpdate);
     super.dispose();
+  }
+
+  void _openCreateModal() {
+    showDialog(
+      context: context,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<StockImportBloc>(),
+        child: const CreateImportModal(),
+      ),
+    );
   }
 
   @override
@@ -96,7 +109,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: ColorPalette.webBgAdmin,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -108,15 +121,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton.icon(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => BlocProvider.value(
-                    value: context.read<StockImportBloc>(),
-                    child: const CreateImportModal(),
-                  ),
-                );
-              },
+              onPressed: _openCreateModal,
               icon: const Icon(Icons.add),
               label: const Text('Tạo phiếu nhập mới'),
               style: ElevatedButton.styleFrom(
@@ -171,92 +176,35 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 4 Summary Cards
-          Row(
-            children: [
-              Expanded(child: _buildStatCard('Tổng phiếu nhập', totalImports.toString(), Icons.receipt_long, Colors.blue)),
-              const SizedBox(width: 16),
-              Expanded(child: _buildStatCard('Chờ duyệt nhập', pendingImports.toString(), Icons.pending_actions, Colors.orange)),
-              const SizedBox(width: 16),
-              Expanded(child: _buildStatCard('Hoàn thành', completedImports.toString(), Icons.check_circle_outline, Colors.green)),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'Tổng chi nhập hàng',
-                  NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(totalAmount),
-                  Icons.attach_money,
-                  Colors.purple,
-                ),
-              ),
-            ],
+          // 1. Page Header (dùng AdminPageHeader chung)
+          AdminPageHeader(
+            icon: Icons.inventory_2_rounded,
+            title: 'Quản lý Kho & Nhập Hàng',
+            subtitle: 'Theo dõi phiếu nhập kho, kiểm duyệt lô hàng và quản lý chi phí nhập nguyên vật liệu',
+            addButtonText: 'Tạo phiếu nhập',
+            onAddPressed: _openCreateModal,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Search and Filter Bar
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  onChanged: (val) {
-                    setState(() {
-                      _searchQuery = val;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Tìm kiếm theo mã phiếu, nhà cung cấp...',
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              PopupMenuButton<String>(
-                initialValue: _filterStatus,
-                onSelected: (String status) {
-                  setState(() {
-                    _filterStatus = status;
-                  });
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(value: 'ALL', child: Text('Tất cả trạng thái')),
-                  const PopupMenuItem<String>(value: 'DRAFT', child: Text('Chờ duyệt')),
-                  const PopupMenuItem<String>(value: 'COMPLETED', child: Text('Hoàn thành')),
-                  const PopupMenuItem<String>(value: 'CANCELLED', child: Text('Đã huỷ')),
+          // 2. Search and Filter Bar (dùng AdminFilterBar & AdminDropdownFilter chung)
+          AdminFilterBar(
+            searchController: _searchController,
+            searchHint: 'Tìm kiếm theo mã phiếu, nhà cung cấp...',
+            onSearchChanged: (val) => setState(() => _searchQuery = val),
+            onClearSearch: () => setState(() => _searchQuery = ''),
+            filters: [
+              AdminDropdownFilter<String>(
+                value: _filterStatus,
+                items: const [
+                  DropdownMenuItem(value: 'ALL', child: Text('Tất cả trạng thái')),
+                  DropdownMenuItem(value: 'DRAFT', child: Text('Chờ duyệt')),
+                  DropdownMenuItem(value: 'COMPLETED', child: Text('Hoàn thành')),
+                  DropdownMenuItem(value: 'CANCELLED', child: Text('Đã huỷ')),
                 ],
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.filter_list, color: Colors.black87, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        _filterStatus == 'ALL' ? 'Lọc trạng thái' : 
-                        _filterStatus == 'DRAFT' ? 'Chờ duyệt' : 
-                        _filterStatus == 'COMPLETED' ? 'Hoàn thành' : 'Đã huỷ',
-                        style: const TextStyle(color: Colors.black87)
-                      ),
-                    ],
-                  ),
-                ),
+                onChanged: (status) => setState(() => _filterStatus = status ?? 'ALL'),
               ),
-              const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: () async {
                   final DateTime? picked = await showDatePicker(
@@ -265,50 +213,81 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     firstDate: DateTime(2020),
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                   );
-                  if (picked != null) {
-                    setState(() {
-                      _selectedDate = picked;
-                    });
-                  } else {
-                    // If they dismiss, we clear the date filter
-                    setState(() {
-                      _selectedDate = null;
-                    });
-                  }
+                  setState(() => _selectedDate = picked);
                 },
-                icon: const Icon(Icons.calendar_today, color: Colors.black87, size: 18),
+                icon: const Icon(Icons.calendar_today_rounded, color: ColorPalette.appetizingOrange, size: 16),
                 label: Text(
-                  _selectedDate == null ? 'Chọn ngày' : DateFormat('dd/MM/yyyy').format(_selectedDate!), 
-                  style: const TextStyle(color: Colors.black87)
+                  _selectedDate == null ? 'Chọn ngày' : DateFormat('dd/MM/yyyy').format(_selectedDate!),
+                  style: const TextStyle(color: Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.w500),
                 ),
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: Color(0xFFE5E7EB)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => const CreateImportModal(),
-                  );
-                },
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('Tạo phiếu nhập', style: TextStyle(fontWeight: FontWeight.w600)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE85D04), // Orange brand color
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  elevation: 0,
+                  backgroundColor: const Color(0xFFFFFBF8),
+                  side: const BorderSide(color: Color(0xFFFFE0B2)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+
+          // 3. 4 Summary Cards (dùng AdminKpiCard chung)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final count = constraints.maxWidth >= 1000 ? 4 : (constraints.maxWidth >= 600 ? 2 : 1);
+              final cardWidth = (constraints.maxWidth - (count - 1) * 16) / count;
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  AdminKpiCard(
+                    width: cardWidth,
+                    title: 'TỔNG PHIẾU NHẬP',
+                    value: totalImports.toString(),
+                    subtitle: 'Tất cả phiếu nhập kho',
+                    icon: Icons.receipt_long_rounded,
+                    iconColor: const Color(0xFFE65100),
+                    iconBg: const Color(0xFFFFF7ED),
+                  ),
+                  AdminKpiCard(
+                    width: cardWidth,
+                    title: 'CHỜ DUYỆT NHẬP',
+                    value: pendingImports.toString(),
+                    valueColor: const Color(0xFFD97706),
+                    subtitle: 'Phiếu đang chờ xử lý',
+                    subTextColor: const Color(0xFFD97706),
+                    icon: Icons.pending_actions_rounded,
+                    iconColor: const Color(0xFFD97706),
+                    iconBg: const Color(0xFFFFFBEB),
+                  ),
+                  AdminKpiCard(
+                    width: cardWidth,
+                    title: 'HOÀN THÀNH',
+                    value: completedImports.toString(),
+                    valueColor: const Color(0xFF059669),
+                    subtitle: 'Đã nhập kho thành công',
+                    subTextColor: const Color(0xFF059669),
+                    showTrendIcon: true,
+                    icon: Icons.check_circle_outline_rounded,
+                    iconColor: const Color(0xFF059669),
+                    iconBg: const Color(0xFFECFDF5),
+                  ),
+                  AdminKpiCard(
+                    width: cardWidth,
+                    title: 'TỔNG CHI NHẬP HÀNG',
+                    value: NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(totalAmount),
+                    subtitle: 'Tổng giá trị nhập hàng',
+                    subTextColor: const Color(0xFF7C3AED),
+                    icon: Icons.attach_money_rounded,
+                    iconColor: const Color(0xFF7C3AED),
+                    iconBg: const Color(0xFFF5F3FF),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 20),
 
           // Data Table
           Container(
@@ -327,106 +306,62 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: DataTable(
-                headingRowColor: MaterialStateProperty.all(const Color(0xFFF9FAFB)),
-                columns: const [
-                  DataColumn(label: Text('Mã Phiếu', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Ngày Nhập', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Nhà Cung Cấp', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Mặt Hàng', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Tổng Tiền', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Trạng Thái', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Thao Tác', style: TextStyle(fontWeight: FontWeight.bold))),
-                ],
-                rows: filteredImports.map((item) {
-                  return DataRow(
-                    cells: [
-                      DataCell(Text(item.importCode, style: const TextStyle(fontWeight: FontWeight.w600))),
-                      DataCell(Text(DateFormat('dd/MM/yyyy HH:mm').format(item.importDate))),
-                      DataCell(Text(item.supplierName)),
-                      DataCell(Text('${item.details.length} mặt hàng')),
-                      DataCell(Text(
-                        NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(item.totalAmount),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      )),
-                      DataCell(_buildStatusBadge(item.status)),
-                      DataCell(
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove_red_eye_outlined, color: Colors.blue),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => BlocProvider.value(
-                                    value: context.read<StockImportBloc>(),
-                                    child: ImportDetailModal(importEntity: item),
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: DataTable(
+                      columnSpacing: 24,
+                      headingRowColor: MaterialStateProperty.all(const Color(0xFFF9FAFB)),
+                      columns: const [
+                        DataColumn(label: Text('Mã Phiếu', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Ngày Nhập', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Nhà Cung Cấp', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Mặt Hàng', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Tổng Tiền', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Trạng Thái', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Thao Tác', style: TextStyle(fontWeight: FontWeight.bold))),
+                      ],
+                      rows: filteredImports.map((item) {
+                        return DataRow(
+                          cells: [
+                            DataCell(Text(item.importCode, style: const TextStyle(fontWeight: FontWeight.w600))),
+                            DataCell(Text(DateFormat('dd/MM/yyyy HH:mm').format(item.importDate))),
+                            DataCell(Text(item.supplierName)),
+                            DataCell(Text('${item.details.length} mặt hàng')),
+                            DataCell(Text(
+                              NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(item.totalAmount),
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            )),
+                            DataCell(_buildStatusBadge(item.status)),
+                            DataCell(
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_red_eye_outlined, color: Colors.blue),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => BlocProvider.value(
+                                          value: context.read<StockImportBloc>(),
+                                          child: ImportDetailModal(importEntity: item),
+                                        ),
+                                      );
+                                    },
+                                    tooltip: 'Xem chi tiết',
                                   ),
-                                );
-                              },
-                              tooltip: 'Xem chi tiết',
+                                ],
+                              )
                             ),
-                          ],
-                        )
-                      ),
-                    ]
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          )
-        ]
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                          ]
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              )
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
             ),
           ),
         ],

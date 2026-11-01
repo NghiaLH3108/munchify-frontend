@@ -11,6 +11,10 @@ DamagedExpiredRecordModel _$DamagedExpiredRecordModelFromJson(
 ) => DamagedExpiredRecordModel(
   recordId: (json['recordId'] as num).toInt(),
   importDetailId: (json['importDetailId'] as num?)?.toInt(),
+  batchCode: json['batchCode'] as String?,
+  expiryDate: json['expiryDate'] == null
+      ? null
+      : DateTime.tryParse(json['expiryDate'] as String),
   productId: (json['productId'] as num).toInt(),
   productName: (json['productName'] as String?) ?? 'Unknown',
   unitName: (json['unitName'] as String?) ?? 'Món',
@@ -30,6 +34,8 @@ Map<String, dynamic> _$DamagedExpiredRecordModelToJson(
 ) => <String, dynamic>{
   'recordId': instance.recordId,
   'importDetailId': instance.importDetailId,
+  'batchCode': instance.batchCode,
+  'expiryDate': instance.expiryDate?.toIso8601String(),
   'productId': instance.productId,
   'productName': instance.productName,
   'unitName': instance.unitName,

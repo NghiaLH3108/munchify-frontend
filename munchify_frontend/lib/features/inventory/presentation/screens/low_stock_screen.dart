@@ -4,6 +4,7 @@ import '../bloc/low_stock/low_stock_bloc.dart';
 import '../bloc/low_stock/low_stock_event.dart';
 import '../bloc/low_stock/low_stock_state.dart';
 import '../../domain/entities/forecast_item_entity.dart';
+import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/services/signalr_service.dart';
 
 class LowStockScreen extends StatefulWidget {
@@ -268,7 +269,7 @@ class _LowStockScreenState extends State<LowStockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBF9F5), // surface
+      backgroundColor: ColorPalette.webBgAdmin,
       appBar: widget.embedInShell ? null : _buildAppBar(),
       body: BlocConsumer<LowStockBloc, LowStockState>(
         listener: (context, state) {

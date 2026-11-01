@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../categories/domain/entities/category_entity.dart';
 import '../../../categories/domain/usecases/manage_category_usecases.dart';
@@ -177,151 +179,94 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFFAF7F2),
-        body: Column(
-          children: [
-            // Top Header chuẩn khớp với ảnh (Hiển thị icon cam, tiêu đề, mô tả và nút + Thêm Nhà Cung Cấp)
-            _buildHeader(),
-            // Scrollable Content
-            Expanded(
-              child: BlocBuilder<SupplierBloc, SupplierState>(
-                builder: (context, state) {
-                  List<SupplierEntity> allSuppliers = [];
-                  bool isLoading = false;
+        backgroundColor: ColorPalette.webBgAdmin,
+        body: BlocBuilder<SupplierBloc, SupplierState>(
+          builder: (context, state) {
+            List<SupplierEntity> allSuppliers = [];
+            bool isLoading = false;
 
-                  if (state is SupplierLoading) {
-                    isLoading = true;
-                  } else if (state is SupplierLoaded) {
-                    allSuppliers = state.suppliers;
-                  }
+            if (state is SupplierLoading) {
+              isLoading = true;
+            } else if (state is SupplierLoaded) {
+              allSuppliers = state.suppliers;
+            }
 
-                  // Tính toán KPI Stats
-                  final totalSuppliers = allSuppliers.length;
-                  final activeSuppliers = allSuppliers.where((s) => s.isActive).length;
-                  final inactiveSuppliers = totalSuppliers - activeSuppliers;
+            // Tính toán KPI Stats
+            final totalSuppliers = allSuppliers.length;
+            final activeSuppliers = allSuppliers.where((s) => s.isActive).length;
+            final inactiveSuppliers = totalSuppliers - activeSuppliers;
 
-                  // Thu thập danh sách các nhóm ngành hàng (ưu tiên từ toàn bộ danh mục hệ thống)
-                  final availableCategories = _systemCategories.isNotEmpty
-                      ? _systemCategories.map((c) => c.categoryName).toList()
-                      : (allSuppliers.expand((s) => s.categoryNames).toSet().toList()..sort());
+            // Thu thập danh sách các nhóm ngành hàng (ưu tiên từ toàn bộ danh mục hệ thống)
+            final availableCategories = _systemCategories.isNotEmpty
+                ? _systemCategories.map((c) => c.categoryName).toList()
+                : (allSuppliers.expand((s) => s.categoryNames).toSet().toList()..sort());
 
-                  // Lọc theo từ khóa, trạng thái và nhóm hàng
-                  final query = _searchController.text.trim().toLowerCase();
-                  final filteredList = allSuppliers.where((s) {
-                    final matchSearch = query.isEmpty ||
-                        s.supplierName.toLowerCase().contains(query) ||
-                        (s.contactName?.toLowerCase().contains(query) ?? false);
-                    final matchStatus = _selectedStatus == null || s.isActive == _selectedStatus;
-                    final matchCategory = _selectedCategory == null || s.categoryNames.contains(_selectedCategory);
-                    return matchSearch && matchStatus && matchCategory;
-                  }).toList();
+            // Lọc theo từ khóa, trạng thái và nhóm hàng
+            final query = _searchController.text.trim().toLowerCase();
+            final filteredList = allSuppliers.where((s) {
+              final matchSearch = query.isEmpty ||
+                  s.supplierName.toLowerCase().contains(query) ||
+                  (s.contactName?.toLowerCase().contains(query) ?? false);
+              final matchStatus = _selectedStatus == null || s.isActive == _selectedStatus;
+              final matchCategory = _selectedCategory == null || s.categoryNames.contains(_selectedCategory);
+              return matchSearch && matchStatus && matchCategory;
+            }).toList();
 
-                  // Phân trang
-                  final totalPages = (filteredList.length / _pageSize).ceil().clamp(1, 999);
-                  if (_currentPage > totalPages) _currentPage = totalPages;
-                  final startIndex = (_currentPage - 1) * _pageSize;
-                  final endIndex = (startIndex + _pageSize).clamp(0, filteredList.length);
-                  final paginatedList = filteredList.sublist(startIndex, endIndex);
+            // Phân trang
+            final totalPages = (filteredList.length / _pageSize).ceil().clamp(1, 999);
+            if (_currentPage > totalPages) _currentPage = totalPages;
+            final startIndex = (_currentPage - 1) * _pageSize;
+            final endIndex = (startIndex + _pageSize).clamp(0, filteredList.length);
+            final paginatedList = filteredList.sublist(startIndex, endIndex);
 
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // KPI Cards
-                        _buildKpiStatsBar(totalSuppliers, activeSuppliers, inactiveSuppliers),
-                        const SizedBox(height: 20),
-                        // Filter & Search Controls
-                        _buildFilterBar(availableCategories),
-                        const SizedBox(height: 20),
-                        // Data Table
-                        _buildDataTableContainer(
-                          paginatedList: paginatedList,
-                          totalCount: filteredList.length,
-                          startIndex: startIndex,
-                          endIndex: endIndex,
-                          totalPages: totalPages,
-                          isLoading: isLoading,
-                        ),
-                      ],
-                    ),
-                  );
-                },
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Top Header (Sử dụng AdminPageHeader)
+                  _buildHeader(),
+                  const SizedBox(height: 20),
+                  // Filter & Search Controls (Đưa lên trên KPI giống mẫu quản lý danh mục)
+                  _buildFilterBar(availableCategories),
+                  const SizedBox(height: 20),
+                  // KPI Cards
+                  _buildKpiStatsBar(totalSuppliers, activeSuppliers, inactiveSuppliers),
+                  const SizedBox(height: 20),
+                  // Data Table
+                  _buildDataTableContainer(
+                    paginatedList: paginatedList,
+                    totalCount: filteredList.length,
+                    startIndex: startIndex,
+                    endIndex: endIndex,
+                    totalPages: totalPages,
+                    isLoading: isLoading,
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 1. TOP HEADER (Khi mở độc lập)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 1. TOP HEADER (Sử dụng AdminPageHeader dùng chung)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildHeader() {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFFFEDD5))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7ED),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.local_shipping_rounded, color: Color(0xFFE65100), size: 22),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Quản lý Nhà Cung Cấp',
-                    style: AppTypography.plusJakarta(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  Text(
-                    'Quản lý danh bạ đối tác cung ứng nguyên liệu & thực phẩm Munchify',
-                    style: AppTypography.inter(fontSize: 11, color: const Color(0xFF64748B)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          ElevatedButton.icon(
-            onPressed: _openAddDialog,
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-            label: const Text('Thêm Nhà Cung Cấp'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE65100),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 2,
-            ),
-          ),
-        ],
-      ),
+    return AdminPageHeader(
+      icon: Icons.local_shipping_rounded,
+      title: 'Quản lý Nhà Cung Cấp',
+      subtitle: 'Quản lý danh bạ đối tác cung ứng nguyên liệu & thực phẩm Munchify',
+      addButtonText: 'Thêm Nhà Cung Cấp',
+      onAddPressed: _openAddDialog,
     );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 2. KPI STATS CARDS (Theo thiết kế)
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 2. KPI STATS CARDS (Khớp 100% ảnh thiết kế: 3 Card)
+  // 2. KPI STATS CARDS (Sử dụng AdminKpiCard dùng chung)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildKpiStatsBar(int total, int active, int inactive) {
     return LayoutBuilder(builder: (context, constraints) {
@@ -332,35 +277,35 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
         spacing: 16,
         runSpacing: 16,
         children: [
-          _buildKpiCard(
+          AdminKpiCard(
             width: cardWidth,
             title: 'TỔNG ĐỐI TÁC',
             value: total.toString(),
-            subText: '+3 đối tác quý này',
-            subColor: const Color(0xFF059669),
+            subtitle: '+3 đối tác quý này',
+            subTextColor: const Color(0xFF059669),
             showTrendIcon: true,
             icon: Icons.store_rounded,
             iconBg: const Color(0xFFFFF7ED),
             iconColor: const Color(0xFFE65100),
           ),
-          _buildKpiCard(
+          AdminKpiCard(
             width: cardWidth,
             title: 'ĐANG HỢP TÁC',
             value: active.toString(),
             valueColor: const Color(0xFF059669),
-            subText: total > 0 ? 'Chiếm ${((active / total) * 100).toStringAsFixed(1)}% danh bạ' : 'Chiếm 0% danh bạ',
-            subColor: const Color(0xFF64748B),
+            subtitle: total > 0 ? 'Chiếm ${((active / total) * 100).toStringAsFixed(1)}% danh bạ' : 'Chiếm 0% danh bạ',
+            subTextColor: const Color(0xFF64748B),
             icon: Icons.check_circle_outline_rounded,
             iconBg: const Color(0xFFECFDF5),
             iconColor: const Color(0xFF059669),
           ),
-          _buildKpiCard(
+          AdminKpiCard(
             width: cardWidth,
             title: 'TẠM NGƯNG',
             value: inactive.toString(),
             valueColor: const Color(0xFF94A3B8),
-            subText: 'Chưa kích hoạt cung ứng',
-            subColor: const Color(0xFFD97706),
+            subtitle: 'Chưa kích hoạt cung ứng',
+            subTextColor: const Color(0xFFD97706),
             icon: Icons.pause_circle_outline_rounded,
             iconBg: const Color(0xFFF1F5F9),
             iconColor: const Color(0xFF64748B),
@@ -370,229 +315,44 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
     });
   }
 
-  Widget _buildKpiCard({
-    required double width,
-    required String title,
-    required String value,
-    Color? valueColor,
-    required String subText,
-    required Color subColor,
-    bool showTrendIcon = false,
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-  }) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFEDD5).withValues(alpha: 0.8), width: 1.2),
-        boxShadow: [
-          // Lớp bóng nhẹ màu cam ấm Ambient
-          BoxShadow(
-            color: iconColor.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-          // Lớp bóng sắc nét tiếp đất
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(19),
-        child: Stack(
-          children: [
-            // Dải màu Accent Line phía trên đỉnh thẻ
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 4,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      iconColor.withValues(alpha: 0.85),
-                      iconColor.withValues(alpha: 0.2),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Nội dung chính
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTypography.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF64748B),
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        value,
-                        style: AppTypography.plusJakarta(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: valueColor ?? const Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (showTrendIcon) ...[
-                            const Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF059669)),
-                            const SizedBox(width: 4),
-                          ],
-                          Text(
-                            subText,
-                            style: AppTypography.inter(fontSize: 11, fontWeight: FontWeight.w600, color: subColor),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: iconBg,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: iconColor.withValues(alpha: 0.15), width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: iconColor.withValues(alpha: 0.12),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Icon(icon, color: iconColor, size: 24),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
-  // 3. FILTER & SEARCH CONTROLS
+  // 3. FILTER & SEARCH CONTROLS (Sử dụng AdminFilterBar & AdminDropdownFilter)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildFilterBar(List<String> categories) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFEDD5), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE65100).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Input tìm kiếm
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() => _currentPage = 1),
-              style: AppTypography.inter(fontSize: 13, color: const Color(0xFF1E293B)),
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: const Color(0xFFFFFBF8),
-                hintText: 'Tìm kiếm theo tên nhà cung cấp...',
-                hintStyle: AppTypography.inter(fontSize: 13, color: const Color(0xFF94A3B8)),
-                prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFFE65100)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFFFE0B2))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFFFE0B2))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE65100), width: 1.5)),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Dropdown Trạng thái
-          _buildFilterDropdown<bool?>(
-            value: _selectedStatus,
-            items: const [
-              DropdownMenuItem(value: null, child: Text('Tất cả trạng thái')),
-              DropdownMenuItem(value: true, child: Text('Đang hợp tác')),
-              DropdownMenuItem(value: false, child: Text('Tạm ngưng')),
-            ],
-            onChanged: (val) {
-              setState(() {
-                _selectedStatus = val;
-                _currentPage = 1;
-              });
-              _loadSuppliers();
-            },
-          ),
-          const SizedBox(width: 12),
-
-          // Dropdown Nhóm hàng hóa (Tự động lấy theo dữ liệu thực tế)
-          _buildFilterDropdown<String?>(
-            value: _selectedCategory,
-            items: [
-              const DropdownMenuItem(value: null, child: Text('Tất cả nhóm hàng')),
-              ...categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))),
-            ],
-            onChanged: (val) {
-              setState(() {
-                _selectedCategory = val;
-                _currentPage = 1;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterDropdown<T>({
-    required T value,
-    required List<DropdownMenuItem<T>> items,
-    required ValueChanged<T?> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: Color(0xFF64748B)),
-          style: AppTypography.inter(fontSize: 13, color: const Color(0xFF334155), fontWeight: FontWeight.w600),
-          items: items,
-          onChanged: onChanged,
+    return AdminFilterBar(
+      searchController: _searchController,
+      searchHint: 'Tìm kiếm theo tên nhà cung cấp...',
+      onSearchChanged: (_) => setState(() => _currentPage = 1),
+      filters: [
+        AdminDropdownFilter<bool?>(
+          value: _selectedStatus,
+          items: const [
+            DropdownMenuItem(value: null, child: Text('Tất cả trạng thái')),
+            DropdownMenuItem(value: true, child: Text('Đang hợp tác')),
+            DropdownMenuItem(value: false, child: Text('Tạm ngưng')),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedStatus = val;
+              _currentPage = 1;
+            });
+            _loadSuppliers();
+          },
         ),
-      ),
+        AdminDropdownFilter<String?>(
+          value: _selectedCategory,
+          items: [
+            const DropdownMenuItem(value: null, child: Text('Tất cả nhóm hàng')),
+            ...categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedCategory = val;
+              _currentPage = 1;
+            });
+          },
+        ),
+      ],
     );
   }
 

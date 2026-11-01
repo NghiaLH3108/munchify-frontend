@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../../domain/entities/damaged_expired_record_entity.dart';
+import '../../../../injection_container.dart';
+import '../../domain/entities/damaged_expired_record_entity.dart';
+import '../../domain/usecases/analyze_damaged_expired_usecase.dart';
 
 class AiInsightDialog extends StatefulWidget {
   final DamagedExpiredRecordEntity record;
@@ -13,17 +15,41 @@ class AiInsightDialog extends StatefulWidget {
 
 class _AiInsightDialogState extends State<AiInsightDialog> {
   bool _isLoading = true;
+  String? _errorMessage;
+  late DamagedExpiredRecordEntity _record;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    _record = widget.record;
+    _runAnalysis();
+  }
+
+  Future<void> _runAnalysis() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    final useCase = sl<AnalyzeDamagedExpiredUseCase>();
+    final result = await useCase.execute(_record.recordId);
+
+    if (mounted) {
+      result.fold(
+        (failure) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = failure.message;
+          });
+        },
+        (updatedRecord) {
+          setState(() {
+            _record = updatedRecord;
+            _isLoading = false;
+          });
+        },
+      );
+    }
   }
 
   @override
@@ -32,16 +58,21 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
     String cause = 'Chưa xác định do thiếu dữ liệu AI.';
     String proposedAction = 'Vui lòng kiểm tra kết nối mạng hoặc API Key.';
 
-    if (widget.record.aiAnalysis != null && widget.record.aiAnalysis!.isNotEmpty) {
+    if (_record.aiAnalysis != null && _record.aiAnalysis!.isNotEmpty) {
       try {
-        final Map<String, dynamic> aiData = jsonDecode(widget.record.aiAnalysis!);
+        final Map<String, dynamic> aiData = jsonDecode(_record.aiAnalysis!);
         insight = aiData['insight'] ?? insight;
         cause = aiData['cause'] ?? cause;
         proposedAction = aiData['proposedAction'] ?? proposedAction;
       } catch (e) {
-        insight = widget.record.aiAnalysis!; // fallback to raw string (usually error messages from backend)
+        insight = _record.aiAnalysis!; // fallback to raw string
       }
     }
+
+    final batchDisplay = _record.batchCode ??
+        (_record.importDetailId != null
+            ? 'IMP-${_record.importDetailId}'
+            : 'BATCH-${_record.createdAt.year}-P${_record.productId}');
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -59,7 +90,7 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.fromLTRB(28, 28, 20, 16),
+              padding: const EdgeInsets.fromLTRB(28, 24, 20, 16),
               decoration: BoxDecoration(
                 color: const Color(0xFFF5F3EF).withOpacity(0.5),
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
@@ -88,7 +119,7 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(color: const Color(0xFFD7E2FF), borderRadius: BorderRadius.circular(12)),
-                              child: const Text('Model v4.2', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF001B3F))),
+                              child: const Text('DeepSeek AI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF001B3F))),
                             )
                           ],
                         ),
@@ -97,13 +128,19 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
                           text: TextSpan(
                             style: const TextStyle(fontSize: 14, color: Color(0xFF5A4138)),
                             children: [
-                              const TextSpan(text: 'Phân tích tự động tồn kho & đề xuất giảm thiểu hao hụt cho lô '),
-                              TextSpan(text: '#BATCH-2026-P${widget.record.productId}', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace', color: Color(0xFF1B1C1A))),
+                              const TextSpan(text: 'Phân tích tự động tồn kho & đề xuất tối ưu cho lô '),
+                              TextSpan(text: '#$batchDisplay', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace', color: Color(0xFF1B1C1A))),
                             ],
                           ),
                         )
                       ],
                     ),
+                  ),
+                  // Re-analyze Button
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Color(0xFFA43700)),
+                    tooltip: 'Phân tích lại AI',
+                    onPressed: _isLoading ? null : _runAnalysis,
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Color(0xFF5A4138)),
@@ -123,12 +160,33 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
                         children: [
                           CircularProgressIndicator(color: Color(0xFFA43700)),
                           SizedBox(height: 24),
-                          Text('AI Copilot đang kết nối và phân tích dữ liệu...', style: TextStyle(color: Color(0xFF5A4138), fontSize: 14, fontWeight: FontWeight.w500)),
+                          Text('AI Copilot đang phân tích dữ liệu lô hàng trực tiếp...', style: TextStyle(color: Color(0xFF5A4138), fontSize: 14, fontWeight: FontWeight.w500)),
                         ],
                       )
                     ),
                   )
-                : SingleChildScrollView(
+                : _errorMessage != null
+                  ? Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.error_outline, color: Color(0xFFBA1A1A), size: 48),
+                            const SizedBox(height: 16),
+                            Text(_errorMessage!, style: const TextStyle(color: Color(0xFFBA1A1A), fontSize: 15, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: _runAnalysis,
+                              icon: const Icon(Icons.refresh, size: 18),
+                              label: const Text('Thử lại'),
+                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA43700), foregroundColor: Colors.white),
+                            )
+                          ],
+                        ),
+                      ),
+                    )
+                  : SingleChildScrollView(
                 padding: const EdgeInsets.all(28),
                 child: Column(
                   children: [
@@ -175,9 +233,9 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
                             children: [
                               const Text('MẶT HÀNG & QUY CÁCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5A4138))),
                               const SizedBox(height: 4),
-                              Text(widget.record.productName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1B1C1A))),
+                              Text(_record.productName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1B1C1A))),
                               const SizedBox(height: 4),
-                              Text('SKU: P${widget.record.productId.toString().padLeft(3, '0')} • Tồn: ${widget.record.quantity} ${widget.record.unitName}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFA43700))),
+                              Text('SKU: P${_record.productId.toString().padLeft(3, '0')} • Tồn: ${_record.quantity} ${_record.unitName}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFA43700))),
                             ],
                           ),
                         ),
@@ -194,7 +252,7 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
                               const SizedBox(height: 4),
                               Text(cause, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF1B1C1A))),
                               const SizedBox(height: 4),
-                              const Text('• Dữ liệu hệ thống ghi nhận', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFBA1A1A))),
+                              const Text('• Phân tích từ DeepSeek AI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFBA1A1A))),
                             ],
                           ),
                         ),
@@ -211,7 +269,7 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
                               const SizedBox(height: 4),
                               Text(proposedAction, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF1B1C1A))),
                               const SizedBox(height: 4),
-                              const Text('• Khuyến nghị từ Copilot', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF005AB7))),
+                              const Text('• Khuyến nghị tối ưu hao hụt', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF005AB7))),
                             ],
                           ),
                         ),
@@ -223,38 +281,38 @@ class _AiInsightDialogState extends State<AiInsightDialog> {
             ),
           ),
           // Footer Action
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F3EF).withOpacity(0.6),
-                borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(16), bottomRight: Radius.circular(16)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context, false),
-                    icon: const Icon(Icons.undo, color: Color(0xFF5A4138), size: 18),
-                    label: const Text('Keep & Cancel (Hủy & Giữ lại)', style: TextStyle(color: Color(0xFF1B1C1A), fontSize: 14)),
-                    style: TextButton.styleFrom(backgroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F3EF).withOpacity(0.6),
+              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(16), bottomRight: Radius.circular(16)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  onPressed: () => Navigator.pop(context, false),
+                  icon: const Icon(Icons.undo, color: Color(0xFF5A4138), size: 18),
+                  label: const Text('Keep & Cancel (Hủy & Giữ lại)', style: TextStyle(color: Color(0xFF1B1C1A), fontSize: 14)),
+                  style: TextButton.styleFrom(backgroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _isLoading ? null : () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.delete_forever, color: Colors.white, size: 18),
+                  label: const Text('Approve Write-off (Deduct Stock)', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isLoading ? Colors.grey : const Color(0xFFBA1A1A),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: _isLoading ? null : () => Navigator.pop(context, true),
-                    icon: const Icon(Icons.delete_forever, color: Colors.white, size: 18),
-                    label: const Text('Approve Write-off (Deduct Stock)', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _isLoading ? Colors.grey : const Color(0xFFBA1A1A),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  )
-                ],
-              ),
-            )
-          ],
-        ),
+                )
+              ],
+            ),
+          )
+        ],
       ),
-    );
+    ),
+  );
   }
 }

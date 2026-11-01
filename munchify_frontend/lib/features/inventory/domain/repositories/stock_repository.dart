@@ -17,6 +17,7 @@ abstract class StockRepository {
   Future<Either<Failure, List<DamagedExpiredRecordEntity>>> getPendingDamagedExpiredRecords();
   Future<Either<Failure, AiExpirySummaryEntity>> getAiExpirySummaryMetrics();
   Future<Either<Failure, bool>> approveDamagedExpiredRecord(int id);
+  Future<Either<Failure, DamagedExpiredRecordEntity>> analyzeDamagedExpiredRecord(int id);
   Future<Either<Failure, DamagedExpiredRecordEntity>> createStaffDamageReport(int productId, int quantity, String reportType, String reason);
 
   // AI Low Stock Warning

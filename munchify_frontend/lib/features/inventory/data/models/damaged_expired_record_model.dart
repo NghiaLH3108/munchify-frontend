@@ -10,6 +10,10 @@ class DamagedExpiredRecordModel extends DamagedExpiredRecordEntity {
   @override
   final int? importDetailId;
   @override
+  final String? batchCode;
+  @override
+  final DateTime? expiryDate;
+  @override
   final int productId;
   @override
   final String productName;
@@ -33,6 +37,8 @@ class DamagedExpiredRecordModel extends DamagedExpiredRecordEntity {
   const DamagedExpiredRecordModel({
     required this.recordId,
     this.importDetailId,
+    this.batchCode,
+    this.expiryDate,
     required this.productId,
     required this.productName,
     required this.unitName,
@@ -46,6 +52,8 @@ class DamagedExpiredRecordModel extends DamagedExpiredRecordEntity {
   }) : super(
           recordId: recordId,
           importDetailId: importDetailId,
+          batchCode: batchCode,
+          expiryDate: expiryDate,
           productId: productId,
           productName: productName,
           unitName: unitName,

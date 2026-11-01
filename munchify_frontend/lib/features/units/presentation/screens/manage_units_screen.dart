@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../domain/entities/unit_entity.dart';
 import '../bloc/unit_bloc.dart';
 import '../bloc/unit_event.dart';
@@ -568,129 +568,41 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
   // PAGE TITLE BAR + FILTER + ACTION
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildPageTitleBar(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 768;
-              final titleWidget = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quản lý Đơn vị tính',
-                    style: AppTypography.plusJakarta(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: ColorPalette.onSurfaceDark,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Quản lý các đơn vị tính cho sản phẩm (Bịch, Gói, Lon, Chai, Ly...).',
-                    style: AppTypography.inter(
-                      fontSize: 13,
-                      color: ColorPalette.textMuted,
-                    ),
-                  ),
-                ],
-              );
-
-              final actionsWidget = Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.sync_rounded,
-                        size: 16,
-                        color: ColorPalette.tertiary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Đồng bộ lúc ${DateFormat('HH:mm:ss').format(DateTime.now())}',
-                        style: AppTypography.inter(
-                          fontSize: 12,
-                          color: ColorPalette.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 14),
-                  ElevatedButton.icon(
-                    onPressed: _showAddUnit,
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Thêm Đơn vị'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorPalette.primaryContainer,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 12,
-                      ),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      textStyle: AppTypography.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-
-              if (isWide) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(child: titleWidget),
-                    const SizedBox(width: 16),
-                    actionsWidget,
-                  ],
-                );
-              } else {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    titleWidget,
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: actionsWidget,
-                    ),
-                  ],
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildFilterToolbar(context),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AdminPageHeader(
+          icon: Icons.straighten_rounded,
+          title: 'Quản lý Đơn vị tính',
+          subtitle: 'Quản lý các đơn vị tính cho sản phẩm (Bịch, Gói, Lon, Chai, Ly...).',
+          addButtonText: 'Thêm Đơn vị',
+          onAddPressed: _showAddUnit,
+        ),
+        const SizedBox(height: 18),
+        _buildFilterToolbar(context),
+      ],
     );
   }
 
   Widget _buildFilterToolbar(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 700;
-        final filterChips = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _filterChip('Tất cả', null),
-            const SizedBox(width: 8),
-            _filterChip('Hoạt động', true),
-            const SizedBox(width: 8),
-            _filterChip('Tạm ngưng', false),
+    return AdminFilterBar(
+      searchController: _searchController,
+      searchHint: 'Tìm theo tên đơn vị, mô tả...',
+      onSearchChanged: (val) => setState(() => _searchQuery = val.trim()),
+      onClearSearch: () => setState(() => _searchQuery = ''),
+      filters: [
+        AdminDropdownFilter<bool?>(
+          value: _selectedStatus,
+          items: const [
+            DropdownMenuItem(value: null, child: Text('Tất cả trạng thái')),
+            DropdownMenuItem(value: true, child: Text('Hoạt động')),
+            DropdownMenuItem(value: false, child: Text('Tạm ngưng')),
           ],
-        );
-        final viewToggle = Container(
+          onChanged: _onStatusFilterChanged,
+        ),
+      ],
+      trailingActions: [
+        Container(
           decoration: BoxDecoration(
             color: ColorPalette.surfaceWhite,
             borderRadius: BorderRadius.circular(8),
@@ -713,54 +625,8 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
               ),
             ],
           ),
-        );
-
-        if (isNarrow) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: filterChips,
-              ),
-              const SizedBox(height: 10),
-              Align(alignment: Alignment.centerRight, child: viewToggle),
-            ],
-          );
-        }
-        return Row(children: [filterChips, const Spacer(), viewToggle]);
-      },
-    );
-  }
-
-  Widget _filterChip(String label, bool? value) {
-    final isSelected = _selectedStatus == value;
-    return GestureDetector(
-      onTap: () => _onStatusFilterChanged(value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? ColorPalette.appetizingOrange
-              : ColorPalette.surfaceWhite,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? ColorPalette.appetizingOrange
-                : ColorPalette.borderSubtle,
-          ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : ColorPalette.textSecondary,
-          ),
-        ),
-      ),
+      ],
     );
   }
 
@@ -816,7 +682,7 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
           spacing: gap,
           runSpacing: gap,
           children: [
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TỔNG ĐƠN VỊ TÍNH',
               value: total.toString(),
               subtitle: 'Tất cả đơn vị đo lường',
@@ -825,7 +691,7 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
               iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
               width: cardWidth,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'ĐANG SỬ DỤNG',
               value: active.toString(),
               subtitle:
@@ -834,10 +700,10 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
               iconColor: ColorPalette.tertiary,
               iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
               width: cardWidth,
-              trendValue: '+$active',
+              showTrendIcon: true,
               trendPositive: true,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TẠM NGƯNG',
               value: inactive.toString(),
               subtitle: 'Không sử dụng trong POS',
@@ -850,141 +716,6 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required double width,
-    String? trendValue,
-    bool trendPositive = true,
-    bool isWarning = false,
-  }) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: ColorPalette.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          // Gradient accent bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 3,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isWarning
-                      ? [ColorPalette.dangerCrimson, ColorPalette.error]
-                      : [iconColor, iconColor.withValues(alpha: 0.6)],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTypography.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: ColorPalette.textMuted,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        value,
-                        style: AppTypography.plusJakarta(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: ColorPalette.onSurfaceDark,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              subtitle,
-                              style: AppTypography.inter(
-                                fontSize: 11,
-                                color: ColorPalette.textMuted,
-                              ),
-                            ),
-                          ),
-                          if (trendValue != null) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: trendPositive
-                                    ? ColorPalette.success.withValues(
-                                        alpha: 0.1,
-                                      )
-                                    : ColorPalette.error.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                trendValue,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: trendPositive
-                                      ? ColorPalette.success
-                                      : ColorPalette.error,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

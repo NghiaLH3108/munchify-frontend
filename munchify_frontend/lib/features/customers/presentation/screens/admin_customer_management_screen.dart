@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../domain/entities/customer_entity.dart';
 import '../bloc/admin_customer_bloc.dart';
 import '../bloc/admin_customer_event.dart';
@@ -416,92 +417,39 @@ class _AdminCustomerManagementScreenState
   // PAGE TITLE BAR + ACTIONS + FILTERS
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildPageTitleBar(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 768;
-              final titleWidget = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quản lý Khách hàng & Tích điểm',
-                    style: AppTypography.plusJakarta(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: ColorPalette.onSurfaceDark,
-                    ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AdminPageHeader(
+          icon: Icons.groups_rounded,
+          title: 'Quản lý Khách hàng & Tích điểm',
+          subtitle: 'Xem danh sách khách hàng, điểm tích lũy hiện tại và lịch sử tích/đổi điểm qua từng đơn hàng.',
+          extraActions: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.sync_rounded,
+                    size: 16, color: ColorPalette.tertiary),
+                const SizedBox(width: 6),
+                Text(
+                  'Đồng bộ lúc $_lastSyncedTime',
+                  style: AppTypography.inter(
+                    fontSize: 12,
+                    color: ColorPalette.textMuted,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Xem danh sách khách hàng, điểm tích lũy hiện tại và lịch sử tích/đổi điểm qua từng đơn hàng.',
-                    style: AppTypography.inter(
-                      fontSize: 13,
-                      color: ColorPalette.textMuted,
-                    ),
-                  ),
-                ],
-              );
-
-              final actionsWidget = Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.sync_rounded,
-                          size: 16, color: ColorPalette.tertiary),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Đồng bộ lúc $_lastSyncedTime',
-                        style: AppTypography.inter(
-                          fontSize: 12,
-                          color: ColorPalette.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 14),
-                ],
-              );
-
-              if (isWide) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(child: titleWidget),
-                    const SizedBox(width: 16),
-                    actionsWidget,
-                  ],
-                );
-              } else {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    titleWidget,
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: actionsWidget,
-                    ),
-                  ],
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildFilterToolbar(context),
-        ],
-      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _buildFilterToolbar(context),
+      ],
     );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // KPI METRIC CARDS (Cleaned: Strictly based on Customer DB fields)
+  // KPI METRIC CARDS (Sử dụng AdminKpiCard dùng chung)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildKpiMetrics(List<CustomerEntity> customers, int totalCount) {
     final activeCount = customers.where((c) => c.loyaltyPoints > 0).length;
@@ -514,10 +462,10 @@ class _AdminCustomerManagementScreenState
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 1050
-            ? 4
+        final crossAxisCount = constraints.maxWidth > 900
+            ? 3
             : (constraints.maxWidth > 550 ? 2 : 1);
-        const gap = 16.0;
+        final gap = 16.0;
         final cardWidth =
             (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
                 crossAxisCount;
@@ -526,7 +474,7 @@ class _AdminCustomerManagementScreenState
           spacing: gap,
           runSpacing: gap,
           children: [
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TỔNG KHÁCH HÀNG',
               value: totalCount.toString(),
               subtitle: 'Tất cả khách hàng hệ thống',
@@ -534,10 +482,10 @@ class _AdminCustomerManagementScreenState
               iconColor: ColorPalette.primaryContainer,
               iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
               width: cardWidth,
-              trendValue: '+$totalCount',
+              showTrendIcon: true,
               trendPositive: true,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'CÓ ĐIỂM TÍCH LŨY',
               value: activeCount.toString(),
               subtitle: '$activePercentage% khách đã tích lũy điểm',
@@ -545,19 +493,11 @@ class _AdminCustomerManagementScreenState
               iconColor: ColorPalette.tertiary,
               iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
               width: cardWidth,
-              trendValue: '+$activeCount',
+              showTrendIcon: true,
               trendPositive: true,
             ),
-            _buildMetricCard(
-              title: 'TỔNG ĐIỂM HỆ THỐNG',
-              value: NumberFormat('#,###').format(totalPoints),
-              subtitle: 'Điểm thưởng khả dụng toàn hệ thống',
-              icon: Icons.toll_rounded,
-              iconColor: ColorPalette.adminPurple,
-              iconBg: ColorPalette.adminPurple.withValues(alpha: 0.1),
-              width: cardWidth,
-            ),
-            _buildMetricCard(
+            // 
+            AdminKpiCard(
               title: 'CHƯA CÓ ĐIỂM',
               value: zeroPointCount.toString(),
               subtitle: 'Khách hàng chưa phát sinh điểm',
@@ -572,309 +512,44 @@ class _AdminCustomerManagementScreenState
     );
   }
 
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required double width,
-    String? trendValue,
-    bool trendPositive = true,
-  }) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: ColorPalette.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTypography.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: ColorPalette.textMuted,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        value,
-                        style: AppTypography.plusJakarta(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: ColorPalette.onSurfaceDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.only(top: 12),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: ColorPalette.borderSubtle)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                      subtitle,
-                      style: AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (trendValue != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: trendPositive
-                            ? ColorPalette.success.withValues(alpha: 0.08)
-                            : ColorPalette.error.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            trendPositive
-                                ? Icons.trending_up_rounded
-                                : Icons.trending_down_rounded,
-                            size: 14,
-                            color: trendPositive
-                                ? ColorPalette.success
-                                : ColorPalette.error,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            trendValue,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: trendPositive
-                                  ? ColorPalette.success
-                                  : ColorPalette.error,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
-  // PILL FILTER TOOLBAR (Search input + Pills matching Staff Management)
+  // FILTER TOOLBAR (Sử dụng AdminFilterBar & AdminDropdownFilter dùng chung)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildFilterToolbar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: ColorPalette.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 880;
-          return isWide
-              ? Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: _buildSearchInputField(),
-                    ),
-                    const SizedBox(width: 16),
-                    _buildPillFilters(),
-                  ],
-                )
-              : Wrap(
-                  spacing: 12,
-                  runSpacing: 10,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: _buildSearchInputField(),
-                    ),
-                    _buildPillFilters(),
-                  ],
-                );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSearchInputField() {
-    return SizedBox(
-      height: 40,
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) {
-          setState(() {});
-          _debounce?.cancel();
-          _debounce = Timer(const Duration(milliseconds: 350), () {
-            if (!mounted) return;
-            setState(() {
-              _searchQuery = val.trim();
-              _currentPage = 1;
-            });
-            _loadData();
+    return AdminFilterBar(
+      searchController: _searchController,
+      searchHint: 'Tìm theo họ tên, SĐT...',
+      onSearchChanged: (val) {
+        setState(() {});
+        _debounce?.cancel();
+        _debounce = Timer(const Duration(milliseconds: 350), () {
+          if (!mounted) return;
+          setState(() {
+            _searchQuery = val.trim();
+            _currentPage = 1;
           });
-        },
-        style: const TextStyle(fontSize: 13),
-        decoration: InputDecoration(
-          hintText: 'Tìm theo họ tên, SĐT...',
-          hintStyle: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
-          prefixIcon: const Icon(Icons.search_rounded,
-              size: 18, color: ColorPalette.textMuted),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded, size: 16),
-                  onPressed: () {
-                    _debounce?.cancel();
-                    _searchController.clear();
-                    setState(() {
-                      _searchQuery = '';
-                      _currentPage = 1;
-                    });
-                    _loadData();
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: ColorPalette.webBgAdmin.withValues(alpha: 0.6),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(
-                color: ColorPalette.appetizingOrange, width: 1.5),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPillFilters() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        _buildPillFilter(
-          label: 'Tất cả',
-          isActive: _selectedHasPoints == null,
-          onTap: () => _onPointsFilterChanged(null),
-        ),
-        _buildPillFilter(
-          label: 'Có điểm tích lũy',
-          isActive: _selectedHasPoints == true,
-          onTap: () => _onPointsFilterChanged(
-              _selectedHasPoints == true ? null : true),
-          activeColor: ColorPalette.success,
-          icon: Icons.monetization_on_rounded,
-        ),
-        _buildPillFilter(
-          label: 'Chưa có điểm (0đ)',
-          isActive: _selectedHasPoints == false,
-          onTap: () => _onPointsFilterChanged(
-              _selectedHasPoints == false ? null : false),
-          activeColor: ColorPalette.textMuted,
-          icon: Icons.person_outline_rounded,
+          _loadData();
+        });
+      },
+      onClearSearch: () {
+        _debounce?.cancel();
+        setState(() {
+          _searchQuery = '';
+          _currentPage = 1;
+        });
+        _loadData();
+      },
+      filters: [
+        AdminDropdownFilter<bool?>(
+          value: _selectedHasPoints,
+          items: const [
+            DropdownMenuItem(value: null, child: Text('Tất cả khách hàng')),
+            DropdownMenuItem(value: true, child: Text('Có điểm tích lũy')),
+            DropdownMenuItem(value: false, child: Text('Chưa có điểm (0đ)')),
+          ],
+          onChanged: _onPointsFilterChanged,
         ),
       ],
-    );
-  }
-
-  Widget _buildPillFilter({
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-    IconData? icon,
-    Color? activeColor,
-  }) {
-    final color = activeColor ?? ColorPalette.appetizingOrange;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isActive ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? color : ColorPalette.borderSubtle,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon,
-                  size: 14,
-                  color: isActive ? Colors.white : ColorPalette.textMuted),
-              const SizedBox(width: 5),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isActive ? Colors.white : ColorPalette.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
