@@ -1,9 +1,10 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../../../core/utils/CurrencyFormatter.dart';
 import '../../domain/entities/customer_entity.dart';
 import '../../domain/entities/customer_point_history_entity.dart';
@@ -360,60 +361,16 @@ class _CustomerPointsHistoryModalState extends State<CustomerPointsHistoryModal>
     final totalPages = (totalCount / _pageSize).ceil();
     if (totalPages <= 1) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Trang $_currentPage / $totalPages (Tổng $totalCount giao dịch)',
-            style: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
-          ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: _currentPage > 1
-                    ? () {
-                        setState(() => _currentPage--);
-                        _loadHistory();
-                      }
-                    : null,
-                icon: const Icon(Icons.chevron_left_rounded, size: 20),
-                style: IconButton.styleFrom(
-                  backgroundColor: ColorPalette.webBgAdmin,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: ColorPalette.appetizingOrange,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '$_currentPage',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
-                ),
-              ),
-              const SizedBox(width: 6),
-              IconButton(
-                onPressed: _currentPage < totalPages
-                    ? () {
-                        setState(() => _currentPage++);
-                        _loadHistory();
-                      }
-                    : null,
-                icon: const Icon(Icons.chevron_right_rounded, size: 20),
-                style: IconButton.styleFrom(
-                  backgroundColor: ColorPalette.webBgAdmin,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return AppPaginationBar(
+      currentPage: _currentPage,
+      totalPages: totalPages,
+      totalCount: totalCount,
+      itemLabel: 'giao dịch',
+      pageSize: _pageSize,
+      onPageChanged: (page) {
+        setState(() => _currentPage = page);
+        _loadHistory();
+      },
     );
   }
 }

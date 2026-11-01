@@ -5,6 +5,7 @@ import '../bloc/low_stock/low_stock_event.dart';
 import '../bloc/low_stock/low_stock_state.dart';
 import '../../domain/entities/forecast_item_entity.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 
 class LowStockScreen extends StatefulWidget {
   final bool embedInShell;
@@ -16,6 +17,8 @@ class LowStockScreen extends StatefulWidget {
 
 class _LowStockScreenState extends State<LowStockScreen> {
   String _searchQuery = '';
+  int _currentPage = 1;
+  static const int _pageSize = 10;
 
   @override
   void initState() {
@@ -304,6 +307,13 @@ class _LowStockScreenState extends State<LowStockScreen> {
             }
           }
 
+          final totalCount = records.length;
+          final totalPages = (totalCount / _pageSize).ceil().clamp(1, 999);
+          if (_currentPage > totalPages) _currentPage = totalPages;
+          final startIndex = (_currentPage - 1) * _pageSize;
+          final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
+          final paginatedRecords = totalCount > 0 ? records.sublist(startIndex, endIndex) : <ForecastItemEntity>[];
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -311,7 +321,7 @@ class _LowStockScreenState extends State<LowStockScreen> {
               children: [
                 _buildHeader(records),
                 const SizedBox(height: 32),
-                _buildDataTable(state, records),
+                _buildDataTable(state, paginatedRecords, totalCount, totalPages, startIndex, endIndex),
               ],
             ),
           );
@@ -442,7 +452,14 @@ class _LowStockScreenState extends State<LowStockScreen> {
     );
   }
 
-  Widget _buildDataTable(LowStockState state, List<ForecastItemEntity> records) {
+  Widget _buildDataTable(
+    LowStockState state,
+    List<ForecastItemEntity> records,
+    int totalCount,
+    int totalPages,
+    int startIndex,
+    int endIndex,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -493,6 +510,15 @@ class _LowStockScreenState extends State<LowStockScreen> {
                 return _buildTableRow(records[index], index % 2 == 1);
               },
             ),
+          AppPaginationBar(
+            currentPage: _currentPage,
+            totalPages: totalPages,
+            totalCount: totalCount,
+            itemLabel: 'sản phẩm cảnh báo',
+            startIndex: totalCount > 0 ? startIndex + 1 : 0,
+            endIndex: endIndex,
+            onPageChanged: (page) => setState(() => _currentPage = page),
+          ),
         ],
       ),
     );

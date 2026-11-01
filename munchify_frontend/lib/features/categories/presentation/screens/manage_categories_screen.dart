@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/category_entity.dart';
 import '../bloc/category_bloc.dart';
 import '../bloc/category_event.dart';
@@ -1257,7 +1258,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             _buildCardGrid(context, items),
 
           const Divider(height: 1, color: ColorPalette.borderSubtle),
-          _buildPagination(isListEnd),
+          _buildPagination(isListEnd, items.length),
         ],
       ),
     );
@@ -1758,120 +1759,19 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     );
   }
 
-  Widget _buildPagination(bool isListEnd) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 10,
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            'Đang ở trang $_currentPage',
-            style: AppTypography.dashboardSubtitle,
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPaginationButton(
-                icon: Icons.chevron_left_rounded,
-                label: 'Trước',
-                enabled: _currentPage > 1,
-                onTap: () {
-                  setState(() => _currentPage--);
-                  _loadData();
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.appetizingOrange,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$_currentPage',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              _buildPaginationButton(
-                icon: Icons.chevron_right_rounded,
-                label: 'Sau',
-                enabled: !isListEnd,
-                onTap: () {
-                  setState(() => _currentPage++);
-                  _loadData();
-                },
-                iconRight: true,
-              ),
-            ],
-          ),
-        ],
-      ),
+  Widget _buildPagination(bool isListEnd, int count) {
+    final totalPages = isListEnd ? _currentPage : _currentPage + 1;
+    return AppPaginationBar(
+      currentPage: _currentPage,
+      totalPages: totalPages,
+      totalCount: count,
+      itemLabel: 'danh mục',
+      pageSize: _pageSize,
+      onPageChanged: (page) {
+        setState(() => _currentPage = page);
+        _loadData();
+      },
     );
   }
 
-  Widget _buildPaginationButton({
-    required IconData icon,
-    required String label,
-    required bool enabled,
-    required VoidCallback onTap,
-    bool iconRight = false,
-  }) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: ColorPalette.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: ColorPalette.borderSubtle),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!iconRight)
-              Icon(
-                icon,
-                size: 16,
-                color: enabled
-                    ? ColorPalette.textPrimary
-                    : ColorPalette.textMuted,
-              ),
-            if (!iconRight) const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: enabled
-                    ? ColorPalette.textPrimary
-                    : ColorPalette.textMuted,
-              ),
-            ),
-            if (iconRight) const SizedBox(width: 4),
-            if (iconRight)
-              Icon(
-                icon,
-                size: 16,
-                color: enabled
-                    ? ColorPalette.textPrimary
-                    : ColorPalette.textMuted,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 }

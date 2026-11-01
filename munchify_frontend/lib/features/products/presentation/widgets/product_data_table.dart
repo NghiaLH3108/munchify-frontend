@@ -5,11 +5,27 @@ import '../../domain/entities/product_entity.dart';
 import '../bloc/product_admin_bloc.dart';
 import '../bloc/product_admin_event.dart';
 import 'product_form_dialog.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 
 class ProductDataTable extends StatelessWidget {
   final List<ProductEntity> products;
+  final int currentPage;
+  final int totalPages;
+  final int totalCount;
+  final int startIndex;
+  final int endIndex;
+  final ValueChanged<int> onPageChanged;
 
-  const ProductDataTable({Key? key, required this.products}) : super(key: key);
+  const ProductDataTable({
+    Key? key,
+    required this.products,
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalCount,
+    required this.startIndex,
+    required this.endIndex,
+    required this.onPageChanged,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,16 +43,30 @@ class ProductDataTable extends StatelessWidget {
           ),
         ],
       ),
-      child: ListView.separated(
-        itemCount: products.length + 1, // +1 for header
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildHeaderRow(context);
-          }
-          final product = products[index - 1];
-          return _buildDataRow(context, product, currencyFormat);
-        },
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          _buildHeaderRow(context),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: products.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return _buildDataRow(context, product, currencyFormat);
+            },
+          ),
+          AppPaginationBar(
+            currentPage: currentPage,
+            totalPages: totalPages,
+            totalCount: totalCount,
+            itemLabel: 'món',
+            startIndex: startIndex,
+            endIndex: endIndex,
+            onPageChanged: onPageChanged,
+          ),
+        ],
       ),
     );
   }

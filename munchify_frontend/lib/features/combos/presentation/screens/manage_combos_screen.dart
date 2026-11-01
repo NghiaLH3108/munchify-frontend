@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/combo_entity.dart';
 import '../../domain/entities/combo_form_options_entity.dart';
@@ -689,45 +690,13 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
   }
 
   Widget _buildPagination(ComboLoaded state) {
-    final totalPages = state.totalPages == 0 ? 1 : state.totalPages;
-    final from = state.totalCount == 0
-        ? 0
-        : (state.page - 1) * state.pageSize + 1;
-    final to = (from + state.combos.length - 1).clamp(0, state.totalCount);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'Hiển thị $from–$to / ${state.totalCount} combo',
-              style: const TextStyle(
-                  fontSize: 12, color: ColorPalette.textMuted),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Trang trước',
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            onPressed:
-                state.page > 1 ? () => _goToPage(state.page - 1) : null,
-            icon: const Icon(Icons.chevron_left_rounded),
-          ),
-          Text('Trang ${state.page} / $totalPages',
-              style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600)),
-          IconButton(
-            tooltip: 'Trang sau',
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            onPressed: state.page < totalPages
-                ? () => _goToPage(state.page + 1)
-                : null,
-            icon: const Icon(Icons.chevron_right_rounded),
-          ),
-        ],
-      ),
+    return AppPaginationBar(
+      currentPage: state.page,
+      totalPages: state.totalPages == 0 ? 1 : state.totalPages,
+      totalCount: state.totalCount,
+      itemLabel: 'combo',
+      pageSize: state.pageSize,
+      onPageChanged: _goToPage,
     );
   }
 }

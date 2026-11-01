@@ -163,7 +163,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 final effectivePointsDiscount = pointsDiscount.clamp(
                   0.0,
                   amountAfterVoucher,
-                );
+                ).toDouble();
                 final finalTotal = amountAfterVoucher - effectivePointsDiscount;
 
                 return Column(

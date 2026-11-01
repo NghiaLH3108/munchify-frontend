@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/AppTypography.dart';
@@ -11,7 +11,7 @@ import '../widgets/staff_data_table.dart';
 import '../widgets/staff_filter_bar.dart';
 import '../widgets/staff_form_dialog.dart';
 import '../widgets/staff_metric_cards.dart';
-import '../widgets/staff_pagination.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 
 /// Orchestrator screen for Staff Management and Authorization:
 /// Integrates KPI metric cards, search/filter bar, data table, and pagination.
@@ -230,21 +230,15 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                         .read<StaffBloc>()
                         .add(ToggleStaffStatusEvent(staff.userId));
                   },
-                  paginationWidget: StaffPagination(
+                  paginationWidget: AppPaginationBar(
                     currentPage: _currentPage,
                     totalPages: state.result.totalPages,
                     totalCount: state.result.totalCount,
-                    onPreviousPage: () {
-                      if (_currentPage > 1) {
-                        setState(() => _currentPage--);
-                        _loadData();
-                      }
-                    },
-                    onNextPage: () {
-                      if (_currentPage < state.result.totalPages) {
-                        setState(() => _currentPage++);
-                        _loadData();
-                      }
+                    itemLabel: 'nhân viên',
+                    pageSize: _pageSize,
+                    onPageChanged: (page) {
+                      setState(() => _currentPage = page);
+                      _loadData();
                     },
                   ),
                 ),
