@@ -58,6 +58,8 @@ class PromotionAdminBloc extends Bloc<PromotionAdminEvent, PromotionAdminState> 
           searchKeyword: event.searchKeyword,
           pageIndex: event.pageIndex,
           isRefreshing: false,
+          successMessage: event.successMessage,
+          stamp: DateTime.now().microsecondsSinceEpoch,
         );
         _lastLoadedState = nextState;
         emit(nextState);
@@ -74,6 +76,7 @@ class PromotionAdminBloc extends Bloc<PromotionAdminEvent, PromotionAdminState> 
         pageIndex: event.pageIndex,
         pageSize: event.pageSize,
         searchKeyword: event.searchKeyword,
+        successMessage: 'Đã cập nhật trạng thái chương trình khuyến mãi.',
       )),
     );
   }

@@ -4,6 +4,7 @@ import '../../../../injection_container.dart' as di;
 import '../../../categories/domain/entities/category_entity.dart';
 import '../../../categories/domain/usecases/manage_category_usecases.dart';
 import '../../domain/entities/supplier_entity.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class SupplierFormDialog extends StatefulWidget {
   final SupplierEntity? supplier;
@@ -82,12 +83,7 @@ class _SupplierFormDialogState extends State<SupplierFormDialog> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       if (_selectedCategoryIds.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng chọn ít nhất một danh mục ngành hàng cung ứng.'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        AppToast.error('Vui lòng chọn ít nhất một danh mục ngành hàng cung ứng.', context: context);
         return;
       }
 

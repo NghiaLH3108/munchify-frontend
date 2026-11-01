@@ -39,6 +39,7 @@ import 'core/services/signalr_service.dart';
 import 'core/network/session_events.dart';
 import 'core/utils/platform_helper.dart';
 import 'core/widgets/role_guard.dart';
+import 'core/widgets/app_toast.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -90,6 +91,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Munchify POS',
+        navigatorKey: AppToast.navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const AuthGate(),
@@ -123,11 +125,7 @@ class _AuthGateState extends State<AuthGate> {
     // 403: đã đăng nhập nhưng không đủ quyền
     _forbiddenSub = SessionEvents.onForbidden.listen((_) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Bạn không có quyền thực hiện chức năng này.'),
-        ),
-      );
+      AppToast.error('Bạn không có quyền thực hiện chức năng này.');
     });
   }
 

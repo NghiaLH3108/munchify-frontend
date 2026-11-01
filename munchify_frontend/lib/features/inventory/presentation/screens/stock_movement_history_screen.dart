@@ -9,6 +9,7 @@ import '../bloc/stock_movement_bloc.dart';
 import '../bloc/stock_movement_event.dart';
 import '../bloc/stock_movement_state.dart';
 import '../../domain/entities/stock_movement_entity.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class StockMovementHistoryScreen extends StatefulWidget {
   const StockMovementHistoryScreen({super.key});
@@ -178,12 +179,7 @@ class _StockMovementHistoryScreenState extends State<StockMovementHistoryScreen>
       body: BlocConsumer<StockMovementBloc, StockMovementState>(
         listener: (context, state) {
           if (state is StockMovementError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: ColorPalette.error,
-              ),
-            );
+            AppToast.error(state.message, context: context);
           }
         },
         builder: (context, state) {

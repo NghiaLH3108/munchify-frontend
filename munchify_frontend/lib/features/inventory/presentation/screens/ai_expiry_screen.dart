@@ -7,6 +7,7 @@ import 'widgets/ai_insight_dialog.dart';
 import '../../domain/entities/damaged_expired_record_entity.dart';
 import '../../domain/entities/ai_expiry_summary_entity.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class AiExpiryScreen extends StatefulWidget {
   final bool embedInShell;
@@ -35,19 +36,10 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       // Tự động làm mới danh sách dữ liệu ngay lập tức
       context.read<AiExpiryBloc>().add(FetchPendingRecordsEvent());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.bolt, color: Colors.amber, size: 20),
-              const SizedBox(width: 8),
-              Expanded(child: Text('[SignalR Realtime] $message')),
-            ],
-          ),
-          backgroundColor: const Color(0xFF1B1C1A),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.warning(
+        '[SignalR Realtime] $message',
+        context: context,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -66,17 +58,9 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       body: BlocConsumer<AiExpiryBloc, AiExpiryState>(
         listener: (context, state) {
           if (state is AiExpiryApproveSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Đã duyệt tiêu hủy & cập nhật trừ kho thành công!'),
-                backgroundColor: Color(0xFF386A20), // success green
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppToast.success('Đã duyệt tiêu hủy & cập nhật trừ kho thành công!', context: context);
           } else if (state is AiExpiryError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFFBA1A1A)),
-            );
+            AppToast.error(state.message, context: context);
           }
         },
         builder: (context, state) {

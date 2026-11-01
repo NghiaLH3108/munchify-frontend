@@ -20,4 +20,5 @@ abstract class ComboRepository {
   Future<Either<Failure, String>> deleteCombo(int id);
 
   Future<Either<Failure, ComboFormOptionsEntity>> getFormOptions();
+  Future<Either<Failure, bool>> toggleComboStatus(int id);
 }

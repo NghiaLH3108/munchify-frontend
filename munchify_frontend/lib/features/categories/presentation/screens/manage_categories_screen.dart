@@ -12,6 +12,7 @@ import '../bloc/category_event.dart';
 import '../bloc/category_state.dart';
 import '../widgets/category_form_dialog.dart';
 import '../widgets/delete_confirm_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ManageCategoriesScreen extends StatefulWidget {
   final bool embedInShell;
@@ -147,63 +148,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     final bodyContent = BlocConsumer<CategoryBloc, CategoryState>(
       listener: (context, state) {
         if (state is CategoryLoaded && state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      state.successMessage!,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-          // Reload if action was successful, wait, if CategoryLoaded is emitted it might already have new items.
-          // In staff_management_screen they call _loadData() on StaffActionSuccess.
-          // For CategoryLoaded, it's just state loaded, no need to load data again if the bloc does it.
-          // But to be safe if bloc doesn't reload automatically, we'll see.
+          AppToast.success(state.successMessage!, context: context);
         } else if (state is CategoryError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      state.message,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       buildWhen: (previous, current) =>

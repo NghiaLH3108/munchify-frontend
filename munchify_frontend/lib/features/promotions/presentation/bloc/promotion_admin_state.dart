@@ -20,6 +20,8 @@ class PromotionsLoaded extends PromotionAdminState {
   final String? searchKeyword;
   final int pageIndex;
   final bool isRefreshing;
+  final String? successMessage;
+  final int? stamp;
 
   const PromotionsLoaded({
     required this.promotionsData,
@@ -28,6 +30,8 @@ class PromotionsLoaded extends PromotionAdminState {
     this.searchKeyword,
     required this.pageIndex,
     this.isRefreshing = false,
+    this.successMessage,
+    this.stamp,
   });
 
   PromotionsLoaded copyWith({
@@ -37,6 +41,8 @@ class PromotionsLoaded extends PromotionAdminState {
     String? searchKeyword,
     int? pageIndex,
     bool? isRefreshing,
+    String? successMessage,
+    int? stamp,
   }) {
     return PromotionsLoaded(
       promotionsData: promotionsData ?? this.promotionsData,
@@ -45,6 +51,8 @@ class PromotionsLoaded extends PromotionAdminState {
       searchKeyword: searchKeyword ?? this.searchKeyword,
       pageIndex: pageIndex ?? this.pageIndex,
       isRefreshing: isRefreshing ?? this.isRefreshing,
+      successMessage: successMessage,
+      stamp: stamp ?? this.stamp,
     );
   }
 
@@ -56,6 +64,8 @@ class PromotionsLoaded extends PromotionAdminState {
         searchKeyword,
         pageIndex,
         isRefreshing,
+        successMessage,
+        stamp,
       ];
 }
 

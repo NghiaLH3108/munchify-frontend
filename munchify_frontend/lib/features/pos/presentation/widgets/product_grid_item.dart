@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ProductGridItem extends StatelessWidget {
   final String productCode;
@@ -34,15 +35,10 @@ class ProductGridItem extends StatelessWidget {
     return GestureDetector(
       onTap: isOutOfStock
           ? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Sản phẩm "$productName" hiện đã hết hàng trong kho!',
-                  ),
-                  backgroundColor: const Color(0xFFC62828),
-                  duration: const Duration(seconds: 2),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              AppToast.warning(
+                'Sản phẩm "$productName" hiện đã hết hàng trong kho!',
+                context: context,
+                duration: const Duration(seconds: 2),
               );
             }
           : onTapCard,

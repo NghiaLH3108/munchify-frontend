@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../bloc/pos_catalog_bloc.dart';
 import '../bloc/pos_catalog_event.dart';
 import '../bloc/pos_catalog_state.dart';
@@ -45,54 +46,20 @@ class _PosHomeScreenState extends State<PosHomeScreen> {
     // Tự động reload danh mục POS để cập nhật số lượng tồn kho mới nhất
     context.read<PosCatalogBloc>().add(LoadCatalogEvent());
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'CẢNH BÁO TỒN KHO THẤP',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    message,
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFFE65100),
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-      ),
+    AppToast.warning(
+      'CẢNH BÁO TỒN KHO THẤP: $message',
+      context: context,
+      duration: const Duration(seconds: 4),
     );
   }
 
   void _onExpiryAlertReceived(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.event_busy_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: const Color(0xFFC62828),
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-      ),
+    AppToast.error(
+      message,
+      context: context,
+      duration: const Duration(seconds: 4),
     );
   }
 

@@ -16,6 +16,7 @@ import '../../../categories/domain/usecases/manage_category_usecases.dart';
 import '../../../categories/domain/entities/category_entity.dart';
 import '../../../units/domain/usecases/manage_unit_usecases.dart';
 import '../../../units/domain/entities/unit_entity.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ProductFormDialog extends StatefulWidget {
   final ProductEntity? product;
@@ -126,17 +127,14 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
             uploadedImageUrl = response.data['url'];
             isUploading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tải ảnh lên thành công')),
-          );
+          AppToast.success('Tải ảnh lên thành công', context: context);
         } else {
           throw Exception('Failed to upload image');
         }
       }
     } catch (e) {
       setState(() => isUploading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
+      AppToast.error('Lỗi tải ảnh: $e', context: context);
     }
   }
 
@@ -147,11 +145,9 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         if (state is ProductFormSuccess) {
           Navigator.of(context).pop();
           context.read<ProductAdminBloc>().add(const LoadProductsEvent());
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('Lưu thành công')));
+          AppToast.success('Lưu thành công', context: context);
         } else if (state is ProductFormError) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(state.message)));
+          AppToast.error(state.message, context: context);
         }
       },
       child: Dialog(
