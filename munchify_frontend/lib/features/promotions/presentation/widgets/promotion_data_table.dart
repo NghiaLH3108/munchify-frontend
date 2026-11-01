@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/promotion_entity.dart';
 
 class PromotionDataTable extends StatelessWidget {
@@ -187,37 +188,14 @@ class PromotionDataTable extends StatelessWidget {
   }
 
   Widget _buildPagination() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: ColorPalette.borderSubtle)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Tổng: $totalCount khuyến mãi',
-            style: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left_rounded),
-                onPressed: currentPage > 1
-                    ? () => onPageChanged(currentPage - 1)
-                    : null,
-              ),
-              Text('Trang $currentPage / $totalPages'),
-              IconButton(
-                icon: const Icon(Icons.chevron_right_rounded),
-                onPressed: currentPage < totalPages
-                    ? () => onPageChanged(currentPage + 1)
-                    : null,
-              ),
-            ],
-          ),
-        ],
-      ),
+    final effectiveTotalPages = totalPages == 0 ? 1 : totalPages;
+    return AppPaginationBar(
+      currentPage: currentPage,
+      totalPages: effectiveTotalPages,
+      totalCount: totalCount,
+      itemLabel: 'khuyến mãi',
+      pageSize: (totalCount / effectiveTotalPages).ceil(),
+      onPageChanged: onPageChanged,
     );
   }
 

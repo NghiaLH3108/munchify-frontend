@@ -250,6 +250,7 @@ Future<void> init() async {
       createCombo: sl(),
       updateCombo: sl(),
       deleteCombo: sl(),
+      toggleComboStatus: sl(),
     ),
   );
 
@@ -372,6 +373,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateComboUseCase(sl()));
   sl.registerLazySingleton(() => DeleteComboUseCase(sl()));
   sl.registerLazySingleton(() => GetComboFormOptionsUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleComboStatusUseCase(sl()));
 
   // Reports
   sl.registerLazySingleton(() => GetRevenueSummaryUseCase(sl()));

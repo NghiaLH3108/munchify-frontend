@@ -5,11 +5,13 @@ import '../bloc/ai_expiry/ai_expiry_event.dart';
 import '../bloc/ai_expiry/ai_expiry_state.dart';
 import '../widgets/ai_insight_dialog.dart';
 import '../../domain/entities/damaged_expired_record_entity.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/ai_expiry_summary_entity.dart';
 import '../../../../core/services/signalr_service.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/utils/CurrencyFormatter.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class AiExpiryScreen extends StatefulWidget {
   final bool embedInShell;
@@ -23,6 +25,8 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filterStatus = 'ALL'; // 'ALL', 'PENDING', 'APPROVED', 'REJECTED'
+  int _currentPage = 1;
+  static const int _pageSize = 10;
 
   @override
   void initState() {
@@ -39,19 +43,10 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       // Tự động làm mới danh sách dữ liệu ngay lập tức
       context.read<AiExpiryBloc>().add(FetchPendingRecordsEvent());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.bolt, color: Colors.amber, size: 20),
-              const SizedBox(width: 8),
-              Expanded(child: Text('[SignalR Realtime] $message')),
-            ],
-          ),
-          backgroundColor: const Color(0xFF1B1C1A),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.warning(
+        '[SignalR Realtime] $message',
+        context: context,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -70,17 +65,9 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
       body: BlocConsumer<AiExpiryBloc, AiExpiryState>(
         listener: (context, state) {
           if (state is AiExpiryApproveSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Đã duyệt tiêu hủy & cập nhật trừ kho thành công!'),
-                backgroundColor: Color(0xFF386A20), // success green
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppToast.success('Đã duyệt tiêu hủy & cập nhật trừ kho thành công!', context: context);
           } else if (state is AiExpiryError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFFBA1A1A)),
-            );
+            AppToast.error(state.message, context: context);
           }
         },
         builder: (context, state) {
@@ -220,6 +207,13 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
   }
 
   Widget _buildDataTable(AiExpiryState state, List<DamagedExpiredRecordEntity> records) {
+    final totalCount = records.length;
+    final totalPages = (totalCount / _pageSize).ceil().clamp(1, 999);
+    if (_currentPage > totalPages) _currentPage = totalPages;
+    final startIndex = (_currentPage - 1) * _pageSize;
+    final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
+    final paginatedRecords = totalCount > 0 ? records.sublist(startIndex, endIndex) : <DamagedExpiredRecordEntity>[];
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -239,36 +233,23 @@ class _AiExpiryScreenState extends State<AiExpiryScreen> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: records.length,
+              itemCount: paginatedRecords.length,
               separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFE4E2DE)),
               itemBuilder: (context, index) {
-                final record = records[index];
+                final record = paginatedRecords[index];
                 return _buildTableRow(record);
               },
             ),
           // Footer
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F3EF),
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Đang hiển thị 1 - ${records.length} trên tổng số ${records.length} lô cần quyết định', style: const TextStyle(fontSize: 12, color: Color(0xFF5A4138))),
-                Row(
-                  children: [
-                    Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.chevron_left, size: 18, color: Colors.grey)),
-                    const SizedBox(width: 4),
-                    Container(width: 32, height: 32, decoration: BoxDecoration(color: const Color(0xFFA43700), borderRadius: BorderRadius.circular(8)), child: const Center(child: Text('1', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))),
-                    const SizedBox(width: 4),
-                    Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.chevron_right, size: 18, color: Color(0xFF5A4138))),
-                  ],
-                )
-              ],
-            ),
-          )
+          AppPaginationBar(
+            currentPage: _currentPage,
+            totalPages: totalPages,
+            totalCount: totalCount,
+            itemLabel: 'lô cần quyết định',
+            startIndex: totalCount > 0 ? startIndex + 1 : 0,
+            endIndex: endIndex,
+            onPageChanged: (page) => setState(() => _currentPage = page),
+          ),
         ],
       ),
     );

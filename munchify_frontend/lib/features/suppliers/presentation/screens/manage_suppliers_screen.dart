@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../categories/domain/entities/category_entity.dart';
 import '../../../categories/domain/usecases/manage_category_usecases.dart';
@@ -11,6 +12,7 @@ import '../bloc/supplier_bloc.dart';
 import '../bloc/supplier_event.dart';
 import '../bloc/supplier_state.dart';
 import '../widgets/supplier_form_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ManageSuppliersScreen extends StatefulWidget {
   final bool embedInShell;
@@ -26,7 +28,7 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
   bool? _selectedStatus; // null: Tất cả, true: Đang hợp tác, false: Tạm ngưng
   String? _selectedCategory; // null: Tất cả nhóm hàng
   int _currentPage = 1;
-  static const int _pageSize = 8;
+  static const int _pageSize = 10;
   List<CategoryEntity> _systemCategories = [];
 
   @override
@@ -147,35 +149,9 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
     return BlocListener<SupplierBloc, SupplierState>(
       listener: (context, state) {
         if (state is SupplierActionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Text(state.message),
-                ],
-              ),
-              backgroundColor: const Color(0xFF059669),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          AppToast.success(state.message, context: context, duration: const Duration(seconds: 3));
         } else if (state is SupplierError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: const Color(0xFFDC2626),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
-            ),
-          );
+          AppToast.error(state.message, context: context, duration: const Duration(seconds: 4));
         }
       },
       child: Scaffold(
@@ -635,57 +611,14 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
             ),
 
           // Pagination Footer
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-              border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Hiển thị ${totalCount > 0 ? startIndex + 1 : 0} - $endIndex trong tổng số $totalCount nhà cung cấp',
-                  style: AppTypography.inter(fontSize: 12, color: const Color(0xFF64748B)),
-                ),
-                Row(
-                  children: [
-                    OutlinedButton(
-                      onPressed: _currentPage > 1 ? () => setState(() => _currentPage--) : null,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Text('Trước', style: TextStyle(fontSize: 12)),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE65100),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '$_currentPage / $totalPages',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
-                      onPressed: _currentPage < totalPages ? () => setState(() => _currentPage++) : null,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Text('Sau', style: TextStyle(fontSize: 12)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          AppPaginationBar(
+            currentPage: _currentPage,
+            totalPages: totalPages,
+            totalCount: totalCount,
+            itemLabel: 'nhà cung cấp',
+            startIndex: totalCount > 0 ? startIndex + 1 : 0,
+            endIndex: endIndex,
+            onPageChanged: (page) => setState(() => _currentPage = page),
           ),
         ],
       ),

@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,12 +6,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/unit_entity.dart';
 import '../bloc/unit_bloc.dart';
 import '../bloc/unit_event.dart';
 import '../bloc/unit_state.dart';
 import '../widgets/unit_form_dialog.dart';
 import '../widgets/unit_delete_confirm_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ManageUnitsScreen extends StatefulWidget {
   final bool embedInShell;
@@ -142,59 +144,9 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
     final bodyContent = BlocConsumer<UnitBloc, UnitState>(
       listener: (context, state) {
         if (state is UnitLoaded && state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      state.successMessage!,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.success(state.successMessage!, context: context);
         } else if (state is UnitError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      state.message,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       buildWhen: (previous, current) =>
@@ -1326,99 +1278,17 @@ class _ManageUnitsScreenState extends State<ManageUnitsScreen> {
 
   // ── PAGINATION ──
   Widget _buildPaginationBar(int count, bool isListEnd) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: ColorPalette.webBgAdmin.withValues(alpha: 0.5),
-        border: Border(top: BorderSide(color: ColorPalette.borderSubtle)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Hiển thị $count kết quả · Trang $_currentPage',
-            style: AppTypography.inter(
-              fontSize: 12,
-              color: ColorPalette.textMuted,
-            ),
-          ),
-          Row(
-            children: [
-              _paginationBtn(
-                icon: Icons.chevron_left_rounded,
-                enabled: _currentPage > 1,
-                onTap: () {
-                  setState(() => _currentPage--);
-                  _loadData();
-                },
-                tooltip: 'Trang trước',
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: ColorPalette.appetizingOrange,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '$_currentPage',
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              _paginationBtn(
-                icon: Icons.chevron_right_rounded,
-                enabled: !isListEnd,
-                onTap: () {
-                  setState(() => _currentPage++);
-                  _loadData();
-                },
-                tooltip: 'Trang tiếp',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _paginationBtn({
-    required IconData icon,
-    required bool enabled,
-    required VoidCallback onTap,
-    String? tooltip,
-  }) {
-    return Tooltip(
-      message: tooltip ?? '',
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: enabled
-                ? ColorPalette.surfaceWhite
-                : ColorPalette.webBgAdmin,
-            border: Border.all(color: ColorPalette.borderSubtle),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: enabled
-                ? ColorPalette.textSecondary
-                : ColorPalette.textMuted,
-          ),
-        ),
-      ),
+    final totalPages = isListEnd ? _currentPage : _currentPage + 1;
+    return AppPaginationBar(
+      currentPage: _currentPage,
+      totalPages: totalPages,
+      totalCount: count,
+      itemLabel: 'đơn vị tính',
+      pageSize: _pageSize,
+      onPageChanged: (page) {
+        setState(() => _currentPage = page);
+        _loadData();
+      },
     );
   }
 }

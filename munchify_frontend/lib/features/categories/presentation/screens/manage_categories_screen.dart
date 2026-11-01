@@ -7,12 +7,14 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/category_entity.dart';
 import '../bloc/category_bloc.dart';
 import '../bloc/category_event.dart';
 import '../bloc/category_state.dart';
 import '../widgets/category_form_dialog.dart';
 import '../widgets/delete_confirm_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class ManageCategoriesScreen extends StatefulWidget {
   final bool embedInShell;
@@ -148,63 +150,9 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     final bodyContent = BlocConsumer<CategoryBloc, CategoryState>(
       listener: (context, state) {
         if (state is CategoryLoaded && state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      state.successMessage!,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-          // Reload if action was successful, wait, if CategoryLoaded is emitted it might already have new items.
-          // In staff_management_screen they call _loadData() on StaffActionSuccess.
-          // For CategoryLoaded, it's just state loaded, no need to load data again if the bloc does it.
-          // But to be safe if bloc doesn't reload automatically, we'll see.
+          AppToast.success(state.successMessage!, context: context);
         } else if (state is CategoryError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      state.message,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       buildWhen: (previous, current) =>
@@ -865,7 +813,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             _buildCardGrid(context, items),
 
           const Divider(height: 1, color: ColorPalette.borderSubtle),
-          _buildPagination(isListEnd),
+          _buildPagination(isListEnd, items.length),
         ],
       ),
     );
@@ -1366,120 +1314,19 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     );
   }
 
-  Widget _buildPagination(bool isListEnd) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 10,
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            'Đang ở trang $_currentPage',
-            style: AppTypography.dashboardSubtitle,
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPaginationButton(
-                icon: Icons.chevron_left_rounded,
-                label: 'Trước',
-                enabled: _currentPage > 1,
-                onTap: () {
-                  setState(() => _currentPage--);
-                  _loadData();
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.appetizingOrange,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$_currentPage',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              _buildPaginationButton(
-                icon: Icons.chevron_right_rounded,
-                label: 'Sau',
-                enabled: !isListEnd,
-                onTap: () {
-                  setState(() => _currentPage++);
-                  _loadData();
-                },
-                iconRight: true,
-              ),
-            ],
-          ),
-        ],
-      ),
+  Widget _buildPagination(bool isListEnd, int count) {
+    final totalPages = isListEnd ? _currentPage : _currentPage + 1;
+    return AppPaginationBar(
+      currentPage: _currentPage,
+      totalPages: totalPages,
+      totalCount: count,
+      itemLabel: 'danh mục',
+      pageSize: _pageSize,
+      onPageChanged: (page) {
+        setState(() => _currentPage = page);
+        _loadData();
+      },
     );
   }
 
-  Widget _buildPaginationButton({
-    required IconData icon,
-    required String label,
-    required bool enabled,
-    required VoidCallback onTap,
-    bool iconRight = false,
-  }) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: ColorPalette.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: ColorPalette.borderSubtle),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!iconRight)
-              Icon(
-                icon,
-                size: 16,
-                color: enabled
-                    ? ColorPalette.textPrimary
-                    : ColorPalette.textMuted,
-              ),
-            if (!iconRight) const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: enabled
-                    ? ColorPalette.textPrimary
-                    : ColorPalette.textMuted,
-              ),
-            ),
-            if (iconRight) const SizedBox(width: 4),
-            if (iconRight)
-              Icon(
-                icon,
-                size: 16,
-                color: enabled
-                    ? ColorPalette.textPrimary
-                    : ColorPalette.textMuted,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 }

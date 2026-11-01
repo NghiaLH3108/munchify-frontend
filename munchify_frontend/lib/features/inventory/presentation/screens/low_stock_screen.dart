@@ -6,6 +6,8 @@ import '../bloc/low_stock/low_stock_state.dart';
 import '../../domain/entities/forecast_item_entity.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class LowStockScreen extends StatefulWidget {
   final bool embedInShell;
@@ -17,6 +19,8 @@ class LowStockScreen extends StatefulWidget {
 
 class _LowStockScreenState extends State<LowStockScreen> {
   String _searchQuery = '';
+  int _currentPage = 1;
+  static const int _pageSize = 10;
 
   @override
   void initState() {
@@ -32,19 +36,10 @@ class _LowStockScreenState extends State<LowStockScreen> {
       // Tự động làm mới danh sách dữ liệu dự báo & cảnh báo
       context.read<LowStockBloc>().add(const FetchLowStockWarningEvent());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 20),
-              const SizedBox(width: 8),
-              Expanded(child: Text('[SignalR Realtime] $message')),
-            ],
-          ),
-          backgroundColor: const Color(0xFF1B1C1A),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.warning(
+        '[SignalR Realtime] $message',
+        context: context,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -57,18 +52,14 @@ class _LowStockScreenState extends State<LowStockScreen> {
 
   void _generateDraftImport(List<ForecastItemEntity> items) {
     if (items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không có sản phẩm nào cần nhập.')),
-      );
+      AppToast.warning('Không có sản phẩm nào cần nhập.', context: context);
       return;
     }
 
     // Chỉ lấy sản phẩm có suggestedImportQty > 0
     final actionableItems = items.where((i) => i.suggestedImportQty > 0).toList();
     if (actionableItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tất cả sản phẩm đều đã có phiếu nhập đang chờ xử lý.')),
-      );
+      AppToast.warning('Tất cả sản phẩm đều đã có phiếu nhập đang chờ xử lý.', context: context);
       return;
     }
 
@@ -274,21 +265,11 @@ class _LowStockScreenState extends State<LowStockScreen> {
       body: BlocConsumer<LowStockBloc, LowStockState>(
         listener: (context, state) {
           if (state is DraftImportGeneratedSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Đã tạo phiếu nhập nháp thành công!'),
-                backgroundColor: Color(0xFF386A20), 
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            AppToast.success('Đã tạo phiếu nhập nháp thành công!', context: context);
           } else if (state is LowStockError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFFBA1A1A)),
-            );
+            AppToast.error(state.message, context: context);
           } else if (state is DraftImportGeneratedError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFFBA1A1A)),
-            );
+            AppToast.error(state.message, context: context);
           }
         },
         builder: (context, state) {
@@ -305,6 +286,13 @@ class _LowStockScreenState extends State<LowStockScreen> {
             }
           }
 
+          final totalCount = records.length;
+          final totalPages = (totalCount / _pageSize).ceil().clamp(1, 999);
+          if (_currentPage > totalPages) _currentPage = totalPages;
+          final startIndex = (_currentPage - 1) * _pageSize;
+          final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
+          final paginatedRecords = totalCount > 0 ? records.sublist(startIndex, endIndex) : <ForecastItemEntity>[];
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -312,7 +300,7 @@ class _LowStockScreenState extends State<LowStockScreen> {
               children: [
                 _buildHeader(records),
                 const SizedBox(height: 32),
-                _buildDataTable(state, records),
+                _buildDataTable(state, paginatedRecords, totalCount, totalPages, startIndex, endIndex),
               ],
             ),
           );
@@ -443,7 +431,14 @@ class _LowStockScreenState extends State<LowStockScreen> {
     );
   }
 
-  Widget _buildDataTable(LowStockState state, List<ForecastItemEntity> records) {
+  Widget _buildDataTable(
+    LowStockState state,
+    List<ForecastItemEntity> records,
+    int totalCount,
+    int totalPages,
+    int startIndex,
+    int endIndex,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -494,6 +489,15 @@ class _LowStockScreenState extends State<LowStockScreen> {
                 return _buildTableRow(records[index], index % 2 == 1);
               },
             ),
+          AppPaginationBar(
+            currentPage: _currentPage,
+            totalPages: totalPages,
+            totalCount: totalCount,
+            itemLabel: 'sản phẩm cảnh báo',
+            startIndex: totalCount > 0 ? startIndex + 1 : 0,
+            endIndex: endIndex,
+            onPageChanged: (page) => setState(() => _currentPage = page),
+          ),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import '../../../../core/theme/AppTypography.dart';
 import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class CustomerFormDialog extends StatefulWidget {
   final VoidCallback onSuccess;
@@ -47,37 +48,11 @@ class _CustomerFormDialogState extends State<CustomerFormDialog> {
         if (state is CustomerCreated) {
           setState(() => _isLoading = false);
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 10),
-                  Text('Thêm khách hàng mới thành công!'),
-                ],
-              ),
-              backgroundColor: ColorPalette.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-          );
+          AppToast.success('Thêm khách hàng mới thành công!', context: context);
           widget.onSuccess();
         } else if (state is CustomerError) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       child: Dialog(

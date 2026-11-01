@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
+import '../../domain/entities/product_entity.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../bloc/product_admin_bloc.dart';
 import '../bloc/product_admin_event.dart';
 import '../bloc/product_admin_state.dart';
@@ -18,6 +20,8 @@ class ProductManagementScreen extends StatefulWidget {
 }
 
 class _ProductManagementScreenState extends State<ProductManagementScreen> {
+  int _currentPage = 1;
+  static const int _pageSize = 10;
   @override
   void initState() {
     super.initState();
@@ -30,6 +34,17 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
     return Scaffold(
       backgroundColor: ColorPalette.webBgAdmin,
       body: BlocBuilder<ProductAdminBloc, ProductAdminState>(
+        listener: (context, state) {
+          if (state is ProductAdminLoaded && state.successMessage != null) {
+            AppToast.success(state.successMessage!, context: context);
+          }
+          if (state is ProductAdminLoaded && state.errorMessage != null) {
+            AppToast.error(state.errorMessage!, context: context);
+          }
+          if (state is ProductAdminError) {
+            AppToast.error(state.message, context: context);
+          }
+        },
         builder: (context, state) {
           if (state is ProductAdminLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -45,7 +60,15 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
   }
 
   Widget _buildContent(BuildContext context, ProductAdminLoaded state) {
-    return Padding(
+    final allProducts = state.products;
+    final totalCount = allProducts.length;
+    final totalPages = (totalCount / _pageSize).ceil().clamp(1, 999);
+    if (_currentPage > totalPages) _currentPage = totalPages;
+    final startIndex = (_currentPage - 1) * _pageSize;
+    final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
+    final paginatedProducts = totalCount > 0 ? allProducts.sublist(startIndex, endIndex) : <ProductEntity>[];
+
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,9 +95,15 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
           ),
           const SizedBox(height: 20),
           
-          // 4. Data Table
-          Expanded(
-            child: ProductDataTable(products: state.products),
+          // Data Table
+          ProductDataTable(
+            products: paginatedProducts,
+            currentPage: _currentPage,
+            totalPages: totalPages,
+            totalCount: totalCount,
+            startIndex: totalCount > 0 ? startIndex + 1 : 0,
+            endIndex: endIndex,
+            onPageChanged: (page) => setState(() => _currentPage = page),
           ),
         ],
       ),

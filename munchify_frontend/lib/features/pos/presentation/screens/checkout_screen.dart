@@ -16,6 +16,7 @@ import '../bloc/order_bloc.dart';
 import '../bloc/order_event.dart';
 import '../bloc/order_state.dart';
 import '../widgets/payment_method_selector.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 /// Màn hình thanh toán chuẩn POS Munchify – hỗ trợ Cash, VietQR, Bank Transfer
 class CheckoutScreen extends StatefulWidget {
@@ -60,30 +61,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           context.read<CustomerBloc>().add(ClearSelectedCustomerEvent());
 
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  SizedBox(width: 8),
-                  Text('Thanh toán thành công!'),
-                ],
-              ),
-              backgroundColor: ColorPalette.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppToast.success('Thanh toán thành công!', context: context);
         } else if (state is OrderError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: ColorPalette.error,
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       child: Scaffold(
@@ -163,7 +143,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 final effectivePointsDiscount = pointsDiscount.clamp(
                   0.0,
                   amountAfterVoucher,
-                );
+                ).toDouble();
                 final finalTotal = amountAfterVoucher - effectivePointsDiscount;
 
                 return Column(
@@ -815,29 +795,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                     onPressed: () {
                       setState(() => _isQrPaid = true);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: const [
-                              Icon(
-                                Icons.check_circle_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              SizedBox(width: 10),
-                              Text(
-                                'Ghi nhận chuyển khoản thành công!',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: const Color(0xFF16A34A),
-                          duration: const Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
+                      AppToast.success(
+                        'Ghi nhận chuyển khoản thành công!',
+                        context: context,
+                        duration: const Duration(seconds: 2),
                       );
                     },
                   ),

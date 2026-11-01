@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/AppTypography.dart';
@@ -12,7 +12,9 @@ import '../widgets/staff_data_table.dart';
 import '../widgets/staff_filter_bar.dart';
 import '../widgets/staff_form_dialog.dart';
 import '../widgets/staff_metric_cards.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../widgets/staff_pagination.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 /// Orchestrator screen for Staff Management and Authorization:
 /// Integrates KPI metric cards, search/filter bar, data table, and pagination.
@@ -112,48 +114,10 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
     final bodyContent = BlocConsumer<StaffBloc, StaffState>(
       listener: (context, state) {
         if (state is StaffActionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded,
-                      color: Colors.white, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(state.message,
-                        style: const TextStyle(fontSize: 13)),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.success(state.message, context: context);
           _loadData();
         } else if (state is StaffError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded,
-                      color: Colors.white, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(state.message,
-                        style: const TextStyle(fontSize: 13)),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       buildWhen: (previous, current) =>
@@ -231,21 +195,15 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                         .read<StaffBloc>()
                         .add(ToggleStaffStatusEvent(staff.userId));
                   },
-                  paginationWidget: StaffPagination(
+                  paginationWidget: AppPaginationBar(
                     currentPage: _currentPage,
                     totalPages: state.result.totalPages,
                     totalCount: state.result.totalCount,
-                    onPreviousPage: () {
-                      if (_currentPage > 1) {
-                        setState(() => _currentPage--);
-                        _loadData();
-                      }
-                    },
-                    onNextPage: () {
-                      if (_currentPage < state.result.totalPages) {
-                        setState(() => _currentPage++);
-                        _loadData();
-                      }
+                    itemLabel: 'nhân viên',
+                    pageSize: _pageSize,
+                    onPageChanged: (page) {
+                      setState(() => _currentPage = page);
+                      _loadData();
                     },
                   ),
                 ),

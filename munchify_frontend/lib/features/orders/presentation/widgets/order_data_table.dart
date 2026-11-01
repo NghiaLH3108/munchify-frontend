@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/paged_orders_result.dart';
 
 class OrderDataTable extends StatelessWidget {
@@ -206,53 +207,13 @@ class OrderDataTable extends StatelessWidget {
           ),
 
           // ── Pagination Footer ───────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: ColorPalette.borderSubtle)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Tổng số: ${pagedOrders.totalCount} đơn hàng (Trang ${pagedOrders.pageNumber} / ${pagedOrders.totalPages > 0 ? pagedOrders.totalPages : 1})',
-                  style: AppTypography.inter(
-                    fontSize: 12,
-                    color: ColorPalette.textMuted,
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: pagedOrders.pageNumber > 1
-                          ? () => onPageChanged(pagedOrders.pageNumber - 1)
-                          : null,
-                      icon: const Icon(Icons.chevron_left_rounded, size: 18),
-                      label: const Text('Trang trước'),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: ColorPalette.borderSubtle),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        textStyle: AppTypography.inter(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: pagedOrders.pageNumber < pagedOrders.totalPages
-                          ? () => onPageChanged(pagedOrders.pageNumber + 1)
-                          : null,
-                      icon: const Icon(Icons.chevron_right_rounded, size: 18),
-                      label: const Text('Trang sau'),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: ColorPalette.borderSubtle),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        textStyle: AppTypography.inter(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          AppPaginationBar(
+            currentPage: pagedOrders.pageNumber,
+            totalPages: pagedOrders.totalPages > 0 ? pagedOrders.totalPages : 1,
+            totalCount: pagedOrders.totalCount,
+            itemLabel: 'đơn hàng',
+            pageSize: pagedOrders.pageSize > 0 ? pagedOrders.pageSize : 10,
+            onPageChanged: onPageChanged,
           ),
         ],
       ),

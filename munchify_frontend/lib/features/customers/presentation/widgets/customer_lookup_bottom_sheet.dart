@@ -12,6 +12,7 @@ import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
 import 'add_customer_bottom_sheet.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class CustomerLookupBottomSheet extends StatefulWidget {
   const CustomerLookupBottomSheet({super.key});
@@ -55,9 +56,7 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
     final phone = _phoneController.text.trim();
     final error = Validators.validatePhoneNumber(phone);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: ColorPalette.error),
-      );
+      AppToast.error(error, context: context);
       return;
     }
     context.read<CustomerBloc>().add(SearchCustomerByPhoneEvent(phone));

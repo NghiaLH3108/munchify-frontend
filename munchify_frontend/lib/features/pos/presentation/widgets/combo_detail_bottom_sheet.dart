@@ -5,6 +5,7 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/entities/combo_item_entity.dart';
 import '../bloc/cart_cubit.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 /// Bottom sheet hiển thị chi tiết combo: danh sách thành phần + SavingAmount thực
 class ComboDetailBottomSheet extends StatelessWidget {
@@ -178,12 +179,10 @@ class ComboDetailBottomSheet extends StatelessWidget {
                     ? () {
                         context.read<CartCubit>().addItem(combo);
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Đã thêm ${combo.name} vào giỏ'),
-                            duration: const Duration(seconds: 1),
-                            backgroundColor: ColorPalette.success,
-                          ),
+                        AppToast.success(
+                          'Đã thêm ${combo.name} vào giỏ',
+                          context: context,
+                          duration: const Duration(seconds: 1),
                         );
                       }
                     : null,

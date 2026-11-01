@@ -10,6 +10,8 @@ import '../widgets/import_detail_modal.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class InventoryScreen extends StatefulWidget {
   final bool embedInShell;
@@ -28,6 +30,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String _searchQuery = '';
   String _filterStatus = 'ALL';
   DateTime? _selectedDate;
+  int _currentPage = 1;
+  static const int _pageSize = 10;
 
   @override
   void initState() {
@@ -43,19 +47,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
       // Tự động làm mới danh sách phiếu nhập kho
       context.read<StockImportBloc>().add(FetchStockImportsEvent());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.sync, color: Colors.lightGreenAccent, size: 20),
-              const SizedBox(width: 8),
-              Expanded(child: Text('[SignalR Realtime] $message')),
-            ],
-          ),
-          backgroundColor: const Color(0xFF1B1C1A),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      AppToast.info(
+        '[SignalR Realtime] $message',
+        context: context,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -82,13 +77,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final bodyContent = BlocConsumer<StockImportBloc, StockImportState>(
       listener: (context, state) {
         if (state is StockImportActionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.green),
-          );
+          AppToast.success(state.message, context: context);
         } else if (state is StockImportError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       builder: (context, state) {
@@ -172,6 +163,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
       
       return matchesSearch && matchesStatus && matchesDate;
     }).toList();
+
+    final totalCount = filteredImports.length;
+    final totalPages = (totalCount / _pageSize).ceil().clamp(1, 999);
+    if (_currentPage > totalPages) _currentPage = totalPages;
+    final startIndex = (_currentPage - 1) * _pageSize;
+    final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
+    final paginatedImports = totalCount > 0 ? filteredImports.sublist(startIndex, endIndex) : <StockImportEntity>[];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -306,60 +304,100 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: LayoutBuilder(
-                builder: (context, constraints) => SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                    child: DataTable(
-                      columnSpacing: 24,
-                      headingRowColor: MaterialStateProperty.all(const Color(0xFFF9FAFB)),
-                      columns: const [
-                        DataColumn(label: Text('Mã Phiếu', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Ngày Nhập', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Nhà Cung Cấp', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Mặt Hàng', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Tổng Tiền', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Trạng Thái', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Thao Tác', style: TextStyle(fontWeight: FontWeight.bold))),
-                      ],
-                      rows: filteredImports.map((item) {
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(item.importCode, style: const TextStyle(fontWeight: FontWeight.w600))),
-                            DataCell(Text(DateFormat('dd/MM/yyyy HH:mm').format(item.importDate))),
-                            DataCell(Text(item.supplierName)),
-                            DataCell(Text('${item.details.length} mặt hàng')),
-                            DataCell(Text(
-                              NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(item.totalAmount),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            )),
-                            DataCell(_buildStatusBadge(item.status)),
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.remove_red_eye_outlined, color: Colors.blue),
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (ctx) => BlocProvider.value(
-                                          value: context.read<StockImportBloc>(),
-                                          child: ImportDetailModal(importEntity: item),
-                                        ),
-                                      );
-                                    },
-                                    tooltip: 'Xem chi tiết',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DataTable(
+                headingRowColor: MaterialStateProperty.all(const Color(0xFFF9FAFB)),
+                columns: const [
+                  DataColumn(label: Text('Mã Phiếu', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Ngày Nhập', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Nhà Cung Cấp', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Mặt Hàng', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Tổng Tiền', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Trạng Thái', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Thao Tác', style: TextStyle(fontWeight: FontWeight.bold))),
+                ],
+                rows: paginatedImports.map((item) {
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(item.importCode, style: const TextStyle(fontWeight: FontWeight.w600))),
+                      DataCell(Text(DateFormat('dd/MM/yyyy HH:mm').format(item.importDate))),
+                      DataCell(Text(item.supplierName)),
+                      DataCell(Text('${item.details.length} mặt hàng')),
+                      DataCell(Text(
+                        NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(item.totalAmount),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      )),
+                      DataCell(_buildStatusBadge(item.status)),
+                      DataCell(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_red_eye_outlined, color: Colors.blue),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => BlocProvider.value(
+                                    value: context.read<StockImportBloc>(),
+                                    child: ImportDetailModal(importEntity: item),
                                   ),
                                 ],
                               )
                             ),
-                          ]
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                          ],
+                        )
+                      ),
+                    ]
+                  );
+                }).toList(),
+              ),
+              AppPaginationBar(
+                currentPage: _currentPage,
+                totalPages: totalPages,
+                totalCount: totalCount,
+                itemLabel: 'phiếu nhập',
+                startIndex: totalCount > 0 ? startIndex + 1 : 0,
+                endIndex: endIndex,
+                onPageChanged: (page) => setState(() => _currentPage = page),
+              ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          )
+        ]
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),

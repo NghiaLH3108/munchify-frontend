@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/widgets/admin/admin_widgets.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/customer_entity.dart';
 import '../bloc/admin_customer_bloc.dart';
 import '../bloc/admin_customer_event.dart';
 import '../bloc/admin_customer_state.dart';
 import '../widgets/customer_points_history_modal.dart';
+import '../../../../core/widgets/app_toast.dart';
 
 class AdminCustomerManagementScreen extends StatefulWidget {
   final bool embedInShell;
@@ -95,26 +97,7 @@ class _AdminCustomerManagementScreenState
     final bodyContent = BlocConsumer<AdminCustomerBloc, AdminCustomerState>(
       listener: (context, state) {
         if (state is AdminCustomerError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded,
-                      color: Colors.white, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(state.message,
-                        style: const TextStyle(fontSize: 13)),
-                  ),
-                ],
-              ),
-              backgroundColor: ColorPalette.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          AppToast.error(state.message, context: context);
         }
       },
       buildWhen: (previous, current) =>
@@ -1135,126 +1118,20 @@ class _AdminCustomerManagementScreenState
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ===========================================================================
   // PAGINATION
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ===========================================================================
   Widget _buildPagination(int totalPages, int totalCount) {
-    final displayTotalPages = totalPages == 0 ? 1 : totalPages;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 10,
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            'Hiển thị trang $_currentPage / $displayTotalPages (Tổng $totalCount khách hàng)',
-            style: AppTypography.dashboardSubtitle,
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPaginationButton(
-                icon: Icons.chevron_left_rounded,
-                label: 'Trước',
-                enabled: _currentPage > 1,
-                onTap: () {
-                  setState(() => _currentPage--);
-                  _loadData();
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: ColorPalette.appetizingOrange,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$_currentPage',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              _buildPaginationButton(
-                icon: Icons.chevron_right_rounded,
-                label: 'Sau',
-                isNext: true,
-                enabled: _currentPage < displayTotalPages,
-                onTap: () {
-                  setState(() => _currentPage++);
-                  _loadData();
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaginationButton({
-    required IconData icon,
-    required String label,
-    required bool enabled,
-    required VoidCallback onTap,
-    bool isNext = false,
-  }) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: enabled
-              ? ColorPalette.surface
-              : ColorPalette.webBgAdmin.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: enabled
-                ? ColorPalette.borderSubtle
-                : ColorPalette.borderSubtle.withValues(alpha: 0.5),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!isNext) ...[
-              Icon(icon,
-                  size: 16,
-                  color: enabled
-                      ? ColorPalette.textPrimary
-                      : ColorPalette.textMuted.withValues(alpha: 0.5)),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: enabled
-                    ? ColorPalette.textPrimary
-                    : ColorPalette.textMuted.withValues(alpha: 0.5),
-              ),
-            ),
-            if (isNext) ...[
-              const SizedBox(width: 4),
-              Icon(icon,
-                  size: 16,
-                  color: enabled
-                      ? ColorPalette.textPrimary
-                      : ColorPalette.textMuted.withValues(alpha: 0.5)),
-            ],
-          ],
-        ),
-      ),
+    return AppPaginationBar(
+      currentPage: _currentPage,
+      totalPages: totalPages == 0 ? 1 : totalPages,
+      totalCount: totalCount,
+      itemLabel: 'khách hàng',
+      pageSize: _pageSize,
+      onPageChanged: (page) {
+        setState(() => _currentPage = page);
+        _loadData();
+      },
     );
   }
 
