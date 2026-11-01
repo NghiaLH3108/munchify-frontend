@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/category_entity.dart';
 import '../bloc/category_bloc.dart';
@@ -524,111 +525,19 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   // PAGE TITLE BAR + FILTER + ACTION
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildPageTitleBar(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 768;
-              final titleWidget = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quản lý Danh mục',
-                    style: AppTypography.plusJakarta(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: ColorPalette.onSurfaceDark,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Quản lý các nhóm sản phẩm trong thực đơn và điểm bán.',
-                    style: AppTypography.inter(
-                      fontSize: 13,
-                      color: ColorPalette.textMuted,
-                    ),
-                  ),
-                ],
-              );
-
-              final actionsWidget = Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.sync_rounded,
-                        size: 16,
-                        color: ColorPalette.tertiary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Đồng bộ lúc ${DateFormat('HH:mm:ss').format(DateTime.now())}',
-                        style: AppTypography.inter(
-                          fontSize: 12,
-                          color: ColorPalette.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 14),
-                  ElevatedButton.icon(
-                    onPressed: _showAddCategory,
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Thêm Danh mục'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorPalette.primaryContainer,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 12,
-                      ),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      textStyle: AppTypography.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-
-              if (isWide) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(child: titleWidget),
-                    const SizedBox(width: 16),
-                    actionsWidget,
-                  ],
-                );
-              } else {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    titleWidget,
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: actionsWidget,
-                    ),
-                  ],
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildFilterToolbar(context),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AdminPageHeader(
+          icon: Icons.category_rounded,
+          title: 'Quản lý Danh mục',
+          subtitle: 'Quản lý các nhóm sản phẩm trong thực đơn và điểm bán.',
+          addButtonText: 'Thêm Danh mục',
+          onAddPressed: _showAddCategory,
+        ),
+        const SizedBox(height: 18),
+        _buildFilterToolbar(context),
+      ],
     );
   }
 
@@ -657,7 +566,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
           spacing: gap,
           runSpacing: gap,
           children: [
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TỔNG DANH MỤC',
               value: total.toString(),
               subtitle: 'Tất cả nhóm sản phẩm',
@@ -666,7 +575,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
               width: cardWidth,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'ĐANG KINH DOANH',
               value: active.toString(),
               subtitle:
@@ -675,10 +584,10 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               iconColor: ColorPalette.tertiary,
               iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
               width: cardWidth,
-              trendValue: '+${active > 0 ? active : 0}',
+              showTrendIcon: true,
               trendPositive: true,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TỔNG SẢN PHẨM',
               value: totalProducts.toString(),
               subtitle: 'Trong tất cả danh mục',
@@ -687,7 +596,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               iconBg: ColorPalette.adminPurple.withValues(alpha: 0.1),
               width: cardWidth,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TẠM NGƯNG',
               value: locked.toString(),
               subtitle: 'Ngừng kinh doanh',
@@ -703,327 +612,26 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     );
   }
 
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required double width,
-    String? trendValue,
-    bool trendPositive = true,
-    bool isWarning = false,
-  }) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: ColorPalette.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          if (isWarning)
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(width: 4, color: ColorPalette.warningTangerine),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: AppTypography.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: ColorPalette.textMuted,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            value,
-                            style: AppTypography.plusJakarta(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: isWarning && int.tryParse(value) != 0
-                                  ? ColorPalette.dangerCrimson
-                                  : ColorPalette.onSurfaceDark,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: iconBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: iconColor, size: 22),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.only(top: 12),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: ColorPalette.borderSubtle),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        subtitle,
-                        style: AppTypography.dashboardSubtitle.copyWith(
-                          fontSize: 11,
-                        ),
-                      ),
-                      if (trendValue != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: trendPositive
-                                ? ColorPalette.success.withValues(alpha: 0.08)
-                                : ColorPalette.error.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                trendPositive
-                                    ? Icons.trending_up_rounded
-                                    : Icons.trending_down_rounded,
-                                size: 14,
-                                color: trendPositive
-                                    ? ColorPalette.success
-                                    : ColorPalette.error,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                trendValue,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: trendPositive
-                                      ? ColorPalette.success
-                                      : ColorPalette.error,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (isWarning)
-                        const Icon(
-                          Icons.warning_amber_rounded,
-                          size: 16,
-                          color: ColorPalette.warning,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
-  // PILL FILTER TOOLBAR
+  // FILTER TOOLBAR (Sử dụng AdminFilterBar & AdminDropdownFilter dùng chung)
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildFilterToolbar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: ColorPalette.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 880;
-          return isWide
-              ? Row(
-                  children: [
-                    Expanded(flex: 3, child: _buildSearchInputField()),
-                    const SizedBox(width: 16),
-                    _buildPillFilters(),
-                  ],
-                )
-              : Wrap(
-                  spacing: 12,
-                  runSpacing: 10,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: _buildSearchInputField(),
-                    ),
-                    _buildPillFilters(),
-                  ],
-                );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSearchInputField() {
-    return SizedBox(
-      height: 40,
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) => setState(() => _searchQuery = val.trim()),
-        style: const TextStyle(fontSize: 13),
-        decoration: InputDecoration(
-          hintText: 'Tìm theo tên danh mục, mô tả...',
-          hintStyle: const TextStyle(
-            fontSize: 12,
-            color: ColorPalette.textMuted,
-          ),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            size: 18,
-            color: ColorPalette.textMuted,
-          ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded, size: 16),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: ColorPalette.webBgAdmin.withValues(alpha: 0.6),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 8,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(
-              color: ColorPalette.appetizingOrange,
-              width: 1.5,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPillFilters() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        _buildPillFilter(
-          label: 'Tất cả',
-          isActive: _selectedStatus == null,
-          onTap: () {
-            _onStatusFilterChanged(null);
-          },
-        ),
-        Container(width: 1, height: 24, color: ColorPalette.borderSubtle),
-        _buildPillFilter(
-          label: 'Hoạt động',
-          isActive: _selectedStatus == true,
-          onTap: () =>
-              _onStatusFilterChanged(_selectedStatus == true ? null : true),
-          activeColor: ColorPalette.success,
-        ),
-        _buildPillFilter(
-          label: 'Ngừng hoạt động',
-          isActive: _selectedStatus == false,
-          onTap: () =>
-              _onStatusFilterChanged(_selectedStatus == false ? null : false),
-          activeColor: ColorPalette.error,
+    return AdminFilterBar(
+      searchController: _searchController,
+      searchHint: 'Tìm theo tên danh mục, mô tả...',
+      onSearchChanged: (val) => setState(() => _searchQuery = val.trim()),
+      onClearSearch: () => setState(() => _searchQuery = ''),
+      filters: [
+        AdminDropdownFilter<bool?>(
+          value: _selectedStatus,
+          items: const [
+            DropdownMenuItem(value: null, child: Text('Tất cả trạng thái')),
+            DropdownMenuItem(value: true, child: Text('Hoạt động')),
+            DropdownMenuItem(value: false, child: Text('Ngừng hoạt động')),
+          ],
+          onChanged: _onStatusFilterChanged,
         ),
       ],
-    );
-  }
-
-  Widget _buildPillFilter({
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-    IconData? icon,
-    Color? activeColor,
-  }) {
-    final color = activeColor ?? ColorPalette.appetizingOrange;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isActive ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? color : ColorPalette.borderSubtle,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 14,
-                color: isActive ? Colors.white : ColorPalette.textMuted,
-              ),
-              const SizedBox(width: 5),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isActive ? Colors.white : ColorPalette.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/combo_entity.dart';
@@ -210,6 +210,8 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
                 _buildTitleBar(),
                 const SizedBox(height: 20),
                 _buildToolbar(),
+                const SizedBox(height: 20),
+                _buildKpiMetrics(state),
                 const SizedBox(height: 16),
                 _buildTableCard(state),
               ],
@@ -223,6 +225,64 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
     return Scaffold(
       backgroundColor: ColorPalette.webBgAdmin,
       body: widget.embedInShell ? body : SafeArea(child: body),
+    );
+  }
+
+  Widget _buildKpiMetrics(ComboLoaded state) {
+    final combos = state.combos;
+    final total = state.totalCount > 0 ? state.totalCount : combos.length;
+    final active = combos.where((c) => c.isActive).length;
+    final inactive = combos.where((c) => !c.isActive).length;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 900
+            ? 3
+            : (constraints.maxWidth > 500 ? 2 : 1);
+        const gap = 16.0;
+        final cardWidth =
+            (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
+                crossAxisCount;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            AdminKpiCard(
+              title: 'TỔNG COMBO',
+              value: total.toString(),
+              subtitle: 'Gói combo ưu đãi',
+              icon: Icons.fastfood_rounded,
+              iconColor: ColorPalette.primaryContainer,
+              iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
+              width: cardWidth,
+            ),
+            AdminKpiCard(
+              title: 'ĐANG BÁN',
+              value: active.toString(),
+              subtitle: total > 0
+                  ? 'Chiếm ${((active / (total == 0 ? 1 : total)) * 100).round()}% danh bạ'
+                  : 'Đang phục vụ khách',
+              icon: Icons.check_circle_outline_rounded,
+              iconColor: ColorPalette.tertiary,
+              iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
+              width: cardWidth,
+              showTrendIcon: true,
+              trendPositive: true,
+            ),
+            AdminKpiCard(
+              title: 'NGỪNG BÁN',
+              value: inactive.toString(),
+              subtitle: 'Tạm ngưng phục vụ',
+              icon: Icons.pause_circle_outline_rounded,
+              iconColor: ColorPalette.textMuted,
+              iconBg: const Color(0xFFF1F5F9),
+              width: cardWidth,
+              isWarning: inactive > 0,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -243,111 +303,31 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
   }
 
   Widget _buildTitleBar() {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Quản lý Combo', style: AppTypography.dashboardHeadline),
-              const SizedBox(height: 4),
-              Text(
-                'Tạo và quản lý combo gồm nhiều sản phẩm đơn với giá ưu đãi',
-                style: AppTypography.dashboardSubtitle,
-              ),
-            ],
-          ),
-        ),
-        ElevatedButton.icon(
-          onPressed: _openingForm ? null : _showCreate,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: ColorPalette.appetizingOrange,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(48, 48),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          icon: _openingForm
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
-                )
-              : const Icon(Icons.add_rounded, size: 18),
-          label: const Text('Thêm combo'),
-        ),
-      ],
+    return AdminPageHeader(
+      icon: Icons.fastfood_rounded,
+      title: 'Quản lý Combo',
+      subtitle: 'Tạo và quản lý combo gồm nhiều sản phẩm đơn với giá ưu đãi',
+      addButtonText: 'Thêm combo',
+      onAddPressed: _openingForm ? null : _showCreate,
     );
   }
 
   Widget _buildToolbar() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        SizedBox(
-          width: 320,
-          height: 44,
-          child: TextField(
-            controller: _searchController,
-            onChanged: _onSearchChanged,
-            style: const TextStyle(fontSize: 13),
-            decoration: InputDecoration(
-              hintText: 'Tìm theo tên hoặc mã combo...',
-              hintStyle:
-                  const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
-              prefixIcon: const Icon(Icons.search_rounded,
-                  size: 18, color: ColorPalette.textMuted),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: ColorPalette.borderSubtle),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: ColorPalette.borderSubtle),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(
-                    color: ColorPalette.appetizingOrange, width: 2),
-              ),
-            ),
-          ),
+    return AdminFilterBar(
+      searchController: _searchController,
+      searchHint: 'Tìm theo tên hoặc mã combo...',
+      onSearchChanged: _onSearchChanged,
+      filters: [
+        AdminDropdownFilter<bool?>(
+          value: _selectedStatus,
+          items: const [
+            DropdownMenuItem(value: null, child: Text('Tất cả trạng thái')),
+            DropdownMenuItem(value: true, child: Text('Đang bán')),
+            DropdownMenuItem(value: false, child: Text('Ngừng bán')),
+          ],
+          onChanged: _onStatusChanged,
         ),
-        _statusChip('Tất cả', null),
-        _statusChip('Đang bán', true),
-        _statusChip('Ngừng bán', false),
       ],
-    );
-  }
-
-  Widget _statusChip(String label, bool? value) {
-    final selected = _selectedStatus == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => _onStatusChanged(value),
-      selectedColor: ColorPalette.primaryFixed,
-      backgroundColor: Colors.white,
-      labelStyle: TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 12,
-        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-        color:
-            selected ? ColorPalette.primaryContainer : ColorPalette.textMuted,
-      ),
-      side: BorderSide(
-          color: selected
-              ? ColorPalette.appetizingOrange
-              : ColorPalette.borderSubtle),
-      materialTapTargetSize: MaterialTapTargetSize.padded,
     );
   }
 

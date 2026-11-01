@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 class DamagedExpiredRecordEntity extends Equatable {
   final int recordId;
   final int? importDetailId;
+  final String? batchCode;
+  final DateTime? expiryDate;
   final int productId;
   final String productName;
   final String unitName;
@@ -17,6 +19,8 @@ class DamagedExpiredRecordEntity extends Equatable {
   const DamagedExpiredRecordEntity({
     required this.recordId,
     this.importDetailId,
+    this.batchCode,
+    this.expiryDate,
     required this.productId,
     required this.productName,
     required this.unitName,
@@ -33,6 +37,8 @@ class DamagedExpiredRecordEntity extends Equatable {
   List<Object?> get props => [
         recordId,
         importDetailId,
+        batchCode,
+        expiryDate,
         productId,
         productName,
         unitName,

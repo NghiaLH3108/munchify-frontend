@@ -59,6 +59,7 @@ class ApiEndpoints {
   static String damagedExpiredSummaryMetrics() => '$damagedExpiredRecords/summary-metrics';
   static String damagedExpiredApprove(dynamic id) => '$damagedExpiredRecords/$id/approve';
   static String damagedExpiredReject(dynamic id) => '$damagedExpiredRecords/$id/reject';
+  static String damagedExpiredAnalyze(dynamic id) => '$damagedExpiredRecords/$id/analyze';
   static String damagedExpiredReport = '$damagedExpiredRecords/report';
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

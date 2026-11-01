@@ -19,6 +19,7 @@ abstract class StockRemoteDataSource {
   Future<List<DamagedExpiredRecordModel>> getPendingDamagedExpiredRecords({String status = 'ALL'});
   Future<AiExpirySummaryModel> getAiExpirySummaryMetrics();
   Future<bool> approveDamagedExpiredRecord(int id);
+  Future<DamagedExpiredRecordModel> analyzeDamagedExpiredRecord(int id);
   Future<DamagedExpiredRecordModel> createStaffDamageReport(int productId, int quantity, String reportType, String reason);
 
   // AI Low Stock Warning
@@ -86,6 +87,12 @@ class StockRemoteDataSourceImpl implements StockRemoteDataSource {
   Future<bool> approveDamagedExpiredRecord(int id) async {
     final response = await dioClient.dio.put(ApiEndpoints.damagedExpiredApprove(id));
     return response.data['data'] as bool;
+  }
+
+  @override
+  Future<DamagedExpiredRecordModel> analyzeDamagedExpiredRecord(int id) async {
+    final response = await dioClient.dio.post(ApiEndpoints.damagedExpiredAnalyze(id));
+    return DamagedExpiredRecordModel.fromJson(response.data['data']);
   }
 
   @override

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/ColorPalette.dart';
-import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../domain/entities/promotion_entity.dart';
 
 class PromotionStatCards extends StatelessWidget {
@@ -20,9 +20,9 @@ class PromotionStatCards extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 1050
+        final crossAxisCount = constraints.maxWidth > 900
             ? 3
-            : (constraints.maxWidth > 550 ? 2 : 1);
+            : (constraints.maxWidth > 500 ? 2 : 1);
         const gap = 16.0;
         final cardWidth =
             (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
@@ -32,128 +32,41 @@ class PromotionStatCards extends StatelessWidget {
           spacing: gap,
           runSpacing: gap,
           children: [
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'TỔNG KHUYẾN MÃI',
               value: totalCount.toString(),
-              subtitle: 'Tất cả các chương trình',
+              subtitle: 'Tất cả các chương trình ưu đãi',
               icon: Icons.campaign_rounded,
               iconColor: ColorPalette.primaryContainer,
               iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
               width: cardWidth,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'ĐANG HOẠT ĐỘNG',
               value: activeCount.toString(),
-              subtitle: 'Chương trình đang chạy',
+              subtitle: totalCount > 0
+                  ? 'Chiếm ${((activeCount / (totalCount == 0 ? 1 : totalCount)) * 100).round()}% chương trình'
+                  : 'Chương trình đang chạy',
               icon: Icons.check_circle_outline_rounded,
-              iconColor: ColorPalette.success,
-              iconBg: ColorPalette.success.withValues(alpha: 0.1),
+              iconColor: ColorPalette.tertiary,
+              iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
               width: cardWidth,
+              showTrendIcon: true,
+              trendPositive: true,
             ),
-            _buildMetricCard(
+            AdminKpiCard(
               title: 'ĐÃ TẠM DỪNG',
               value: inactiveCount.toString(),
-              subtitle: 'Chương trình đã dừng',
+              subtitle: 'Chương trình đã dừng / kết thúc',
               icon: Icons.pause_circle_outline_rounded,
               iconColor: ColorPalette.textMuted,
-              iconBg: ColorPalette.surfaceContainerHigh,
+              iconBg: const Color(0xFFF1F5F9),
               width: cardWidth,
+              isWarning: inactiveCount > 0,
             ),
           ],
         );
       },
-    );
-  }
-
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required double width,
-  }) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: ColorPalette.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTypography.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: ColorPalette.textMuted,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        value,
-                        style: AppTypography.plusJakarta(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: ColorPalette.onSurfaceDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.only(top: 12),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: ColorPalette.borderSubtle)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                      subtitle,
-                      style: AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

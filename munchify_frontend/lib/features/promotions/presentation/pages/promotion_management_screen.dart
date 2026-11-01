@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
-import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/promotion_entity.dart';
 import '../../domain/usecases/get_promotion_by_id_usecase.dart';
@@ -9,10 +9,10 @@ import '../bloc/promotion_admin_bloc.dart';
 import '../bloc/promotion_admin_event.dart';
 import '../bloc/promotion_admin_state.dart';
 import '../bloc/promotion_form_bloc.dart';
-import '../widgets/promotion_stat_cards.dart';
-import '../widgets/promotion_filter_bar.dart';
 import '../widgets/promotion_data_table.dart';
+import '../widgets/promotion_filter_bar.dart';
 import '../widgets/promotion_form_dialog.dart';
+import '../widgets/promotion_stat_cards.dart';
 import '../../../../core/widgets/app_toast.dart';
 
 class PromotionManagementScreen extends StatefulWidget {
@@ -27,6 +27,8 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
   int _currentPage = 1;
   static const int _pageSize = 10;
   String _searchQuery = '';
+  bool? _selectedStatus;
+  String? _selectedDiscountType;
   final TextEditingController _searchController = TextEditingController();
 
   late PromotionAdminBloc _adminBloc;
@@ -116,10 +118,16 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
           if (state is PromotionAdminLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is PromotionsLoaded) {
-            final items = state.promotionsData.items;
-            final kpiItems = state.kpiPromotions ?? items;
+            final allItems = state.promotionsData.items;
+            final kpiItems = state.kpiPromotions ?? allItems;
             final kpiTotal = state.kpiTotalCount ?? state.promotionsData.totalCount;
-            
+
+            final items = allItems.where((p) {
+              if (_selectedStatus != null && p.isActive != _selectedStatus) return false;
+              if (_selectedDiscountType != null && p.discountType != _selectedDiscountType) return false;
+              return true;
+            }).toList();
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -127,8 +135,43 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
                 children: [
                   _buildPageTitleBar(context),
                   const SizedBox(height: 20),
+                  PromotionFilterBar(
+                    searchController: _searchController,
+                    onSearchChanged: (val) {
+                      setState(() {
+                        _searchQuery = val.trim();
+                        _currentPage = 1;
+                      });
+                      _loadData();
+                    },
+                    selectedStatus: _selectedStatus,
+                    onStatusChanged: (val) {
+                      setState(() {
+                        _selectedStatus = val;
+                        _currentPage = 1;
+                      });
+                    },
+                    selectedDiscountType: _selectedDiscountType,
+                    onDiscountTypeChanged: (val) {
+                      setState(() {
+                        _selectedDiscountType = val;
+                        _currentPage = 1;
+                      });
+                    },
+                    onReset: () {
+                      _searchController.clear();
+                      setState(() {
+                        _searchQuery = '';
+                        _selectedStatus = null;
+                        _selectedDiscountType = null;
+                        _currentPage = 1;
+                      });
+                      _loadData();
+                    },
+                  ),
+                  const SizedBox(height: 20),
                   PromotionStatCards(promotions: kpiItems, totalCount: kpiTotal),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
                       color: ColorPalette.surface,
@@ -152,30 +195,11 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
                             color: ColorPalette.appetizingOrange,
                             backgroundColor: Colors.transparent,
                           ),
-                        PromotionFilterBar(
-                          searchController: _searchController,
-                          hasSearchQuery: _searchQuery.isNotEmpty,
-                          onSearch: () {
-                            setState(() {
-                              _searchQuery = _searchController.text.trim();
-                              _currentPage = 1;
-                            });
-                            _loadData();
-                          },
-                          onClear: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                              _currentPage = 1;
-                            });
-                            _loadData();
-                          },
-                        ),
                         PromotionDataTable(
                           promotions: items,
                           totalPages: state.promotionsData.totalPages,
                           currentPage: state.promotionsData.pageNumber,
-                          totalCount: state.promotionsData.totalCount,
+                          totalCount: items.length != allItems.length ? items.length : state.promotionsData.totalCount,
                           onPageChanged: (page) {
                             setState(() => _currentPage = page);
                             _loadData();
@@ -213,27 +237,12 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
   }
 
   Widget _buildPageTitleBar(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Quản lý Khuyến mãi', style: AppTypography.plusJakarta(fontSize: 22, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            Text('Quản lý các chương trình ưu đãi', style: AppTypography.inter(fontSize: 13, color: ColorPalette.textMuted)),
-          ],
-        ),
-        ElevatedButton.icon(
-          onPressed: () => _openFormDialog(),
-          icon: const Icon(Icons.add_rounded, size: 18),
-          label: const Text('Thêm Khuyến mãi'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: ColorPalette.primaryContainer,
-            foregroundColor: Colors.white,
-          ),
-        ),
-      ],
+    return AdminPageHeader(
+      icon: Icons.local_offer_rounded,
+      title: 'Quản lý Khuyến mãi',
+      subtitle: 'Quản lý các chương trình ưu đãi, mã giảm giá và voucher',
+      addButtonText: 'Thêm Khuyến mãi',
+      onAddPressed: () => _openFormDialog(),
     );
   }
 }

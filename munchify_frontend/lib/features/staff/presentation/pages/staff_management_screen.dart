@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../domain/entities/staff_entity.dart';
 import '../bloc/staff_bloc.dart';
 import '../bloc/staff_event.dart';
@@ -405,93 +406,30 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   }
 
   Widget _buildPageTitleBar(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 768;
-        final titleWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return AdminPageHeader(
+      icon: Icons.badge_rounded,
+      title: 'Quản lý Nhân sự & Phân quyền',
+      subtitle:
+          'Phân quyền tài khoản, cấu hình thông tin nhân sự và giám sát trạng thái hoạt động.',
+      addButtonText: 'Thêm Nhân Viên',
+      onAddPressed: () => _openStaffDialog(context),
+      extraActions: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            const Icon(Icons.sync_rounded,
+                size: 16, color: ColorPalette.tertiary),
+            const SizedBox(width: 6),
             Text(
-              'Quản lý Nhân sự & Phân quyền',
-              style: AppTypography.plusJakarta(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: ColorPalette.onSurfaceDark,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Phân quyền tài khoản, cấu hình thông tin nhân sự và giám sát trạng thái hoạt động.',
+              'Đồng bộ lúc 14:28:10',
               style: AppTypography.inter(
-                fontSize: 13,
+                fontSize: 12,
                 color: ColorPalette.textMuted,
               ),
             ),
           ],
-        );
-
-        final actionsWidget = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.sync_rounded,
-                    size: 16, color: ColorPalette.tertiary),
-                const SizedBox(width: 6),
-                Text(
-                  'Đồng bộ lúc 14:28:10',
-                  style: AppTypography.inter(
-                    fontSize: 12,
-                    color: ColorPalette.textMuted,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 14),
-            ElevatedButton.icon(
-              onPressed: () => _openStaffDialog(context),
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('+ Thêm Nhân Viên'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorPalette.primaryContainer,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-                textStyle: AppTypography.inter(
-                    fontSize: 13, fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        );
-
-        if (isWide) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(child: titleWidget),
-              const SizedBox(width: 16),
-              actionsWidget,
-            ],
-          );
-        } else {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              titleWidget,
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: actionsWidget,
-              ),
-            ],
-          );
-        }
-      },
+        ),
+      ],
     );
   }
 

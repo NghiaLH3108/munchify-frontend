@@ -127,7 +127,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorPalette.webBgAdmin,
       body: widget.embedInShell ? body : SafeArea(child: body),
     );
   }
