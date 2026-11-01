@@ -9,6 +9,7 @@ import '../widgets/create_import_modal.dart';
 import '../widgets/import_detail_modal.dart';
 import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/services/signalr_service.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../../../core/widgets/app_toast.dart';
 
 class InventoryScreen extends StatefulWidget {
@@ -27,6 +28,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String _searchQuery = '';
   String _filterStatus = 'ALL';
   DateTime? _selectedDate;
+  int _currentPage = 1;
+  static const int _pageSize = 10;
 
   @override
   void initState() {
@@ -155,6 +158,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
       
       return matchesSearch && matchesStatus && matchesDate;
     }).toList();
+
+    final totalCount = filteredImports.length;
+    final totalPages = (totalCount / _pageSize).ceil().clamp(1, 999);
+    if (_currentPage > totalPages) _currentPage = totalPages;
+    final startIndex = (_currentPage - 1) * _pageSize;
+    final endIndex = (startIndex + _pageSize).clamp(0, totalCount);
+    final paginatedImports = totalCount > 0 ? filteredImports.sublist(startIndex, endIndex) : <StockImportEntity>[];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -315,7 +325,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: DataTable(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DataTable(
                 headingRowColor: MaterialStateProperty.all(const Color(0xFFF9FAFB)),
                 columns: const [
                   DataColumn(label: Text('Mã Phiếu', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -326,7 +339,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   DataColumn(label: Text('Trạng Thái', style: TextStyle(fontWeight: FontWeight.bold))),
                   DataColumn(label: Text('Thao Tác', style: TextStyle(fontWeight: FontWeight.bold))),
                 ],
-                rows: filteredImports.map((item) {
+                rows: paginatedImports.map((item) {
                   return DataRow(
                     cells: [
                       DataCell(Text(item.importCode, style: const TextStyle(fontWeight: FontWeight.w600))),
@@ -361,6 +374,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ]
                   );
                 }).toList(),
+              ),
+              AppPaginationBar(
+                currentPage: _currentPage,
+                totalPages: totalPages,
+                totalCount: totalCount,
+                itemLabel: 'phiếu nhập',
+                startIndex: totalCount > 0 ? startIndex + 1 : 0,
+                endIndex: endIndex,
+                onPageChanged: (page) => setState(() => _currentPage = page),
+              ),
+                ],
               ),
             ),
           ),
