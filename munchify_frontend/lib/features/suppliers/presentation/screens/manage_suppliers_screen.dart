@@ -60,7 +60,9 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
   void _loadSuppliers() {
     context.read<SupplierBloc>().add(
           LoadSuppliersEvent(
-            search: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
+            search: _searchController.text.trim().isEmpty
+                ? null
+                : _searchController.text.trim(),
             isActive: _selectedStatus,
           ),
         );
@@ -68,7 +70,8 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
 
   void _openAddDialog() {
     final state = context.read<SupplierBloc>().state;
-    final suppliers = state is SupplierLoaded ? state.suppliers : <SupplierEntity>[];
+    final suppliers =
+        state is SupplierLoaded ? state.suppliers : <SupplierEntity>[];
 
     showDialog(
       context: context,
@@ -99,7 +102,8 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
 
   void _openEditDialog(SupplierEntity supplier) {
     final state = context.read<SupplierBloc>().state;
-    final suppliers = state is SupplierLoaded ? state.suppliers : <SupplierEntity>[];
+    final suppliers =
+        state is SupplierLoaded ? state.suppliers : <SupplierEntity>[];
 
     showDialog(
       context: context,
@@ -144,161 +148,152 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
         );
   }
 
+  String _initialsFor(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'NC';
+    return trimmed
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .map((e) => e[0])
+        .take(2)
+        .join('')
+        .toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<SupplierBloc, SupplierState>(
+    return BlocConsumer<SupplierBloc, SupplierState>(
       listener: (context, state) {
         if (state is SupplierActionSuccess) {
-          AppToast.success(state.message, context: context, duration: const Duration(seconds: 3));
+          AppToast.success(
+            state.message,
+            context: context,
+            duration: const Duration(seconds: 3),
+          );
         } else if (state is SupplierError) {
-          AppToast.error(state.message, context: context, duration: const Duration(seconds: 4));
+          AppToast.error(
+            state.message,
+            context: context,
+            duration: const Duration(seconds: 4),
+          );
         }
       },
-      child: Scaffold(
-        backgroundColor: ColorPalette.webBgAdmin,
-        body: BlocBuilder<SupplierBloc, SupplierState>(
-          builder: (context, state) {
-            List<SupplierEntity> allSuppliers = [];
-            bool isLoading = false;
+      builder: (context, state) {
+        List<SupplierEntity> allSuppliers = [];
+        bool isLoading = false;
 
-            if (state is SupplierLoading) {
-              isLoading = true;
-            } else if (state is SupplierLoaded) {
-              allSuppliers = state.suppliers;
-            }
+        if (state is SupplierLoading) {
+          isLoading = true;
+        } else if (state is SupplierLoaded) {
+          allSuppliers = state.suppliers;
+        }
 
-            // Tính toán KPI Stats
-            final totalSuppliers = allSuppliers.length;
-            final activeSuppliers = allSuppliers.where((s) => s.isActive).length;
-            final inactiveSuppliers = totalSuppliers - activeSuppliers;
+        final totalSuppliers = allSuppliers.length;
+        final activeSuppliers = allSuppliers.where((s) => s.isActive).length;
+        final inactiveSuppliers = totalSuppliers - activeSuppliers;
 
-            // Thu thập danh sách các nhóm ngành hàng (ưu tiên từ toàn bộ danh mục hệ thống)
-            final availableCategories = _systemCategories.isNotEmpty
-                ? _systemCategories.map((c) => c.categoryName).toList()
-                : (allSuppliers.expand((s) => s.categoryNames).toSet().toList()..sort());
+        final availableCategories = _systemCategories.isNotEmpty
+            ? _systemCategories.map((c) => c.categoryName).toList()
+            : (allSuppliers.expand((s) => s.categoryNames).toSet().toList()
+              ..sort());
 
-            // Lọc theo từ khóa, trạng thái và nhóm hàng
-            final query = _searchController.text.trim().toLowerCase();
-            final filteredList = allSuppliers.where((s) {
-              final matchSearch = query.isEmpty ||
-                  s.supplierName.toLowerCase().contains(query) ||
-                  (s.contactName?.toLowerCase().contains(query) ?? false);
-              final matchStatus = _selectedStatus == null || s.isActive == _selectedStatus;
-              final matchCategory = _selectedCategory == null || s.categoryNames.contains(_selectedCategory);
-              return matchSearch && matchStatus && matchCategory;
-            }).toList();
+        final query = _searchController.text.trim().toLowerCase();
+        final filteredList = allSuppliers.where((s) {
+          final matchSearch = query.isEmpty ||
+              s.supplierName.toLowerCase().contains(query) ||
+              (s.contactName?.toLowerCase().contains(query) ?? false);
+          final matchStatus =
+              _selectedStatus == null || s.isActive == _selectedStatus;
+          final matchCategory = _selectedCategory == null ||
+              s.categoryNames.contains(_selectedCategory);
+          return matchSearch && matchStatus && matchCategory;
+        }).toList();
 
-            // Phân trang
-            final totalPages = (filteredList.length / _pageSize).ceil().clamp(1, 999);
-            if (_currentPage > totalPages) _currentPage = totalPages;
-            final startIndex = (_currentPage - 1) * _pageSize;
-            final endIndex = (startIndex + _pageSize).clamp(0, filteredList.length);
-            final paginatedList = filteredList.sublist(startIndex, endIndex);
+        final totalPages =
+            (filteredList.length / _pageSize).ceil().clamp(1, 999);
+        if (_currentPage > totalPages) _currentPage = totalPages;
+        final startIndex = (_currentPage - 1) * _pageSize;
+        final endIndex =
+            (startIndex + _pageSize).clamp(0, filteredList.length);
+        final paginatedList = filteredList.sublist(startIndex, endIndex);
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Top Header (Sử dụng AdminPageHeader)
-                  _buildHeader(),
-                  const SizedBox(height: 20),
-                  // Filter & Search Controls (Đưa lên trên KPI giống mẫu quản lý danh mục)
-                  _buildFilterBar(availableCategories),
-                  const SizedBox(height: 20),
-                  // KPI Cards
-                  _buildKpiStatsBar(totalSuppliers, activeSuppliers, inactiveSuppliers),
-                  const SizedBox(height: 20),
-                  // Data Table
-                  _buildDataTableContainer(
-                    paginatedList: paginatedList,
-                    totalCount: filteredList.length,
-                    startIndex: startIndex,
-                    endIndex: endIndex,
-                    totalPages: totalPages,
-                    isLoading: isLoading,
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+        return AdminListScaffold(
+          embedInShell: widget.embedInShell,
+          stickyHeader: AdminStickyHeader(
+            breadcrumb: 'Nhà cung cấp',
+            onRefresh: _loadSuppliers,
+          ),
+          header: AdminPageHeader(
+            icon: Icons.local_shipping_rounded,
+            title: 'Quản lý Nhà Cung Cấp',
+            subtitle:
+                'Quản lý danh bạ đối tác cung ứng nguyên liệu & thực phẩm Munchify',
+            addButtonText: 'Thêm Nhà Cung Cấp',
+            onAddPressed: _openAddDialog,
+          ),
+          filterBar: _buildFilterBar(availableCategories),
+          kpiCards: _buildKpiCards(
+            totalSuppliers,
+            activeSuppliers,
+            inactiveSuppliers,
+          ),
+          table: _buildTable(
+            paginatedList: paginatedList,
+            totalCount: filteredList.length,
+            startIndex: startIndex,
+            endIndex: endIndex,
+            totalPages: totalPages,
+            isLoading: isLoading,
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildKpiCards(int total, int active, int inactive) {
+    return [
+      AdminKpiCard(
+        title: 'TỔNG ĐỐI TÁC',
+        value: total.toString(),
+        subtitle: '+3 đối tác quý này',
+        subTextColor: const Color(0xFF059669),
+        showTrendIcon: true,
+        icon: Icons.store_rounded,
+        iconBg: const Color(0xFFFFF7ED),
+        iconColor: const Color(0xFFE65100),
       ),
-    );
+      AdminKpiCard(
+        title: 'ĐANG HỢP TÁC',
+        value: active.toString(),
+        valueColor: const Color(0xFF059669),
+        subtitle: total > 0
+            ? 'Chiếm ${((active / total) * 100).toStringAsFixed(1)}% danh bạ'
+            : 'Chiếm 0% danh bạ',
+        subTextColor: const Color(0xFF64748B),
+        icon: Icons.check_circle_outline_rounded,
+        iconBg: const Color(0xFFECFDF5),
+        iconColor: const Color(0xFF059669),
+      ),
+      AdminKpiCard(
+        title: 'TẠM NGƯNG',
+        value: inactive.toString(),
+        valueColor: const Color(0xFF94A3B8),
+        subtitle: 'Chưa kích hoạt cung ứng',
+        subTextColor: const Color(0xFFD97706),
+        icon: Icons.pause_circle_outline_rounded,
+        iconBg: const Color(0xFFF1F5F9),
+        iconColor: const Color(0xFF64748B),
+        isWarning: inactive > 0,
+      ),
+    ];
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 1. TOP HEADER (Sử dụng AdminPageHeader dùng chung)
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildHeader() {
-    return AdminPageHeader(
-      icon: Icons.local_shipping_rounded,
-      title: 'Quản lý Nhà Cung Cấp',
-      subtitle: 'Quản lý danh bạ đối tác cung ứng nguyên liệu & thực phẩm Munchify',
-      addButtonText: 'Thêm Nhà Cung Cấp',
-      onAddPressed: _openAddDialog,
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 2. KPI STATS CARDS (Sử dụng AdminKpiCard dùng chung)
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildKpiStatsBar(int total, int active, int inactive) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final isWide = constraints.maxWidth >= 768;
-      final cardWidth = isWide ? (constraints.maxWidth - 32) / 3 : constraints.maxWidth;
-
-      return Wrap(
-        spacing: 16,
-        runSpacing: 16,
-        children: [
-          AdminKpiCard(
-            width: cardWidth,
-            title: 'TỔNG ĐỐI TÁC',
-            value: total.toString(),
-            subtitle: '+3 đối tác quý này',
-            subTextColor: const Color(0xFF059669),
-            showTrendIcon: true,
-            icon: Icons.store_rounded,
-            iconBg: const Color(0xFFFFF7ED),
-            iconColor: const Color(0xFFE65100),
-          ),
-          AdminKpiCard(
-            width: cardWidth,
-            title: 'ĐANG HỢP TÁC',
-            value: active.toString(),
-            valueColor: const Color(0xFF059669),
-            subtitle: total > 0 ? 'Chiếm ${((active / total) * 100).toStringAsFixed(1)}% danh bạ' : 'Chiếm 0% danh bạ',
-            subTextColor: const Color(0xFF64748B),
-            icon: Icons.check_circle_outline_rounded,
-            iconBg: const Color(0xFFECFDF5),
-            iconColor: const Color(0xFF059669),
-          ),
-          AdminKpiCard(
-            width: cardWidth,
-            title: 'TẠM NGƯNG',
-            value: inactive.toString(),
-            valueColor: const Color(0xFF94A3B8),
-            subtitle: 'Chưa kích hoạt cung ứng',
-            subTextColor: const Color(0xFFD97706),
-            icon: Icons.pause_circle_outline_rounded,
-            iconBg: const Color(0xFFF1F5F9),
-            iconColor: const Color(0xFF64748B),
-          ),
-        ],
-      );
-    });
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 3. FILTER & SEARCH CONTROLS (Sử dụng AdminFilterBar & AdminDropdownFilter)
-  // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildFilterBar(List<String> categories) {
     return AdminFilterBar(
       searchController: _searchController,
       searchHint: 'Tìm kiếm theo tên nhà cung cấp...',
       onSearchChanged: (_) => setState(() => _currentPage = 1),
+      onClearSearch: () => setState(() => _currentPage = 1),
       filters: [
         AdminDropdownFilter<bool?>(
           value: _selectedStatus,
@@ -318,8 +313,13 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
         AdminDropdownFilter<String?>(
           value: _selectedCategory,
           items: [
-            const DropdownMenuItem(value: null, child: Text('Tất cả nhóm hàng')),
-            ...categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))),
+            const DropdownMenuItem(
+              value: null,
+              child: Text('Tất cả nhóm hàng'),
+            ),
+            ...categories.map(
+              (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
+            ),
           ],
           onChanged: (val) {
             setState(() {
@@ -332,10 +332,7 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 4. DATA TABLE & PAGINATION
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildDataTableContainer({
+  Widget _buildTable({
     required List<SupplierEntity> paginatedList,
     required int totalCount,
     required int startIndex,
@@ -343,293 +340,190 @@ class _ManageSuppliersScreenState extends State<ManageSuppliersScreen> {
     required int totalPages,
     required bool isLoading,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFEDD5).withValues(alpha: 0.9), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE65100).withValues(alpha: 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
+    return AdminDataTable<SupplierEntity>(
+      title: 'Danh sách nhà cung cấp',
+      countLabel: '$totalCount đối tác',
+      subtitle: 'Hiển thị trang $_currentPage / $totalPages.',
+      items: paginatedList,
+      indexOffset: startIndex,
+      isRefreshing: isLoading,
+      onRowTap: _openEditDialog,
+      emptyState: const AdminEmptyState(
+        icon: Icons.inbox_rounded,
+        title: 'Không tìm thấy nhà cung cấp nào phù hợp.',
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          children: [
-            if (isLoading)
-              const LinearProgressIndicator(
-                backgroundColor: Color(0xFFFFEDD5),
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE65100)),
-              ),
-
-            // Table Header with warm gradient
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFFFFBF8), Color(0xFFFFF4EC)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                border: Border(bottom: BorderSide(color: Color(0xFFFFE0B2), width: 1.1)),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 50, child: Text('STT', textAlign: TextAlign.center, style: _headerStyle)),
-                  const Expanded(
-                    flex: 4,
-                    child: Row(
-                      children: [
-                        SizedBox(width: 46), // Khoảng trống tương ứng kích thước avatar (36px) + khoảng cách (10px)
-                        Expanded(child: Text('NHÀ CUNG CẤP', style: _headerStyle)),
-                      ],
+      columns: [
+        AdminTableColumn.index<SupplierEntity>(),
+        AdminTableColumn(
+          label: 'NHÀ CUNG CẤP',
+          flex: 4,
+          cellBuilder: (_, supplier, index) {
+            final initials = _initialsFor(supplier.supplierName);
+            final mod = index % 3;
+            final bg = mod == 0
+                ? const Color(0xFFFFEDD5)
+                : (mod == 1
+                    ? const Color(0xFFFEF3C7)
+                    : const Color(0xFFDBEAFE));
+            final fg = mod == 0
+                ? const Color(0xFFE65100)
+                : (mod == 1
+                    ? const Color(0xFFB45309)
+                    : const Color(0xFF1D4ED8));
+            return Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    initials,
+                    style: AppTypography.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: fg,
                     ),
                   ),
-                  const Expanded(flex: 3, child: Text('NGƯỜI ĐẠI DIỆN', textAlign: TextAlign.center, style: _headerStyle)),
-                  const Expanded(flex: 3, child: Text('NHÓM DANH MỤC', textAlign: TextAlign.center, style: _headerStyle)),
-                  const Expanded(flex: 2, child: Text('TRẠNG THÁI', textAlign: TextAlign.center, style: _headerStyle)),
-                  const SizedBox(width: 135, child: Text('THAO TÁC', textAlign: TextAlign.center, style: _headerStyle)),
-                ],
-              ),
-            ),
-
-          // Table Body
-          if (paginatedList.isEmpty && !isLoading)
-            Padding(
-              padding: const EdgeInsets.all(48.0),
-              child: Column(
-                children: [
-                  const Icon(Icons.inbox_rounded, size: 48, color: Color(0xFFCBD5E1)),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Không tìm thấy nhà cung cấp nào phù hợp.',
-                    style: AppTypography.inter(fontSize: 14, color: const Color(0xFF64748B)),
-                  ),
-                ],
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: paginatedList.length,
-              separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              itemBuilder: (context, index) {
-                final supplier = paginatedList[index];
-                final stt = (startIndex + index + 1).toString().padLeft(2, '0');
-                final initials = supplier.supplierName.trim().isNotEmpty
-                    ? supplier.supplierName.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
-                    : 'NC';
-
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  color: index % 2 == 0 ? Colors.white : const Color(0xFFFAFAFA),
-                  child: Row(
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // STT
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          stt,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
+                      Text(
+                        supplier.supplierName,
+                        style: AppTypography.plusJakarta(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F172A),
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-
-                      // Nhà cung cấp
-                      Expanded(
-                        flex: 4,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: index % 3 == 0
-                                    ? const Color(0xFFFFEDD5)
-                                    : (index % 3 == 1 ? const Color(0xFFFEF3C7) : const Color(0xFFDBEAFE)),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                initials,
-                                style: AppTypography.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: index % 3 == 0
-                                      ? const Color(0xFFE65100)
-                                      : (index % 3 == 1 ? const Color(0xFFB45309) : const Color(0xFF1D4ED8)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    supplier.supplierName,
-                                    style: AppTypography.plusJakarta(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0F172A),
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    'Mã: NCC-${supplier.supplierId.toString().padLeft(3, '0')}',
-                                    style: AppTypography.inter(fontSize: 11, color: const Color(0xFF94A3B8)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Người đại diện (Căn giữa)
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          supplier.contactName ?? '---',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF334155),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-
-                      // Nhóm danh mục (Căn giữa)
-                      Expanded(
-                        flex: 3,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFEDD5),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              supplier.categoryNames.isNotEmpty
-                                  ? supplier.categoryNames.first
-                                  : '---',
-                              style: AppTypography.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFC2410C),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Trạng thái (Căn giữa)
-                      Expanded(
-                        flex: 2,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: supplier.isActive ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: supplier.isActive ? const Color(0xFFA7F3D0) : const Color(0xFFCBD5E1),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: supplier.isActive ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  supplier.isActive ? 'Đang hợp tác' : 'Tạm ngưng',
-                                  style: AppTypography.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: supplier.isActive ? const Color(0xFF047857) : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Thao tác (Căn giữa)
-                      SizedBox(
-                        width: 135,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE65100)),
-                              tooltip: 'Chỉnh sửa',
-                              onPressed: () => _openEditDialog(supplier),
-                            ),
-                            const SizedBox(width: 4),
-                            Tooltip(
-                              message: supplier.isActive ? 'Tạm ngưng hợp tác (Xóa mềm)' : 'Kích hoạt lại hợp tác',
-                              child: Transform.scale(
-                                scale: 0.72,
-                                child: Switch(
-                                  value: supplier.isActive,
-                                  activeThumbColor: const Color(0xFF10B981),
-                                  activeTrackColor: const Color(0xFFA7F3D0),
-                                  inactiveThumbColor: const Color(0xFF94A3B8),
-                                  inactiveTrackColor: const Color(0xFFE2E8F0),
-                                  onChanged: (_) => _toggleSupplierStatus(supplier),
-                                ),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        'Mã: NCC-${supplier.supplierId.toString().padLeft(3, '0')}',
+                        style: AppTypography.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF94A3B8),
                         ),
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+              ],
+            );
+          },
+        ),
+        AdminTableColumn(
+          label: 'NGƯỜI ĐẠI DIỆN',
+          flex: 3,
+          cellBuilder: (_, supplier, _) => Text(
+            supplier.contactName ?? '—',
+            style: AppTypography.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF334155),
             ),
-
-          // Pagination Footer
-          AppPaginationBar(
-            currentPage: _currentPage,
-            totalPages: totalPages,
-            totalCount: totalCount,
-            itemLabel: 'nhà cung cấp',
-            startIndex: totalCount > 0 ? startIndex + 1 : 0,
-            endIndex: endIndex,
-            onPageChanged: (page) => setState(() => _currentPage = page),
+            overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+        AdminTableColumn(
+          label: 'NHÓM DANH MỤC',
+          flex: 3,
+          cellBuilder: (_, supplier, _) => Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEDD5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                supplier.categoryNames.isNotEmpty
+                    ? supplier.categoryNames.first
+                    : '—',
+                style: AppTypography.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFC2410C),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+        AdminTableColumn(
+          label: 'TRẠNG THÁI',
+          flex: 3,
+          cellBuilder: (_, supplier, _) => FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Switch(
+                  value: supplier.isActive,
+                  activeTrackColor: ColorPalette.success.withValues(alpha: 0.3),
+                  activeThumbColor: ColorPalette.success,
+                  inactiveTrackColor:
+                      ColorPalette.error.withValues(alpha: 0.15),
+                  inactiveThumbColor: ColorPalette.error.withValues(alpha: 0.6),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (_) => _toggleSupplierStatus(supplier),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: supplier.isActive
+                        ? ColorPalette.success.withValues(alpha: 0.08)
+                        : ColorPalette.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    supplier.isActive ? 'Đang hợp tác' : 'Tạm ngưng',
+                    style: AppTypography.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: supplier.isActive
+                          ? ColorPalette.success
+                          : ColorPalette.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AdminTableColumn(
+          label: 'THAO TÁC',
+          width: 80,
+          align: TextAlign.right,
+          cellBuilder: (_, supplier, _) => Align(
+            alignment: Alignment.centerRight,
+            child: AdminRowActionButton(
+              icon: Icons.edit_outlined,
+              color: ColorPalette.appetizingOrange,
+              tooltip: 'Chỉnh sửa',
+              onPressed: () => _openEditDialog(supplier),
+            ),
+          ),
+        ),
+      ],
+      pagination: AppPaginationBar(
+        currentPage: _currentPage,
+        totalPages: totalPages,
+        totalCount: totalCount,
+        itemLabel: 'nhà cung cấp',
+        startIndex: totalCount > 0 ? startIndex + 1 : 0,
+        endIndex: endIndex,
+        onPageChanged: (page) => setState(() => _currentPage = page),
       ),
     );
   }
-
-  static const TextStyle _headerStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-    color: Color(0xFF64748B),
-    letterSpacing: 0.5,
-  );
 }

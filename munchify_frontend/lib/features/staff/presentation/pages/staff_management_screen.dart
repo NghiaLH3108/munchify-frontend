@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -110,9 +110,10 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
-    final bodyContent = BlocConsumer<StaffBloc, StaffState>(
+    return BlocConsumer<StaffBloc, StaffState>(
       listener: (context, state) {
         if (state is StaffActionSuccess) {
           AppToast.success(state.message, context: context);
@@ -126,320 +127,75 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
           current is StaffListLoaded ||
           current is StaffError,
       builder: (context, state) {
+        Widget? stateView;
+        List<Widget> kpis = const [];
+        Widget? table;
+
         if (state is StaffLoading) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: ColorPalette.appetizingOrange,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Đang đồng bộ danh sách nhân viên...',
-                  style: AppTypography.dashboardSubtitle,
-                ),
-              ],
-            ),
+          stateView = const AdminLoadingView(
+            message: 'Đang đồng bộ danh sách nhân viên...',
           );
         } else if (state is StaffError) {
-          return _buildErrorState(state.message);
+          stateView = AdminErrorView(message: state.message, onRetry: _loadData);
         } else if (state is StaffListLoaded) {
-          final allItems = state.result.items;
-          final kpiItems = state.kpiItems;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildPageTitleBar(context),
-                const SizedBox(height: 18),
-                StaffFilterBar(
-                  searchController: _searchController,
-                  searchQuery: _searchQuery,
-                  onSearchChanged: _onSearchChanged,
-                  onClearSearch: _onClearSearch,
-                  selectedRole: _selectedRole,
-                  onRoleChanged: _onRoleFilterChanged,
-                  selectedStatus: _selectedStatus,
-                  onStatusChanged: _onStatusFilterChanged,
-                ),
-                const SizedBox(height: 20),
-                StaffMetricCards(staffList: kpiItems),
-                const SizedBox(height: 24),
-                if (state.isRefreshing)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 4),
-                    child: LinearProgressIndicator(
-                      minHeight: 2,
-                      color: ColorPalette.appetizingOrange,
-                      backgroundColor: Colors.transparent,
-                    ),
-                  ),
-                StaffDataTable(
-                  items: allItems,
-                  currentPage: _currentPage,
-                  pageSize: _pageSize,
-                  totalPages: state.result.totalPages,
-                  totalCount: state.result.totalCount,
-                  isCardView: _isCardView,
-                  onToggleViewMode: (val) => setState(() => _isCardView = val),
-                  onEditStaff: (staff) =>
-                      _openStaffDialog(context, staffToEdit: staff),
-                  onToggleStatus: (staff) {
-                    context.read<StaffBloc>().add(
-                      ToggleStaffStatusEvent(staff.userId),
-                    );
-                  },
-                  paginationWidget: AppPaginationBar(
-                    currentPage: _currentPage,
-                    totalPages: state.result.totalPages,
-                    totalCount: state.result.totalCount,
-                    itemLabel: 'nhân viên',
-                    pageSize: _pageSize,
-                    onPageChanged: (page) {
-                      setState(() => _currentPage = page);
-                      _loadData();
-                    },
-                  ),
-                ),
-              ],
+          kpis = StaffMetricCards.cards(state.kpiItems);
+          table = StaffDataTable(
+            items: state.result.items,
+            currentPage: _currentPage,
+            pageSize: _pageSize,
+            totalPages: state.result.totalPages,
+            totalCount: state.result.totalCount,
+            isRefreshing: state.isRefreshing,
+            isCardView: _isCardView,
+            onToggleViewMode: (val) => setState(() => _isCardView = val),
+            onEditStaff: (staff) =>
+                _openStaffDialog(context, staffToEdit: staff),
+            onToggleStatus: (staff) {
+              context.read<StaffBloc>().add(
+                ToggleStaffStatusEvent(staff.userId),
+              );
+            },
+            paginationWidget: AppPaginationBar(
+              currentPage: _currentPage,
+              totalPages: state.result.totalPages,
+              totalCount: state.result.totalCount,
+              itemLabel: 'nhân viên',
+              pageSize: _pageSize,
+              onPageChanged: (page) {
+                setState(() => _currentPage = page);
+                _loadData();
+              },
             ),
           );
+        } else {
+          stateView = const SizedBox.shrink();
         }
-        return const SizedBox.shrink();
-      },
-    );
 
-    if (widget.embedInShell) {
-      return bodyContent;
-    }
-
-    return Scaffold(
-      backgroundColor: ColorPalette.webBgAdmin,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildStickyHeader(context),
-            Expanded(child: bodyContent),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStickyHeader(BuildContext context) {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      decoration: const BoxDecoration(
-        color: ColorPalette.surface,
-        border: Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
+        return AdminListScaffold(
+          embedInShell: widget.embedInShell,
+          stickyHeader: AdminStickyHeader(
+            breadcrumb: 'Nhân viên & Quyền',
+            onRefresh: _loadData,
+            userInitials: 'HM',
+            userName: 'Hoàng Minh',
+            userRole: 'Admin',
           ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 950;
-          final isVeryNarrow = constraints.maxWidth < 650;
-
-          return Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: ColorPalette.appetizingOrange.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.lunch_dining_rounded,
-                  color: ColorPalette.appetizingOrange,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Munchify POS',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: ColorPalette.warmDarkGrey,
-                ),
-              ),
-              if (!isNarrow) ...[
-                const SizedBox(width: 10),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: ColorPalette.textMuted,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Trang chủ',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: ColorPalette.textMuted,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: Text(
-                        '/',
-                        style: TextStyle(
-                          color: ColorPalette.textMuted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'Nhân viên & Quyền',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: ColorPalette.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const Spacer(),
-              Flexible(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  reverse: true,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!isVeryNarrow) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: ColorPalette.success.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  color: ColorPalette.success,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Online',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: ColorPalette.success,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                      ],
-                      IconButton(
-                        onPressed: _loadData,
-                        icon: const Icon(
-                          Icons.refresh_rounded,
-                          size: 20,
-                          color: ColorPalette.textMuted,
-                        ),
-                        tooltip: 'Tải lại danh sách',
-                        style: IconButton.styleFrom(
-                          backgroundColor: ColorPalette.webBgAdmin,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: ColorPalette.borderSubtle),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            const CircleAvatar(
-                              radius: 14,
-                              backgroundColor:
-                                  ColorPalette.surfaceContainerHigh,
-                              child: Text(
-                                'HM',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: ColorPalette.appetizingOrange,
-                                ),
-                              ),
-                            ),
-                            if (!isVeryNarrow) ...[
-                              const SizedBox(width: 8),
-                              const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Hoàng Minh',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: ColorPalette.textPrimary,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Admin',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: ColorPalette.appetizingOrange,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 6),
-                              const Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                                size: 16,
-                                color: ColorPalette.textMuted,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+          header: _buildPageTitleBar(context),
+          filterBar: StaffFilterBar(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: _onSearchChanged,
+            onClearSearch: _onClearSearch,
+            selectedRole: _selectedRole,
+            onRoleChanged: _onRoleFilterChanged,
+            selectedStatus: _selectedStatus,
+            onStatusChanged: _onStatusFilterChanged,
+          ),
+          kpiCards: kpis,
+          table: table,
+          stateView: stateView,
+        );
+      },
     );
   }
 
@@ -470,55 +226,6 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildErrorState(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: ColorPalette.error.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.cloud_off_rounded,
-                color: ColorPalette.error,
-                size: 44,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Không thể tải dữ liệu',
-              style: AppTypography.dashboardHeadline,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: AppTypography.dashboardSubtitle,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Thử Lại'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorPalette.appetizingOrange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
