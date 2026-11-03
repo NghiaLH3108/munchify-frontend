@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -176,7 +176,7 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final body = BlocConsumer<ComboBloc, ComboState>(
+    return BlocConsumer<ComboBloc, ComboState>(
       listener: (context, state) {
         if (state is ComboLoaded) {
           if (state.successMessage != null) {
@@ -190,126 +190,84 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
         }
       },
       builder: (context, state) {
+        Widget? stateView;
+        List<Widget> kpis = const [];
+        Widget? table;
+
         if (state is ComboLoading || state is ComboInitial) {
-          return const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              color: ColorPalette.appetizingOrange,
-            ),
+          stateView = const AdminLoadingView(
+            message: 'Đang đồng bộ danh sách combo...',
           );
+        } else if (state is ComboError) {
+          stateView = AdminErrorView(message: state.message, onRetry: _loadData);
+        } else if (state is ComboLoaded) {
+          kpis = _buildKpiCards(state);
+          table = _buildTable(state);
+        } else {
+          stateView = const SizedBox.shrink();
         }
-        if (state is ComboError) {
-          return _buildError(state.message);
-        }
-        if (state is ComboLoaded) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildTitleBar(),
-                const SizedBox(height: 20),
-                _buildToolbar(),
-                const SizedBox(height: 20),
-                _buildKpiMetrics(state),
-                const SizedBox(height: 16),
-                _buildTableCard(state),
-              ],
-            ),
-          );
-        }
-        return const SizedBox.shrink();
-      },
-    );
 
-    return Scaffold(
-      backgroundColor: ColorPalette.webBgAdmin,
-      body: widget.embedInShell ? body : SafeArea(child: body),
-    );
-  }
-
-  Widget _buildKpiMetrics(ComboLoaded state) {
-    final combos = state.combos;
-    final total = state.totalCount > 0 ? state.totalCount : combos.length;
-    final active = combos.where((c) => c.isActive).length;
-    final inactive = combos.where((c) => !c.isActive).length;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900
-            ? 3
-            : (constraints.maxWidth > 500 ? 2 : 1);
-        const gap = 16.0;
-        final cardWidth =
-            (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
-                crossAxisCount;
-
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            AdminKpiCard(
-              title: 'TỔNG COMBO',
-              value: total.toString(),
-              subtitle: 'Gói combo ưu đãi',
-              icon: Icons.fastfood_rounded,
-              iconColor: ColorPalette.primaryContainer,
-              iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
-              width: cardWidth,
-            ),
-            AdminKpiCard(
-              title: 'ĐANG BÁN',
-              value: active.toString(),
-              subtitle: total > 0
-                  ? 'Chiếm ${((active / (total == 0 ? 1 : total)) * 100).round()}% danh bạ'
-                  : 'Đang phục vụ khách',
-              icon: Icons.check_circle_outline_rounded,
-              iconColor: ColorPalette.tertiary,
-              iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
-              width: cardWidth,
-              showTrendIcon: true,
-              trendPositive: true,
-            ),
-            AdminKpiCard(
-              title: 'NGỪNG BÁN',
-              value: inactive.toString(),
-              subtitle: 'Tạm ngưng phục vụ',
-              icon: Icons.pause_circle_outline_rounded,
-              iconColor: ColorPalette.textMuted,
-              iconBg: const Color(0xFFF1F5F9),
-              width: cardWidth,
-              isWarning: inactive > 0,
-            ),
-          ],
+        return AdminListScaffold(
+          embedInShell: widget.embedInShell,
+          stickyHeader: AdminStickyHeader(
+            breadcrumb: 'Combo',
+            onRefresh: _loadData,
+            onQuickSearch: _onSearchChanged,
+          ),
+          header: AdminPageHeader(
+            icon: Icons.fastfood_rounded,
+            title: 'Quản lý Combo',
+            subtitle:
+                'Tạo và quản lý combo gồm nhiều sản phẩm đơn với giá ưu đãi',
+            addButtonText: 'Thêm combo',
+            onAddPressed: _openingForm ? null : _showCreate,
+          ),
+          filterBar: _buildToolbar(),
+          kpiCards: kpis,
+          table: table,
+          stateView: stateView,
         );
       },
     );
   }
 
-  Widget _buildError(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: ColorPalette.error),
-          const SizedBox(height: 16),
-          Text('Đã xảy ra lỗi: $message',
-              style: const TextStyle(color: ColorPalette.error)),
-          const SizedBox(height: 16),
-          ElevatedButton(onPressed: _loadData, child: const Text('Thử lại')),
-        ],
-      ),
-    );
-  }
+  List<Widget> _buildKpiCards(ComboLoaded state) {
+    final combos = state.combos;
+    final total = state.totalCount > 0 ? state.totalCount : combos.length;
+    final active = combos.where((c) => c.isActive).length;
+    final inactive = combos.where((c) => !c.isActive).length;
 
-  Widget _buildTitleBar() {
-    return AdminPageHeader(
-      icon: Icons.fastfood_rounded,
-      title: 'Quản lý Combo',
-      subtitle: 'Tạo và quản lý combo gồm nhiều sản phẩm đơn với giá ưu đãi',
-      addButtonText: 'Thêm combo',
-      onAddPressed: _openingForm ? null : _showCreate,
-    );
+    return [
+      AdminKpiCard(
+        title: 'TỔNG COMBO',
+        value: total.toString(),
+        subtitle: 'Gói combo ưu đãi',
+        icon: Icons.fastfood_rounded,
+        iconColor: ColorPalette.primaryContainer,
+        iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
+      ),
+      AdminKpiCard(
+        title: 'ĐANG BÁN',
+        value: active.toString(),
+        subtitle: total > 0
+            ? 'Chiếm ${((active / (total == 0 ? 1 : total)) * 100).round()}% danh bạ'
+            : 'Đang phục vụ khách',
+        icon: Icons.check_circle_outline_rounded,
+        iconColor: ColorPalette.tertiary,
+        iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
+        showTrendIcon: true,
+        trendPositive: true,
+      ),
+      AdminKpiCard(
+        title: 'NGỪNG BÁN',
+        value: inactive.toString(),
+        subtitle: 'Tạm ngưng phục vụ',
+        icon: Icons.pause_circle_outline_rounded,
+        iconColor: ColorPalette.textMuted,
+        iconBg: const Color(0xFFF1F5F9),
+        isWarning: inactive > 0,
+      ),
+    ];
   }
 
   Widget _buildToolbar() {
@@ -317,6 +275,14 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
       searchController: _searchController,
       searchHint: 'Tìm theo tên hoặc mã combo...',
       onSearchChanged: _onSearchChanged,
+      onClearSearch: () {
+        _debounce?.cancel();
+        setState(() {
+          _searchQuery = '';
+          _currentPage = 1;
+        });
+        _loadData();
+      },
       filters: [
         AdminDropdownFilter<bool?>(
           value: _selectedStatus,
@@ -331,148 +297,114 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
     );
   }
 
-  Widget _buildTableCard(ComboLoaded state) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorPalette.borderSubtle),
+  Widget _buildTable(ComboLoaded state) {
+    final totalPages = state.totalPages == 0 ? 1 : state.totalPages;
+    return AdminDataTable<ComboEntity>(
+      title: 'Danh sách combo',
+      countLabel: '${state.totalCount} combo',
+      subtitle: 'Hiển thị trang ${state.page} / $totalPages.',
+      items: state.combos,
+      indexOffset: (state.page - 1) * state.pageSize,
+      minTableWidth: 980,
+      rowHeight: 72,
+      isRefreshing: state.isRefreshing,
+      onRowTap: _openingForm ? null : _showEdit,
+      emptyState: const AdminEmptyState(
+        icon: Icons.fastfood_outlined,
+        title: 'Chưa có combo nào',
+        subtitle: 'Nhấn "Thêm combo" để tạo combo đầu tiên',
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          if (state.isRefreshing)
-            const LinearProgressIndicator(
-              minHeight: 2,
-              color: ColorPalette.appetizingOrange,
-              backgroundColor: Colors.transparent,
-            ),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const minWidth = 980.0;
-              final width =
-                  constraints.maxWidth < minWidth ? minWidth : constraints.maxWidth;
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: width,
-                  child: Column(
-                    children: [
-                      _buildHeaderRow(),
-                      if (state.combos.isEmpty)
-                        _buildEmpty()
-                      else
-                        ...state.combos.map(_buildRow),
-                    ],
-                  ),
+      columns: [
+        AdminTableColumn.index<ComboEntity>(),
+        AdminTableColumn(
+          label: 'COMBO',
+          flex: 3,
+          cellBuilder: (_, combo, _) => _buildNameCell(combo),
+        ),
+        AdminTableColumn(
+          label: 'SẢN PHẨM THÀNH PHẦN',
+          flex: 5,
+          cellBuilder: (_, combo, _) => _buildItemsCell(combo),
+        ),
+        AdminTableColumn(
+          label: 'GIÁ BÁN',
+          flex: 2,
+          cellBuilder: (_, combo, _) => Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _vnd.format(combo.price),
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: ColorPalette.appetizingOrange,
                 ),
-              );
-            },
-          ),
-          _buildPagination(state),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderRow() {
-    TextStyle style = const TextStyle(
-      fontFamily: 'Inter',
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.6,
-      color: ColorPalette.textMuted,
-    );
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-        border: Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
-      ),
-      child: Row(
-        children: [
-          Expanded(flex: 4, child: Text('COMBO', style: style)),
-          Expanded(flex: 4, child: Text('SẢN PHẨM THÀNH PHẦN', style: style)),
-          Expanded(flex: 2, child: Text('GIÁ BÁN', style: style)),
-          Expanded(flex: 2, child: Text('TIẾT KIỆM', style: style)),
-          Expanded(flex: 3, child: Text('TRẠNG THÁI', style: style)),
-          SizedBox(width: 96, child: Text('THAO TÁC', style: style)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRow(ComboEntity combo) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(flex: 4, child: _buildNameCell(combo)),
-          Expanded(flex: 4, child: _buildItemsCell(combo)),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _vnd.format(combo.price),
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: ColorPalette.appetizingOrange,
-                  ),
-                ),
-                Text(
-                  'Lẻ: ${_vnd.format(combo.retailTotal)}',
-                  style: const TextStyle(
-                      fontSize: 11, color: ColorPalette.textMuted),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              combo.savingAmount > 0 ? _vnd.format(combo.savingAmount) : '—',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: combo.savingAmount > 0
-                    ? ColorPalette.success
-                    : ColorPalette.textMuted,
               ),
+              const SizedBox(height: 2),
+              Text(
+                'Lẻ: ${_vnd.format(combo.retailTotal)}',
+                style: const TextStyle(
+                    fontSize: 11, color: ColorPalette.textMuted),
+              ),
+            ],
+          ),
+        ),
+        AdminTableColumn(
+          label: 'TIẾT KIỆM',
+          flex: 2,
+          cellBuilder: (_, combo, _) => Text(
+            combo.savingAmount > 0 ? _vnd.format(combo.savingAmount) : '—',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: combo.savingAmount > 0
+                  ? ColorPalette.success
+                  : ColorPalette.textMuted,
             ),
           ),
-          Expanded(flex: 3, child: _buildStatusBadge(combo)),
-          SizedBox(
-            width: 96,
+        ),
+        AdminTableColumn(
+          label: 'TRẠNG THÁI',
+          flex: 3,
+          cellBuilder: (_, combo, _) => _buildStatusBadge(combo),
+        ),
+        AdminTableColumn(
+          label: 'THAO TÁC',
+          width: 84,
+          align: TextAlign.right,
+          cellBuilder: (_, combo, _) => Align(
+            alignment: Alignment.centerRight,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
+                AdminRowActionButton(
+                  icon: Icons.edit_outlined,
+                  color: ColorPalette.appetizingOrange,
                   tooltip: 'Chỉnh sửa',
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                  icon: const Icon(Icons.edit_outlined,
-                      size: 20, color: ColorPalette.info),
                   onPressed: _openingForm ? null : () => _showEdit(combo),
                 ),
-                IconButton(
+                const SizedBox(width: 6),
+                AdminRowActionButton(
+                  icon: Icons.delete_outline_rounded,
+                  color: ColorPalette.dangerCrimson,
                   tooltip: 'Xóa',
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                  icon: const Icon(Icons.delete_outline_rounded,
-                      size: 20, color: ColorPalette.dangerCrimson),
                   onPressed: () => _confirmDelete(combo),
                 ),
               ],
             ),
           ),
-        ],
+        ),
+      ],
+      pagination: AppPaginationBar(
+        currentPage: state.page,
+        totalPages: totalPages,
+        totalCount: state.totalCount,
+        itemLabel: 'combo',
+        pageSize: state.pageSize,
+        onPageChanged: _goToPage,
       ),
     );
   }
@@ -491,7 +423,7 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
                 ? Image.network(
                     combo.imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    errorBuilder: (_, _, _) => const Icon(
                         Icons.fastfood_rounded,
                         color: ColorPalette.appetizingOrange),
                   )
@@ -502,6 +434,7 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -510,7 +443,7 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF1E293B),
                 ),
@@ -534,33 +467,77 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
       return const Text('—',
           style: TextStyle(color: ColorPalette.textMuted));
     }
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: combo.items.map((i) {
-        final isOutOfStock = i.componentStockQuantity < i.quantity;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
+    final allNames = combo.items
+        .map((i) => '${i.quantity} × ${i.componentProductName}')
+        .join('\n');
+    final visibleItems = combo.items.take(2).toList();
+    final remaining = combo.items.length - visibleItems.length;
+
+    return Tooltip(
+      message: allNames,
+      waitDuration: const Duration(milliseconds: 300),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            for (final item in visibleItems) _buildItemChip(item),
+            if (remaining > 0)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: ColorPalette.primaryFixed.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '+$remaining món',
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: ColorPalette.primaryContainer,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemChip(ComboComponentEntity i) {
+    final isOutOfStock = i.componentStockQuantity < i.quantity;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 185),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isOutOfStock
+              ? ColorPalette.dangerCrimson.withValues(alpha: 0.1)
+              : ColorPalette.surfaceVariant,
+          borderRadius: BorderRadius.circular(8),
+          border: isOutOfStock
+              ? Border.all(
+                  color: ColorPalette.dangerCrimson.withValues(alpha: 0.3))
+              : null,
+        ),
+        child: Text(
+          '${i.quantity} × ${i.componentProductName}${isOutOfStock ? ' (Hết)' : ''}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
             color: isOutOfStock
-                ? ColorPalette.dangerCrimson.withValues(alpha: 0.1)
-                : ColorPalette.surfaceVariant,
-            borderRadius: BorderRadius.circular(8),
-            border: isOutOfStock
-                ? Border.all(color: ColorPalette.dangerCrimson.withValues(alpha: 0.3))
-                : null,
+                ? ColorPalette.dangerCrimson
+                : const Color(0xFF334155),
           ),
-          child: Text(
-            '${i.quantity} × ${i.componentProductName}${isOutOfStock ? ' (Hết)' : ''}',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: isOutOfStock ? ColorPalette.dangerCrimson : const Color(0xFF334155),
-            ),
-          ),
-        );
-      }).toList(),
+        ),
+      ),
     );
   }
 
@@ -569,114 +546,86 @@ class _ManageCombosScreenState extends State<ManageCombosScreen> {
     final isOutOfStock = combo.isOutOfStock;
 
     final color = active ? ColorPalette.success : ColorPalette.textMuted;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Switch(
-          value: combo.isActive,
-          onChanged: (val) {
-            context.read<ComboBloc>().add(
-                  ToggleComboStatusEvent(
-                    id: combo.id,
-                    currentIsActive: combo.isActive,
-                  ),
-                );
-          },
-          activeColor: ColorPalette.appetizingOrange,
-        ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    active ? 'Đang bán' : 'Ngừng bán',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (active && isOutOfStock) ...[
-              const SizedBox(height: 4),
-              const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.warning_amber_rounded, size: 12, color: ColorPalette.dangerCrimson),
-                  SizedBox(width: 4),
-                  Text(
-                    'Combo đã hết',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: ColorPalette.dangerCrimson,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmpty() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 56),
-      child: Column(
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: ColorPalette.primaryFixed.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.fastfood_outlined,
-                size: 32, color: ColorPalette.primaryContainer),
+          Switch(
+            value: combo.isActive,
+            activeTrackColor: ColorPalette.success.withValues(alpha: 0.3),
+            activeThumbColor: ColorPalette.success,
+            inactiveTrackColor: ColorPalette.error.withValues(alpha: 0.15),
+            inactiveThumbColor: ColorPalette.error.withValues(alpha: 0.6),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            onChanged: (val) {
+              context.read<ComboBloc>().add(
+                    ToggleComboStatusEvent(
+                      id: combo.id,
+                      currentIsActive: combo.isActive,
+                    ),
+                  );
+            },
           ),
-          const SizedBox(height: 12),
-          const Text('Chưa có combo nào',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          const Text('Nhấn "Thêm combo" để tạo combo đầu tiên',
-              style: TextStyle(fontSize: 12, color: ColorPalette.textMuted)),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration:
+                          BoxDecoration(color: color, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      active ? 'Đang bán' : 'Ngừng bán',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (active && isOutOfStock) ...[
+                const SizedBox(height: 4),
+                const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.warning_amber_rounded,
+                        size: 12, color: ColorPalette.dangerCrimson),
+                    SizedBox(width: 4),
+                    Text(
+                      'Combo đã hết',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: ColorPalette.dangerCrimson,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPagination(ComboLoaded state) {
-    return AppPaginationBar(
-      currentPage: state.page,
-      totalPages: state.totalPages == 0 ? 1 : state.totalPages,
-      totalCount: state.totalCount,
-      itemLabel: 'combo',
-      pageSize: state.pageSize,
-      onPageChanged: _goToPage,
     );
   }
 }

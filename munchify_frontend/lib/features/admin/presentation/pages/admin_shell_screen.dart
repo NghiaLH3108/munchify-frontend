@@ -28,7 +28,7 @@ import '../../../../core/widgets/app_toast.dart';
 /// matching the HTML mockup (Sidebar + Sticky Top Navbar + View Switcher).
 class AdminShellScreen extends StatefulWidget {
   final String initialTab;
-  const AdminShellScreen({super.key, this.initialTab = 'staff'});
+  const AdminShellScreen({super.key, this.initialTab = 'reports'});
 
   @override
   State<AdminShellScreen> createState() => _AdminShellScreenState();
@@ -336,6 +336,11 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                   const SizedBox(height: 26),
                   // Navigation Links
                   _buildSidebarItem(
+                    key: 'reports',
+                    icon: Icons.bar_chart_rounded,
+                    title: 'Báo cáo & Thống kê',
+                  ),
+                  _buildSidebarItem(
                     key: 'orders',
                     icon: Icons.receipt_long_rounded,
                     title: 'Đơn hàng',
@@ -397,11 +402,6 @@ class _AdminShellScreenState extends State<AdminShellScreen> {
                     key: 'staff',
                     icon: Icons.badge_rounded,
                     title: 'Nhân viên & Quyền',
-                  ),
-                  _buildSidebarItem(
-                    key: 'reports',
-                    icon: Icons.badge_rounded,
-                    title: 'Báo cáo & Thống kê',
                   ),
                 ],
               ),

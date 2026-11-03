@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,6 +34,8 @@ class _AdminCustomerManagementScreenState
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+
+  static final DateFormat _df = DateFormat('dd/MM/yyyy');
 
   @override
   void initState() {
@@ -71,6 +73,29 @@ class _AdminCustomerManagementScreenState
     });
   }
 
+  void _onSearchChanged(String val) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      setState(() {
+        _searchQuery = val.trim();
+        _currentPage = 1;
+      });
+      _loadData();
+    });
+  }
+
+  void _clearFilters() {
+    _debounce?.cancel();
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _selectedHasPoints = null;
+      _currentPage = 1;
+    });
+    _loadData();
+  }
+
   String _getInitials(String name) {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty || parts[0].isEmpty) return '?';
@@ -94,7 +119,7 @@ class _AdminCustomerManagementScreenState
 
   @override
   Widget build(BuildContext context) {
-    final bodyContent = BlocConsumer<AdminCustomerBloc, AdminCustomerState>(
+    return BlocConsumer<AdminCustomerBloc, AdminCustomerState>(
       listener: (context, state) {
         if (state is AdminCustomerError) {
           AppToast.error(state.message, context: context);
@@ -105,29 +130,16 @@ class _AdminCustomerManagementScreenState
           current is AdminCustomersLoaded ||
           current is AdminCustomerError,
       builder: (context, state) {
+        Widget? stateView;
+        List<Widget> kpis = const [];
+        Widget? table;
+
         if (state is AdminCustomerLoading) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: ColorPalette.appetizingOrange,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Đang đồng bộ danh sách khách hàng...',
-                  style: AppTypography.dashboardSubtitle,
-                ),
-              ],
-            ),
+          stateView = const AdminLoadingView(
+            message: 'Đang đồng bộ danh sách khách hàng...',
           );
         } else if (state is AdminCustomerError) {
-          return _buildErrorState(state.message);
+          stateView = AdminErrorView(message: state.message, onRetry: _loadData);
         } else if (state is AdminCustomersLoaded) {
           final allItems = state.customersData.items;
           final kpiItems = state.kpiCustomers ?? allItems;
@@ -144,375 +156,113 @@ class _AdminCustomerManagementScreenState
             return true;
           }).toList();
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildPageTitleBar(context),
-                const SizedBox(height: 20),
-                _buildKpiMetrics(kpiItems, kpiTotal),
-                const SizedBox(height: 24),
-                _buildCustomerTableCard(
-                  context,
-                  filteredItems,
-                  state.customersData.totalPages,
-                  state.customersData.totalCount,
-                  isRefreshing: state.isRefreshing,
-                ),
-              ],
-            ),
+          kpis = _buildKpiCards(kpiItems, kpiTotal);
+          table = _buildTable(
+            filteredItems,
+            state.customersData.totalPages,
+            state.customersData.totalCount,
+            state.isRefreshing,
           );
+        } else {
+          stateView = const SizedBox.shrink();
         }
-        return const SizedBox.shrink();
-      },
-    );
 
-    if (widget.embedInShell) {
-      return bodyContent;
-    }
-
-    return Scaffold(
-      backgroundColor: ColorPalette.webBgAdmin,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildStickyHeader(context),
-            Expanded(child: bodyContent),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // STICKY HEADER (when opened standalone, matching admin shell header)
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildStickyHeader(BuildContext context) {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      decoration: BoxDecoration(
-        color: ColorPalette.surface,
-        border: const Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
+        return AdminListScaffold(
+          embedInShell: widget.embedInShell,
+          stickyHeader: AdminStickyHeader(
+            breadcrumb: 'Khách hàng thân thiết',
+            onRefresh: _loadData,
+            onQuickSearch: _onSearchChanged,
+            userInitials: 'HM',
+            userName: 'Hoàng Minh',
+            userRole: 'Admin',
           ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 950;
-          final isVeryNarrow = constraints.maxWidth < 650;
-
-          return Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: ColorPalette.appetizingOrange.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.loyalty_rounded,
-                    color: ColorPalette.appetizingOrange, size: 22),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Munchify POS',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: ColorPalette.warmDarkGrey,
-                ),
-              ),
-              if (!isNarrow) ...[
-                const SizedBox(width: 10),
-                Row(
-                  children: [
-                    const Icon(Icons.chevron_right_rounded,
-                        size: 18, color: ColorPalette.textMuted),
-                    const SizedBox(width: 4),
-                    Text('Trang chủ',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: ColorPalette.textMuted,
-                          decoration: TextDecoration.none,
-                        )),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: Text('/',
-                          style: TextStyle(
-                              color: ColorPalette.textMuted, fontSize: 12)),
+          header: AdminPageHeader(
+            icon: Icons.groups_rounded,
+            title: 'Quản lý Khách hàng & Tích điểm',
+            subtitle:
+                'Xem danh sách khách hàng, điểm tích lũy hiện tại và lịch sử tích/đổi điểm qua từng đơn hàng.',
+            extraActions: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.sync_rounded,
+                      size: 16, color: ColorPalette.tertiary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Đồng bộ lúc $_lastSyncedTime',
+                    style: AppTypography.inter(
+                      fontSize: 12,
+                      color: ColorPalette.textMuted,
                     ),
-                    Text('Khách hàng thân thiết',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: ColorPalette.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        )),
-                  ],
-                ),
-              ],
-              const Spacer(),
-              Flexible(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  reverse: true,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!isNarrow) ...[
-                        SizedBox(
-                          width: 240,
-                          height: 38,
-                          child: TextField(
-                            style: const TextStyle(fontSize: 13),
-                            decoration: InputDecoration(
-                              hintText: 'Tìm nhanh... (Ctrl+K)',
-                              hintStyle: const TextStyle(
-                                  fontSize: 12, color: ColorPalette.textMuted),
-                              prefixIcon: const Icon(Icons.search_rounded,
-                                  size: 18, color: ColorPalette.textMuted),
-                              filled: true,
-                              fillColor:
-                                  ColorPalette.webBgAdmin.withValues(alpha: 0.7),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 8),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: ColorPalette.borderSubtle),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: ColorPalette.borderSubtle),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: ColorPalette.appetizingOrange,
-                                    width: 1.5),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      if (!isVeryNarrow) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: ColorPalette.success.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                    color: ColorPalette.success,
-                                    shape: BoxShape.circle),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text('Online',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: ColorPalette.success)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                      ],
-                      IconButton(
-                        onPressed: _loadData,
-                        icon: const Icon(Icons.refresh_rounded,
-                            size: 20, color: ColorPalette.textMuted),
-                        tooltip: 'Tải lại danh sách',
-                        style: IconButton.styleFrom(
-                          backgroundColor: ColorPalette.webBgAdmin,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: ColorPalette.borderSubtle),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            const CircleAvatar(
-                              radius: 14,
-                              backgroundColor: ColorPalette.surfaceContainerHigh,
-                              child: Text('HM',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorPalette.appetizingOrange)),
-                            ),
-                            if (!isVeryNarrow) ...[
-                              const SizedBox(width: 8),
-                              const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Hoàng Minh',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: ColorPalette.textPrimary)),
-                                  Text('Admin',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color: ColorPalette.appetizingOrange)),
-                                ],
-                              ),
-                              const SizedBox(width: 6),
-                              const Icon(Icons.keyboard_arrow_down_rounded,
-                                  size: 16, color: ColorPalette.textMuted),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
-                ),
+                ],
               ),
             ],
-          );
-        },
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PAGE TITLE BAR + ACTIONS + FILTERS
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildPageTitleBar(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AdminPageHeader(
-          icon: Icons.groups_rounded,
-          title: 'Quản lý Khách hàng & Tích điểm',
-          subtitle: 'Xem danh sách khách hàng, điểm tích lũy hiện tại và lịch sử tích/đổi điểm qua từng đơn hàng.',
-          extraActions: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.sync_rounded,
-                    size: 16, color: ColorPalette.tertiary),
-                const SizedBox(width: 6),
-                Text(
-                  'Đồng bộ lúc $_lastSyncedTime',
-                  style: AppTypography.inter(
-                    fontSize: 12,
-                    color: ColorPalette.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        _buildFilterToolbar(context),
-      ],
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // KPI METRIC CARDS (Sử dụng AdminKpiCard dùng chung)
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildKpiMetrics(List<CustomerEntity> customers, int totalCount) {
-    final activeCount = customers.where((c) => c.loyaltyPoints > 0).length;
-    final zeroPointCount = customers.where((c) => c.loyaltyPoints == 0).length;
-    final totalPoints = customers.fold<int>(0, (sum, c) => sum + c.loyaltyPoints);
-
-    final activePercentage = totalCount == 0
-        ? 0
-        : ((activeCount / (customers.isEmpty ? 1 : customers.length)) * 100).round();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900
-            ? 3
-            : (constraints.maxWidth > 550 ? 2 : 1);
-        final gap = 16.0;
-        final cardWidth =
-            (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
-                crossAxisCount;
-
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            AdminKpiCard(
-              title: 'TỔNG KHÁCH HÀNG',
-              value: totalCount.toString(),
-              subtitle: 'Tất cả khách hàng hệ thống',
-              icon: Icons.groups_rounded,
-              iconColor: ColorPalette.primaryContainer,
-              iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
-              width: cardWidth,
-              showTrendIcon: true,
-              trendPositive: true,
-            ),
-            AdminKpiCard(
-              title: 'CÓ ĐIỂM TÍCH LŨY',
-              value: activeCount.toString(),
-              subtitle: '$activePercentage% khách đã tích lũy điểm',
-              icon: Icons.verified_user_rounded,
-              iconColor: ColorPalette.tertiary,
-              iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
-              width: cardWidth,
-              showTrendIcon: true,
-              trendPositive: true,
-            ),
-            // 
-            AdminKpiCard(
-              title: 'CHƯA CÓ ĐIỂM',
-              value: zeroPointCount.toString(),
-              subtitle: 'Khách hàng chưa phát sinh điểm',
-              icon: Icons.person_outline_rounded,
-              iconColor: ColorPalette.textMuted,
-              iconBg: ColorPalette.webBgAdmin,
-              width: cardWidth,
-            ),
-          ],
+          ),
+          filterBar: _buildFilterToolbar(),
+          kpiCards: kpis,
+          table: table,
+          stateView: stateView,
         );
       },
     );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // FILTER TOOLBAR (Sử dụng AdminFilterBar & AdminDropdownFilter dùng chung)
+  // KPI METRIC CARDS
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildFilterToolbar(BuildContext context) {
+  List<Widget> _buildKpiCards(List<CustomerEntity> customers, int totalCount) {
+    final activeCount = customers.where((c) => c.loyaltyPoints > 0).length;
+    final zeroPointCount = customers.where((c) => c.loyaltyPoints == 0).length;
+
+    final activePercentage = totalCount == 0
+        ? 0
+        : ((activeCount / (customers.isEmpty ? 1 : customers.length)) * 100)
+            .round();
+
+    return [
+      AdminKpiCard(
+        title: 'TỔNG KHÁCH HÀNG',
+        value: totalCount.toString(),
+        subtitle: 'Tất cả khách hàng hệ thống',
+        icon: Icons.groups_rounded,
+        iconColor: ColorPalette.primaryContainer,
+        iconBg: ColorPalette.primaryFixed.withValues(alpha: 0.6),
+        showTrendIcon: true,
+        trendPositive: true,
+      ),
+      AdminKpiCard(
+        title: 'CÓ ĐIỂM TÍCH LŨY',
+        value: activeCount.toString(),
+        subtitle: '$activePercentage% khách đã tích lũy điểm',
+        icon: Icons.verified_user_rounded,
+        iconColor: ColorPalette.tertiary,
+        iconBg: ColorPalette.tertiary.withValues(alpha: 0.1),
+        showTrendIcon: true,
+        trendPositive: true,
+      ),
+      AdminKpiCard(
+        title: 'CHƯA CÓ ĐIỂM',
+        value: zeroPointCount.toString(),
+        subtitle: 'Khách hàng chưa phát sinh điểm',
+        icon: Icons.person_outline_rounded,
+        iconColor: ColorPalette.textMuted,
+        iconBg: ColorPalette.webBgAdmin,
+      ),
+    ];
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FILTER TOOLBAR
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildFilterToolbar() {
     return AdminFilterBar(
       searchController: _searchController,
       searchHint: 'Tìm theo họ tên, SĐT...',
       onSearchChanged: (val) {
         setState(() {});
-        _debounce?.cancel();
-        _debounce = Timer(const Duration(milliseconds: 350), () {
-          if (!mounted) return;
-          setState(() {
-            _searchQuery = val.trim();
-            _currentPage = 1;
-          });
-          _loadData();
-        });
+        _onSearchChanged(val);
       },
       onClearSearch: () {
         _debounce?.cancel();
@@ -537,465 +287,190 @@ class _AdminCustomerManagementScreenState
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // DATA TABLE / CARD CONTAINER
+  // DATA TABLE (template dùng chung)
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildCustomerTableCard(
-    BuildContext context,
+  Widget _buildTable(
     List<CustomerEntity> items,
     int totalPages,
-    int totalCount, {
-    bool isRefreshing = false,
-  }) {
-    if (items.isEmpty && !isRefreshing) {
-      return _buildEmptyState();
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorPalette.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    int totalCount,
+    bool isRefreshing,
+  ) {
+    final pages = totalPages == 0 ? 1 : totalPages;
+    return AdminDataTable<CustomerEntity>(
+      title: 'Danh sách khách hàng',
+      countLabel: '$totalCount người',
+      subtitle:
+          'Hiển thị trang $_currentPage / $pages — thông tin liên hệ và lịch sử giao dịch điểm.',
+      items: items,
+      indexOffset: (_currentPage - 1) * _pageSize,
+      minTableWidth: 880,
+      isRefreshing: isRefreshing,
+      onRowTap: (c) => _openHistoryModal(context, c),
+      isCardView: _isCardView,
+      onToggleView: (v) => setState(() => _isCardView = v),
+      cardBuilder: (context, c, _) => _buildCustomerCard(context, c),
+      emptyState: AdminEmptyState(
+        icon: Icons.people_outline_rounded,
+        title: 'Không tìm thấy khách hàng nào',
+        subtitle: 'Thử thay đổi từ khóa tìm kiếm hoặc các bộ lọc đang chọn.',
+        action: OutlinedButton.icon(
+          onPressed: _clearFilters,
+          icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+          label: const Text('Xóa bộ lọc'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: ColorPalette.appetizingOrange,
+            side: const BorderSide(color: ColorPalette.appetizingOrange),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
-        ],
+        ),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (isRefreshing)
-            const LinearProgressIndicator(
-              minHeight: 2,
-              color: ColorPalette.appetizingOrange,
-              backgroundColor: Colors.transparent,
-            ),
-          // Table Card Header Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 12,
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Danh sách khách hàng',
-                          style: AppTypography.plusJakarta(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: ColorPalette.onSurfaceDark,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: ColorPalette.primaryFixed,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '$totalCount người',
-                            style: AppTypography.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: ColorPalette.primaryContainer,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Hiển thị trang $_currentPage / ${totalPages == 0 ? 1 : totalPages} — thông tin liên hệ và lịch sử giao dịch điểm.',
-                      style: AppTypography.inter(
-                          fontSize: 12, color: ColorPalette.textMuted),
-                    ),
-                  ],
-                ),
-                Wrap(
-                  spacing: 10,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    // View Mode Switcher: Table View vs Card Grid View
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.webBgAdmin,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: ColorPalette.borderSubtle),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildViewModeButton(
-                            icon: Icons.table_rows_rounded,
-                            tooltip: 'Dạng bảng chi tiết',
-                            isSelected: !_isCardView,
-                            onTap: () => setState(() => _isCardView = false),
-                          ),
-                          _buildViewModeButton(
-                            icon: Icons.grid_view_rounded,
-                            tooltip: 'Dạng thẻ lưới trực quan',
-                            isSelected: _isCardView,
-                            onTap: () => setState(() => _isCardView = true),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: ColorPalette.borderSubtle),
-
-          // Main Content: Either Proportional Flex Table OR Modern Card Grid
-          if (items.isEmpty)
-            _buildEmptyState()
-          else if (!_isCardView)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final effectiveWidth = math.max(880.0, constraints.maxWidth);
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: effectiveWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildProportionalTableHeader(),
-                        ...items.asMap().entries.map((e) {
-                          final index =
-                              e.key + 1 + ((_currentPage - 1) * _pageSize);
-                          return _buildProportionalTableRow(
-                              context, e.value, index);
-                        }),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            )
-          else
-            _buildCustomerCardGrid(context, items),
-
-          // Pagination
-          const Divider(height: 1, color: ColorPalette.borderSubtle),
-          _buildPagination(totalPages, totalCount),
-        ],
-      ),
-    );
-  }
-
-  // ─── Proportional Flex Table Header ─────────────────────────────────────────
-  Widget _buildProportionalTableHeader() {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: ColorPalette.webBgAdmin.withValues(alpha: 0.8),
-        border: const Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
-      ),
-      child: const Row(
-        children: [
-          SizedBox(width: 44, child: Text('#', style: AppTypography.tableHeader)),
-          SizedBox(width: 12),
-          Expanded(
-              flex: 4,
-              child: Text('KHÁCH HÀNG', style: AppTypography.tableHeader)),
-          Expanded(
-              flex: 3,
-              child: Text('SỐ ĐIỆN THOẠI', style: AppTypography.tableHeader)),
-          Expanded(
-              flex: 3,
-              child: Text('ĐIỂM TÍCH LŨY', style: AppTypography.tableHeader)),
-          Expanded(
-              flex: 3,
-              child: Text('NGÀY THAM GIA', style: AppTypography.tableHeader)),
-          SizedBox(
-              width: 80,
-              child: Text('THAO TÁC',
-                  textAlign: TextAlign.right,
-                  style: AppTypography.tableHeader)),
-        ],
-      ),
-    );
-  }
-
-  // ─── Proportional Flex Table Row ────────────────────────────────────────────
-  Widget _buildProportionalTableRow(
-      BuildContext context, CustomerEntity customer, int index) {
-    final df = DateFormat('dd/MM/yyyy');
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _openHistoryModal(context, customer),
-        hoverColor: ColorPalette.webBgAdmin.withValues(alpha: 0.4),
-        child: Container(
-          height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: const BoxDecoration(
-            border: Border(
-                bottom: BorderSide(color: ColorPalette.borderSubtle, width: 0.5)),
-          ),
-          child: Row(
+      columns: [
+        AdminTableColumn.index<CustomerEntity>(),
+        AdminTableColumn(
+          label: 'KHÁCH HÀNG',
+          flex: 4,
+          cellBuilder: (_, customer, _) => Row(
             children: [
-              // Index #
-              SizedBox(
-                width: 44,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$index',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
+              CircleAvatar(
+                radius: 17,
+                backgroundColor:
+                    ColorPalette.primaryFixed.withValues(alpha: 0.8),
+                child: Text(
+                  _getInitials(customer.customerName),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: ColorPalette.primaryContainer,
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Customer Name + Avatar
               Expanded(
-                flex: 4,
-                child: Row(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 17,
-                      backgroundColor:
-                          ColorPalette.primaryFixed.withValues(alpha: 0.8),
-                      child: Text(
-                        _getInitials(customer.customerName),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: ColorPalette.primaryContainer,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            customer.customerName,
-                            style: AppTypography.labelLarge.copyWith(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Mã KH: #${customer.customerId}',
-                            style: AppTypography.dashboardSubtitle
-                                .copyWith(fontSize: 11),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Phone Number
-              Expanded(
-                flex: 3,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.phone_outlined,
-                        size: 14, color: ColorPalette.textMuted),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        customer.phone,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: ColorPalette.textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Loyalty Points
-              Expanded(
-                flex: 3,
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.primaryFixed.withValues(alpha: 0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.toll_rounded,
-                        size: 14,
-                        color: ColorPalette.primaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Text(
-                      '${customer.loyaltyPoints} điểm',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: ColorPalette.appetizingOrange,
-                      ),
+                      customer.customerName,
+                      style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Mã KH: #${customer.customerId}',
+                      style:
+                          AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-              ),
-
-              // Join Date
-              Expanded(
-                flex: 3,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.calendar_today_outlined,
-                        size: 13, color: ColorPalette.textMuted),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        df.format(customer.createdAt),
-                        style: const TextStyle(
-                            fontSize: 12, color: ColorPalette.textMuted),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Action button (History icon)
-              SizedBox(
-                width: 80,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.history_rounded, size: 18),
-                    color: ColorPalette.appetizingOrange,
-                    tooltip: 'Lịch sử tích điểm',
-                    style: IconButton.styleFrom(
-                      backgroundColor:
-                          ColorPalette.appetizingOrange.withValues(alpha: 0.08),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                      minimumSize: const Size(34, 34),
-                    ),
-                    onPressed: () => _openHistoryModal(context, customer),
-                  ),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // ─── View Mode Switcher Button ──────────────────────────────────────────────
-  Widget _buildViewModeButton({
-    required IconData icon,
-    required String tooltip,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected ? ColorPalette.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: isSelected
-                ? ColorPalette.appetizingOrange
-                : ColorPalette.textMuted,
+        AdminTableColumn(
+          label: 'SỐ ĐIỆN THOẠI',
+          flex: 3,
+          cellBuilder: (_, customer, _) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.phone_outlined,
+                  size: 14, color: ColorPalette.textMuted),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  customer.phone,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: ColorPalette.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  // ─── Modern Card Grid View (Alternative Layout) ─────────────────────────────
-  Widget _buildCustomerCardGrid(
-      BuildContext context, List<CustomerEntity> items) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final crossAxisCount = constraints.maxWidth > 1150
-              ? 3
-              : (constraints.maxWidth > 700 ? 2 : 1);
-          const gap = 16.0;
-          final cardWidth =
-              (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
-                  crossAxisCount;
-
-          return Wrap(
-            spacing: gap,
-            runSpacing: gap,
-            children: items.asMap().entries.map((e) {
-              final index = e.key + 1 + ((_currentPage - 1) * _pageSize);
-              return SizedBox(
-                width: cardWidth,
-                child: _buildCustomerCard(context, e.value, index),
-              );
-            }).toList(),
-          );
+        AdminTableColumn(
+          label: 'ĐIỂM TÍCH LŨY',
+          flex: 3,
+          cellBuilder: (_, customer, _) => Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: ColorPalette.primaryFixed.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.toll_rounded,
+                  size: 14,
+                  color: ColorPalette.primaryContainer,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${customer.loyaltyPoints} điểm',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: ColorPalette.appetizingOrange,
+                ),
+              ),
+            ],
+          ),
+        ),
+        AdminTableColumn(
+          label: 'NGÀY THAM GIA',
+          flex: 3,
+          cellBuilder: (_, customer, _) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.calendar_today_outlined,
+                  size: 13, color: ColorPalette.textMuted),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  _df.format(customer.createdAt),
+                  style: const TextStyle(
+                      fontSize: 12, color: ColorPalette.textMuted),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        AdminTableColumn(
+          label: 'THAO TÁC',
+          width: 80,
+          align: TextAlign.right,
+          cellBuilder: (ctx, customer, _) => Align(
+            alignment: Alignment.centerRight,
+            child: AdminRowActionButton(
+              icon: Icons.history_rounded,
+              color: ColorPalette.appetizingOrange,
+              tooltip: 'Lịch sử tích điểm',
+              onPressed: () => _openHistoryModal(ctx, customer),
+            ),
+          ),
+        ),
+      ],
+      pagination: AppPaginationBar(
+        currentPage: _currentPage,
+        totalPages: pages,
+        totalCount: totalCount,
+        itemLabel: 'khách hàng',
+        pageSize: _pageSize,
+        onPageChanged: (page) {
+          setState(() => _currentPage = page);
+          _loadData();
         },
       ),
     );
   }
 
-  Widget _buildCustomerCard(
-      BuildContext context, CustomerEntity customer, int index) {
-    final df = DateFormat('dd/MM/yyyy');
-
+  Widget _buildCustomerCard(BuildContext context, CustomerEntity customer) {
     return Container(
       decoration: BoxDecoration(
         color: ColorPalette.surface,
@@ -1041,7 +516,8 @@ class _AdminCustomerManagementScreenState
                     const SizedBox(height: 2),
                     Text(
                       'Mã KH: #${customer.customerId}',
-                      style: AppTypography.dashboardSubtitle.copyWith(fontSize: 12),
+                      style:
+                          AppTypography.dashboardSubtitle.copyWith(fontSize: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -1052,7 +528,6 @@ class _AdminCustomerManagementScreenState
           const SizedBox(height: 14),
           const Divider(height: 1, color: ColorPalette.borderSubtle),
           const SizedBox(height: 12),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1092,8 +567,9 @@ class _AdminCustomerManagementScreenState
                   size: 12, color: ColorPalette.textMuted),
               const SizedBox(width: 6),
               Text(
-                'Tham gia: ${df.format(customer.createdAt)}',
-                style: const TextStyle(fontSize: 11, color: ColorPalette.textMuted),
+                'Tham gia: ${_df.format(customer.createdAt)}',
+                style:
+                    const TextStyle(fontSize: 11, color: ColorPalette.textMuted),
               ),
             ],
           ),
@@ -1106,142 +582,14 @@ class _AdminCustomerManagementScreenState
               foregroundColor: ColorPalette.appetizingOrange,
               side: BorderSide(
                   color: ColorPalette.appetizingOrange.withValues(alpha: 0.4)),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               minimumSize: const Size(double.infinity, 36),
               textStyle:
                   const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // PAGINATION
-  // ===========================================================================
-  Widget _buildPagination(int totalPages, int totalCount) {
-    return AppPaginationBar(
-      currentPage: _currentPage,
-      totalPages: totalPages == 0 ? 1 : totalPages,
-      totalCount: totalCount,
-      itemLabel: 'khách hàng',
-      pageSize: _pageSize,
-      onPageChanged: (page) {
-        setState(() => _currentPage = page);
-        _loadData();
-      },
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // EMPTY & ERROR STATES
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(48),
-      decoration: BoxDecoration(
-        color: ColorPalette.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: ColorPalette.primaryFixed.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.people_outline_rounded,
-                size: 40, color: ColorPalette.appetizingOrange),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Không tìm thấy khách hàng nào',
-            style: AppTypography.plusJakarta(
-                fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Thử thay đổi từ khóa tìm kiếm hoặc các bộ lọc đang chọn.',
-            style: AppTypography.dashboardSubtitle,
-          ),
-          const SizedBox(height: 20),
-          OutlinedButton.icon(
-            onPressed: () {
-              _debounce?.cancel();
-              _searchController.clear();
-              setState(() {
-                _searchQuery = '';
-                _selectedHasPoints = null;
-                _currentPage = 1;
-              });
-              _loadData();
-            },
-            icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
-            label: const Text('Xóa bộ lọc'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: ColorPalette.appetizingOrange,
-              side: const BorderSide(color: ColorPalette.appetizingOrange),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String message) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(32),
-        margin: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: ColorPalette.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ColorPalette.borderSubtle),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: ColorPalette.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.error_outline_rounded,
-                  size: 36, color: ColorPalette.error),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Không thể tải dữ liệu khách hàng',
-              style: AppTypography.plusJakarta(
-                  fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              message,
-              style: AppTypography.dashboardSubtitle,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Thử lại'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorPalette.appetizingOrange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

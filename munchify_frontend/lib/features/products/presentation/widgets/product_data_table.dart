@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/theme/AppTypography.dart';
+import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../domain/entities/product_entity.dart';
 import '../bloc/product_admin_bloc.dart';
 import '../bloc/product_admin_event.dart';
 import 'product_form_dialog.dart';
-import '../../../../core/widgets/app_pagination_bar.dart';
 
 class ProductDataTable extends StatelessWidget {
   final List<ProductEntity> products;
@@ -17,7 +20,7 @@ class ProductDataTable extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
 
   const ProductDataTable({
-    Key? key,
+    super.key,
     required this.products,
     required this.currentPage,
     required this.totalPages,
@@ -25,167 +28,222 @@ class ProductDataTable extends StatelessWidget {
     required this.startIndex,
     required this.endIndex,
     required this.onPageChanged,
-  }) : super(key: key);
+  });
+
+  static final NumberFormat _vnd =
+      NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final indexOffset = startIndex > 0 ? startIndex - 1 : 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return AdminDataTable<ProductEntity>(
+      title: 'Danh sách sản phẩm',
+      countLabel: '$totalCount món',
+      subtitle: 'Hiển thị trang $currentPage / $totalPages.',
+      items: products,
+      indexOffset: indexOffset,
+      minTableWidth: 960,
+      onRowTap: (product) => ProductFormDialog.show(context, product: product),
+      emptyState: const AdminEmptyState(
+        icon: Icons.restaurant_menu_rounded,
+        title: 'Chưa có sản phẩm nào phù hợp',
+        subtitle: 'Thử thay đổi bộ lọc hoặc thêm món mới vào thực đơn.',
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          _buildHeaderRow(context),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: products.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return _buildDataRow(context, product, currencyFormat);
-            },
-          ),
-          AppPaginationBar(
-            currentPage: currentPage,
-            totalPages: totalPages,
-            totalCount: totalCount,
-            itemLabel: 'món',
-            startIndex: startIndex,
-            endIndex: endIndex,
-            onPageChanged: onPageChanged,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderRow(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-      child: Row(
-        children: const [
-
-          SizedBox(width: 80, child: Text('Hình ảnh', style: TextStyle(fontWeight: FontWeight.bold))),
-          SizedBox(width: 100, child: Text('Mã SKU', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(child: Text('Tên món / Sản phẩm', style: TextStyle(fontWeight: FontWeight.bold))),
-          SizedBox(width: 120, child: Text('Danh mục', style: TextStyle(fontWeight: FontWeight.bold))),
-          SizedBox(width: 120, child: Text('Đơn giá', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-          SizedBox(width: 120, child: Text('Tồn kho / Mức', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold))),
-          SizedBox(width: 100, child: Text('Trạng thái', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold))),
-          SizedBox(width: 100, child: Text('Thao tác', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataRow(BuildContext context, ProductEntity product, NumberFormat currencyFormat) {
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-
-          SizedBox(
-            width: 80,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: product.imageUrl != null
-                      ? Image.network(product.imageUrl!, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.fastfood))
-                      : Container(color: Colors.grey[200], child: const Icon(Icons.fastfood)),
+      columns: [
+        AdminTableColumn.index<ProductEntity>(),
+        AdminTableColumn(
+          label: 'MÓN / SẢN PHẨM',
+          flex: 4,
+          cellBuilder: (_, product, _) => Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  color: ColorPalette.amberTint,
+                  child: product.imageUrl != null &&
+                          product.imageUrl!.isNotEmpty
+                      ? Image.network(
+                          product.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.fastfood_rounded,
+                            size: 18,
+                            color: ColorPalette.appetizingOrange,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.fastfood_rounded,
+                          size: 18,
+                          color: ColorPalette.appetizingOrange,
+                        ),
                 ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${product.sku} · ĐVT: ${product.unitName ?? 'N/A'}',
+                      style:
+                          AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        AdminTableColumn(
+          label: 'DANH MỤC',
+          flex: 2,
+          cellBuilder: (_, product, _) => Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: ColorPalette.primaryFixed.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                product.categoryName ?? 'Chưa phân loại',
+                style: AppTypography.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: ColorPalette.primaryContainer,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
-          SizedBox(width: 100, child: Text(product.sku)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        AdminTableColumn(
+          label: 'ĐƠN GIÁ',
+          flex: 2,
+          cellBuilder: (_, product, _) => Text(
+            _vnd.format(product.price),
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: ColorPalette.appetizingOrange,
+            ),
+          ),
+        ),
+        AdminTableColumn(
+          label: 'TỒN KHO / ĐỊNH MỨC',
+          flex: 2,
+          cellBuilder: (_, product, _) {
+            final isLow = product.stockQuantity <= product.minStockLevel;
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isLow
+                      ? ColorPalette.dangerCrimson.withValues(alpha: 0.1)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${product.stockQuantity} / ${product.minStockLevel}',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isLow
+                        ? ColorPalette.dangerCrimson
+                        : ColorPalette.textPrimary,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        AdminTableColumn(
+          label: 'TRẠNG THÁI',
+          flex: 3,
+          cellBuilder: (ctx, product, _) => FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text('ĐVT: ${product.unitName ?? 'N/A'}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 120,
-            child: Chip(
-              label: Text(product.categoryName ?? 'Unknown', style: const TextStyle(fontSize: 12)),
-              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            ),
-          ),
-          SizedBox(
-            width: 120,
-            child: Text(
-              currencyFormat.format(product.price),
-              textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepOrange),
-            ),
-          ),
-          SizedBox(
-            width: 120,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+                Switch(
+                  value: product.isActive,
+                  activeTrackColor: ColorPalette.success.withValues(alpha: 0.3),
+                  activeThumbColor: ColorPalette.success,
+                  inactiveTrackColor:
+                      ColorPalette.error.withValues(alpha: 0.15),
+                  inactiveThumbColor: ColorPalette.error.withValues(alpha: 0.6),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (value) {
+                    ctx
+                        .read<ProductAdminBloc>()
+                        .add(ToggleProductStatusEvent(product.id, value));
+                  },
+                ),
+                const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
+                    color: product.isActive
+                        ? ColorPalette.success.withValues(alpha: 0.08)
+                        : ColorPalette.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${product.stockQuantity} / ${product.minStockLevel}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                    product.isActive ? 'Đang bán' : 'Ngừng bán',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: product.isActive
+                          ? ColorPalette.success
+                          : ColorPalette.error,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(
-            width: 100,
-            child: Center(
-              child: Switch(
-                value: product.isActive,
-                onChanged: (value) {
-                  context.read<ProductAdminBloc>().add(ToggleProductStatusEvent(product.id, value));
-                },
-                activeColor: Colors.orange,
-              ),
+        ),
+        AdminTableColumn(
+          label: 'THAO TÁC',
+          width: 80,
+          align: TextAlign.right,
+          cellBuilder: (ctx, product, _) => Align(
+            alignment: Alignment.centerRight,
+            child: AdminRowActionButton(
+              icon: Icons.edit_outlined,
+              color: ColorPalette.appetizingOrange,
+              tooltip: 'Chỉnh sửa',
+              onPressed: () =>
+                  ProductFormDialog.show(ctx, product: product),
             ),
           ),
-          SizedBox(
-            width: 100,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: () {
-                  ProductFormDialog.show(context, product: product);
-                }),
-              ],
-            ),
-          ),
-        ],
+        ),
+      ],
+      pagination: AppPaginationBar(
+        currentPage: currentPage,
+        totalPages: totalPages,
+        totalCount: totalCount,
+        itemLabel: 'món',
+        startIndex: startIndex,
+        endIndex: endIndex,
+        onPageChanged: onPageChanged,
       ),
     );
   }

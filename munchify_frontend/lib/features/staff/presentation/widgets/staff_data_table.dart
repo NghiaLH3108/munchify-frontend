@@ -1,15 +1,15 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/theme/AppTypography.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/widgets/admin/admin_widgets.dart';
 import '../../domain/entities/staff_entity.dart';
 
-/// Responsive data table and card view for staff list:
-/// - Table Card Header Bar with count and view mode toggle
-/// - Proportional horizontal scrolling table view
-/// - Responsive card grid view
-/// - Integrated status toggle switch and edit button callbacks
-/// - Bottom slot for pagination widget
+/// Danh sách nhân viên dựng trên template dùng chung [AdminDataTable]:
+/// - Thanh tiêu đề có badge đếm và toggle Bảng/Lưới
+/// - Bảng theo tỉ lệ flex, cuộn ngang khi hẹp
+/// - Lưới thẻ responsive
+/// - Switch trạng thái và nút chỉnh sửa
+/// - Slot phân trang ở dưới
 class StaffDataTable extends StatelessWidget {
   final List<StaffEntity> items;
   final int currentPage;
@@ -17,6 +17,7 @@ class StaffDataTable extends StatelessWidget {
   final int totalPages;
   final int totalCount;
   final bool isCardView;
+  final bool isRefreshing;
   final ValueChanged<bool> onToggleViewMode;
   final ValueChanged<StaffEntity> onEditStaff;
   final ValueChanged<StaffEntity> onToggleStatus;
@@ -33,513 +34,229 @@ class StaffDataTable extends StatelessWidget {
     required this.onToggleViewMode,
     required this.onEditStaff,
     required this.onToggleStatus,
+    this.isRefreshing = false,
     this.paginationWidget,
   });
 
+  static const _adminFg = Color(0xFF92400E);
+  static const _staffFg = Color(0xFF1E40AF);
+
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorPalette.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return AdminDataTable<StaffEntity>(
+      title: 'Danh sách nhân viên',
+      countLabel: '$totalCount người',
+      subtitle:
+          'Hiển thị trang $currentPage / $totalPages — bao gồm cả admin và nhân viên.',
+      items: items,
+      indexOffset: (currentPage - 1) * pageSize,
+      isRefreshing: isRefreshing,
+      onRowTap: onEditStaff,
+      isCardView: isCardView,
+      onToggleView: onToggleViewMode,
+      cardBuilder: (context, staff, _) => _buildStaffCard(staff),
+      pagination: paginationWidget,
+      emptyState: const AdminEmptyState(
+        icon: Icons.search_off_rounded,
+        title: 'Không tìm thấy nhân viên phù hợp',
+        subtitle: 'Vui lòng thử từ khóa tìm kiếm khác hoặc xóa bộ lọc.',
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Table Card Header Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 12,
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Danh sách nhân viên',
-                          style: AppTypography.plusJakarta(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: ColorPalette.onSurfaceDark,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: ColorPalette.primaryFixed,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '$totalCount người',
-                            style: AppTypography.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: ColorPalette.primaryContainer,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Hiển thị trang $currentPage / $totalPages — bao gồm cả admin và nhân viên.',
-                      style: AppTypography.inter(
-                          fontSize: 12, color: ColorPalette.textMuted),
-                    ),
-                  ],
-                ),
-                Wrap(
-                  spacing: 10,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    // View Mode Switcher
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: ColorPalette.webBgAdmin,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: ColorPalette.borderSubtle),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildViewModeButton(
-                            icon: Icons.table_rows_rounded,
-                            tooltip: 'Dạng bảng chi tiết',
-                            isSelected: !isCardView,
-                            onTap: () => onToggleViewMode(false),
-                          ),
-                          _buildViewModeButton(
-                            icon: Icons.grid_view_rounded,
-                            tooltip: 'Dạng thẻ lưới trực quan',
-                            isSelected: isCardView,
-                            onTap: () => onToggleViewMode(true),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: ColorPalette.borderSubtle),
-
-          // Main Content: Either Table OR Card Grid
-          if (!isCardView)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final effectiveWidth = math.max(920.0, constraints.maxWidth);
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: effectiveWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildProportionalTableHeader(),
-                        ...items.asMap().entries.map((e) {
-                          final index =
-                              e.key + 1 + ((currentPage - 1) * pageSize);
-                          return _buildProportionalTableRow(
-                              context, e.value, index);
-                        }),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            )
-          else
-            _buildStaffCardGrid(context, items),
-
-          // Optional Pagination Slot
-          if (paginationWidget != null) ...[
-            const Divider(height: 1, color: ColorPalette.borderSubtle),
-            paginationWidget!,
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ─── Proportional Flex Table Header ─────────────────────────────────────────
-  Widget _buildProportionalTableHeader() {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: ColorPalette.webBgAdmin.withValues(alpha: 0.8),
-        border:
-            const Border(bottom: BorderSide(color: ColorPalette.borderSubtle)),
-      ),
-      child: const Row(
-        children: [
-          SizedBox(width: 44, child: Text('#', style: AppTypography.tableHeader)),
-          SizedBox(width: 12),
-          Expanded(
-              flex: 4,
-              child: Text('NHÂN VIÊN', style: AppTypography.tableHeader)),
-          Expanded(
-              flex: 2,
-              child: Text('VAI TRÒ', style: AppTypography.tableHeader)),
-          Expanded(
-              flex: 3,
-              child: Text('LIÊN HỆ', style: AppTypography.tableHeader)),
-          Expanded(
-              flex: 3,
-              child: Text('TRẠNG THÁI', style: AppTypography.tableHeader)),
-          SizedBox(
-              width: 80,
-              child: Text('THAO TÁC',
-                  textAlign: TextAlign.right,
-                  style: AppTypography.tableHeader)),
-        ],
-      ),
-    );
-  }
-
-  // ─── Proportional Flex Table Row ────────────────────────────────────────────
-  Widget _buildProportionalTableRow(
-      BuildContext context, StaffEntity staff, int index) {
-    final isAdmin = staff.role.toUpperCase() == 'ADMIN';
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => onEditStaff(staff),
-        hoverColor: ColorPalette.webBgAdmin.withValues(alpha: 0.4),
-        child: Container(
-          height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: const BoxDecoration(
-            border: Border(
-                bottom: BorderSide(
-                    color: ColorPalette.borderSubtle, width: 0.5)),
-          ),
-          child: Row(
+      columns: [
+        AdminTableColumn.index<StaffEntity>(),
+        AdminTableColumn(
+          label: 'NHÂN VIÊN',
+          flex: 4,
+          cellBuilder: (_, staff, _) => Row(
             children: [
-              // Index #
-              SizedBox(
-                width: 44,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$index',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              _avatar(staff, 17, 12),
               const SizedBox(width: 12),
-              // Staff Name + Avatar
               Expanded(
-                flex: 4,
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 17,
-                      backgroundColor: isAdmin
-                          ? ColorPalette.amber.withValues(alpha: 0.2)
-                          : ColorPalette.info.withValues(alpha: 0.12),
-                      child: Text(
-                        _getInitials(staff.fullName),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: isAdmin
-                              ? const Color(0xFF92400E)
-                              : const Color(0xFF1E40AF),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            staff.fullName,
-                            style:
-                                AppTypography.labelLarge.copyWith(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '@${staff.username}',
-                            style: AppTypography.dashboardSubtitle
-                                .copyWith(fontSize: 11),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Role Badge
-              Expanded(
-                flex: 2,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isAdmin
-                          ? ColorPalette.amber.withValues(alpha: 0.12)
-                          : ColorPalette.info.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isAdmin
-                            ? ColorPalette.amber.withValues(alpha: 0.35)
-                            : ColorPalette.info.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isAdmin ? Icons.shield_rounded : Icons.badge_rounded,
-                          size: 13,
-                          color: isAdmin
-                              ? const Color(0xFF92400E)
-                              : const Color(0xFF1E40AF),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          staff.role,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: isAdmin
-                                ? const Color(0xFF92400E)
-                                : const Color(0xFF1E40AF),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // Contact
-              Expanded(
-                flex: 3,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.phone_outlined,
-                            size: 13, color: ColorPalette.textMuted),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            staff.phone ?? '—',
-                            style: const TextStyle(
-                                fontSize: 12, color: ColorPalette.textMuted),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      staff.fullName,
+                      style: AppTypography.labelLarge.copyWith(fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.email_outlined,
-                            size: 13, color: ColorPalette.textMuted),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            staff.email ?? '—',
-                            style: const TextStyle(
-                                fontSize: 12, color: ColorPalette.textMuted),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 2),
+                    Text(
+                      '@${staff.username}',
+                      style:
+                          AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-              ),
-              // Status Toggle
-              Expanded(
-                flex: 3,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Switch(
-                        value: staff.isActive,
-                        activeTrackColor:
-                            ColorPalette.success.withValues(alpha: 0.3),
-                        activeThumbColor: ColorPalette.success,
-                        inactiveTrackColor:
-                            ColorPalette.error.withValues(alpha: 0.15),
-                        inactiveThumbColor:
-                            ColorPalette.error.withValues(alpha: 0.6),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (val) => onToggleStatus(staff),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: staff.isActive
-                              ? ColorPalette.success.withValues(alpha: 0.08)
-                              : ColorPalette.error.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          staff.isActive ? 'Hoạt động' : 'Tạm khóa',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: staff.isActive
-                                ? ColorPalette.success
-                                : ColorPalette.error,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Actions
-              SizedBox(
-                width: 80,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    color: ColorPalette.appetizingOrange,
-                    tooltip: 'Chỉnh sửa',
-                    style: IconButton.styleFrom(
-                      backgroundColor:
-                          ColorPalette.appetizingOrange.withValues(alpha: 0.08),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                      minimumSize: const Size(34, 34),
-                    ),
-                    onPressed: () => onEditStaff(staff),
-                  ),
                 ),
               ),
             ],
           ),
         ),
-      ),
+        AdminTableColumn(
+          label: 'VAI TRÒ',
+          flex: 2,
+          cellBuilder: (_, staff, _) {
+            final isAdmin = _isAdmin(staff);
+            final fg = isAdmin ? _adminFg : _staffFg;
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isAdmin
+                      ? ColorPalette.amber.withValues(alpha: 0.12)
+                      : ColorPalette.info.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isAdmin
+                        ? ColorPalette.amber.withValues(alpha: 0.35)
+                        : ColorPalette.info.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isAdmin ? Icons.shield_rounded : Icons.badge_rounded,
+                      size: 13,
+                      color: fg,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      staff.role,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: fg,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        AdminTableColumn(
+          label: 'LIÊN HỆ',
+          flex: 3,
+          cellBuilder: (_, staff, _) => Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _contactLine(Icons.phone_outlined, staff.phone),
+              const SizedBox(height: 3),
+              _contactLine(Icons.email_outlined, staff.email),
+            ],
+          ),
+        ),
+        AdminTableColumn(
+          label: 'TRẠNG THÁI',
+          flex: 3,
+          cellBuilder: (_, staff, _) => FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _statusSwitch(staff),
+                const SizedBox(width: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: staff.isActive
+                        ? ColorPalette.success.withValues(alpha: 0.08)
+                        : ColorPalette.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: _statusText(staff),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AdminTableColumn(
+          label: 'THAO TÁC',
+          width: 80,
+          align: TextAlign.right,
+          cellBuilder: (_, staff, _) => Align(
+            alignment: Alignment.centerRight,
+            child: AdminRowActionButton(
+              icon: Icons.edit_outlined,
+              color: ColorPalette.appetizingOrange,
+              tooltip: 'Chỉnh sửa',
+              onPressed: () => onEditStaff(staff),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  // ─── View Mode Switcher Button ──────────────────────────────────────────────
-  Widget _buildViewModeButton({
-    required IconData icon,
-    required String tooltip,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected ? ColorPalette.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: isSelected
-                ? ColorPalette.appetizingOrange
-                : ColorPalette.textMuted,
-          ),
+  bool _isAdmin(StaffEntity s) => s.role.toUpperCase() == 'ADMIN';
+
+  Widget _avatar(StaffEntity staff, double radius, double fontSize) {
+    final isAdmin = _isAdmin(staff);
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: isAdmin
+          ? ColorPalette.amber.withValues(alpha: 0.2)
+          : ColorPalette.info.withValues(alpha: 0.12),
+      child: Text(
+        _getInitials(staff.fullName),
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: fontSize,
+          color: isAdmin ? _adminFg : _staffFg,
         ),
       ),
     );
   }
 
-  // ─── Modern Card Grid View (Alternative Layout) ─────────────────────────────
-  Widget _buildStaffCardGrid(BuildContext context, List<StaffEntity> cardItems) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final crossAxisCount = constraints.maxWidth > 1150
-              ? 3
-              : (constraints.maxWidth > 700 ? 2 : 1);
-          const gap = 16.0;
-          final cardWidth =
-              (constraints.maxWidth - ((crossAxisCount - 1) * gap)) /
-                  crossAxisCount;
+  Widget _contactLine(IconData icon, String? value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: ColorPalette.textMuted),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            value ?? '—',
+            style: const TextStyle(fontSize: 12, color: ColorPalette.textMuted),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
 
-          return Wrap(
-            spacing: gap,
-            runSpacing: gap,
-            children: cardItems.asMap().entries.map((e) {
-              final index = e.key + 1 + ((currentPage - 1) * pageSize);
-              return SizedBox(
-                width: cardWidth,
-                child: _buildStaffCard(context, e.value, index),
-              );
-            }).toList(),
-          );
-        },
+  Widget _statusSwitch(StaffEntity staff) {
+    return Switch(
+      value: staff.isActive,
+      activeTrackColor: ColorPalette.success.withValues(alpha: 0.3),
+      activeThumbColor: ColorPalette.success,
+      inactiveTrackColor: ColorPalette.error.withValues(alpha: 0.15),
+      inactiveThumbColor: ColorPalette.error.withValues(alpha: 0.6),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      onChanged: (_) => onToggleStatus(staff),
+    );
+  }
+
+  Widget _statusText(StaffEntity staff) {
+    return Text(
+      staff.isActive ? 'Hoạt động' : 'Tạm khóa',
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: staff.isActive ? ColorPalette.success : ColorPalette.error,
       ),
     );
   }
 
-  Widget _buildStaffCard(BuildContext context, StaffEntity staff, int index) {
-    final isAdmin = staff.role.toUpperCase() == 'ADMIN';
+  Widget _buildStaffCard(StaffEntity staff) {
+    final isAdmin = _isAdmin(staff);
     return Container(
       decoration: BoxDecoration(
         color: ColorPalette.surface,
@@ -559,22 +276,7 @@ class StaffDataTable extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: isAdmin
-                    ? ColorPalette.amber.withValues(alpha: 0.2)
-                    : ColorPalette.info.withValues(alpha: 0.12),
-                child: Text(
-                  _getInitials(staff.fullName),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: isAdmin
-                        ? const Color(0xFF92400E)
-                        : const Color(0xFF1E40AF),
-                  ),
-                ),
-              ),
+              _avatar(staff, 20, 13),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -588,7 +290,8 @@ class StaffDataTable extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '@${staff.username}',
-                      style: AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
+                      style:
+                          AppTypography.dashboardSubtitle.copyWith(fontSize: 11),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -607,9 +310,7 @@ class StaffDataTable extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: isAdmin
-                        ? const Color(0xFF92400E)
-                        : const Color(0xFF1E40AF),
+                    color: isAdmin ? _adminFg : _staffFg,
                   ),
                 ),
               ),
@@ -618,32 +319,9 @@ class StaffDataTable extends StatelessWidget {
           const SizedBox(height: 12),
           const Divider(height: 1, color: ColorPalette.borderSubtle),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(Icons.phone_outlined,
-                  size: 13, color: ColorPalette.textMuted),
-              const SizedBox(width: 6),
-              Text(staff.phone ?? '—',
-                  style: const TextStyle(
-                      fontSize: 12, color: ColorPalette.textMuted)),
-            ],
-          ),
+          _contactLine(Icons.phone_outlined, staff.phone),
           const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.email_outlined,
-                  size: 13, color: ColorPalette.textMuted),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  staff.email ?? '—',
-                  style: const TextStyle(
-                      fontSize: 12, color: ColorPalette.textMuted),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+          _contactLine(Icons.email_outlined, staff.email),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -651,29 +329,9 @@ class StaffDataTable extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Switch(
-                    value: staff.isActive,
-                    activeTrackColor:
-                        ColorPalette.success.withValues(alpha: 0.3),
-                    activeThumbColor: ColorPalette.success,
-                    inactiveTrackColor:
-                        ColorPalette.error.withValues(alpha: 0.15),
-                    inactiveThumbColor:
-                        ColorPalette.error.withValues(alpha: 0.6),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    onChanged: (val) => onToggleStatus(staff),
-                  ),
+                  _statusSwitch(staff),
                   const SizedBox(width: 4),
-                  Text(
-                    staff.isActive ? 'Hoạt động' : 'Tạm khóa',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: staff.isActive
-                          ? ColorPalette.success
-                          : ColorPalette.error,
-                    ),
-                  ),
+                  _statusText(staff),
                 ],
               ),
               OutlinedButton.icon(
@@ -683,42 +341,19 @@ class StaffDataTable extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: ColorPalette.appetizingOrange,
                   side: BorderSide(
-                      color: ColorPalette.appetizingOrange
-                          .withValues(alpha: 0.4)),
+                    color: ColorPalette.appetizingOrange.withValues(alpha: 0.4),
+                  ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   textStyle:
                       const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      decoration: BoxDecoration(
-        color: ColorPalette.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorPalette.borderSubtle),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.search_off_rounded,
-              size: 48, color: ColorPalette.textMuted.withValues(alpha: 0.5)),
-          const SizedBox(height: 14),
-          const Text('Không tìm thấy nhân viên phù hợp',
-              style: AppTypography.titleLarge),
-          const SizedBox(height: 6),
-          const Text('Vui lòng thử từ khóa tìm kiếm khác hoặc xóa bộ lọc.',
-              style: AppTypography.dashboardSubtitle),
         ],
       ),
     );

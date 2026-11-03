@@ -20,7 +20,8 @@ class PromotionManagementScreen extends StatefulWidget {
   const PromotionManagementScreen({super.key, this.embedInShell = false});
 
   @override
-  State<PromotionManagementScreen> createState() => _PromotionManagementScreenState();
+  State<PromotionManagementScreen> createState() =>
+      _PromotionManagementScreenState();
 }
 
 class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
@@ -62,7 +63,9 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(
-          child: CircularProgressIndicator(color: ColorPalette.appetizingOrange),
+          child: CircularProgressIndicator(
+            color: ColorPalette.appetizingOrange,
+          ),
         ),
       );
 
@@ -92,7 +95,9 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
       context: context,
       builder: (ctx) => MultiBlocProvider(
         providers: [
-          BlocProvider<PromotionFormBloc>(create: (_) => sl<PromotionFormBloc>()),
+          BlocProvider<PromotionFormBloc>(
+            create: (_) => sl<PromotionFormBloc>(),
+          ),
         ],
         child: PromotionFormDialog(
           promotionToEdit: detailToEdit,
@@ -104,145 +109,133 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bodyContent = BlocProvider.value(
+    return BlocProvider.value(
       value: _adminBloc,
       child: BlocConsumer<PromotionAdminBloc, PromotionAdminState>(
         listener: (context, state) {
           if (state is PromotionAdminError) {
             AppToast.error(state.message, context: context);
-          } else if (state is PromotionsLoaded && state.successMessage != null) {
+          } else if (state is PromotionsLoaded &&
+              state.successMessage != null) {
             AppToast.success(state.successMessage!, context: context);
           }
         },
         builder: (context, state) {
+          Widget? stateView;
+          List<Widget> kpis = const [];
+          Widget? table;
+
           if (state is PromotionAdminLoading) {
-            return const Center(child: CircularProgressIndicator());
+            stateView = const AdminLoadingView(
+              message: 'Đang đồng bộ chương trình khuyến mãi...',
+            );
+          } else if (state is PromotionAdminError) {
+            stateView = AdminErrorView(
+              message: state.message,
+              onRetry: _loadData,
+            );
           } else if (state is PromotionsLoaded) {
             final allItems = state.promotionsData.items;
             final kpiItems = state.kpiPromotions ?? allItems;
-            final kpiTotal = state.kpiTotalCount ?? state.promotionsData.totalCount;
+            final kpiTotal =
+                state.kpiTotalCount ?? state.promotionsData.totalCount;
 
             final items = allItems.where((p) {
-              if (_selectedStatus != null && p.isActive != _selectedStatus) return false;
-              if (_selectedDiscountType != null && p.discountType != _selectedDiscountType) return false;
+              if (_selectedStatus != null && p.isActive != _selectedStatus) {
+                return false;
+              }
+              if (_selectedDiscountType != null &&
+                  p.discountType != _selectedDiscountType) {
+                return false;
+              }
               return true;
             }).toList();
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildPageTitleBar(context),
-                  const SizedBox(height: 20),
-                  PromotionFilterBar(
-                    searchController: _searchController,
-                    onSearchChanged: (val) {
-                      setState(() {
-                        _searchQuery = val.trim();
-                        _currentPage = 1;
-                      });
-                      _loadData();
-                    },
-                    selectedStatus: _selectedStatus,
-                    onStatusChanged: (val) {
-                      setState(() {
-                        _selectedStatus = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    selectedDiscountType: _selectedDiscountType,
-                    onDiscountTypeChanged: (val) {
-                      setState(() {
-                        _selectedDiscountType = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onReset: () {
-                      _searchController.clear();
-                      setState(() {
-                        _searchQuery = '';
-                        _selectedStatus = null;
-                        _selectedDiscountType = null;
-                        _currentPage = 1;
-                      });
-                      _loadData();
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  PromotionStatCards(promotions: kpiItems, totalCount: kpiTotal),
-                  const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: ColorPalette.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: ColorPalette.borderSubtle),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (state.isRefreshing)
-                          const LinearProgressIndicator(
-                            minHeight: 2,
-                            color: ColorPalette.appetizingOrange,
-                            backgroundColor: Colors.transparent,
-                          ),
-                        PromotionDataTable(
-                          promotions: items,
-                          totalPages: state.promotionsData.totalPages,
-                          currentPage: state.promotionsData.pageNumber,
-                          totalCount: items.length != allItems.length ? items.length : state.promotionsData.totalCount,
-                          onPageChanged: (page) {
-                            setState(() => _currentPage = page);
-                            _loadData();
-                          },
-                          onEdit: (promo) => _openFormDialog(promotion: promo),
-                          onToggleStatus: (id) {
-                            _adminBloc.add(TogglePromotionStatus(
-                              id: id,
-                              pageIndex: _currentPage,
-                              pageSize: _pageSize,
-                              searchKeyword: _searchQuery.isNotEmpty ? _searchQuery : null,
-                            ));
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            kpis = PromotionStatCards.cards(
+              promotions: kpiItems,
+              totalCount: kpiTotal,
             );
+            table = PromotionDataTable(
+              promotions: items,
+              totalPages: state.promotionsData.totalPages,
+              currentPage: state.promotionsData.pageNumber,
+              totalCount: items.length != allItems.length
+                  ? items.length
+                  : state.promotionsData.totalCount,
+              pageSize: _pageSize,
+              isRefreshing: state.isRefreshing,
+              onPageChanged: (page) {
+                setState(() => _currentPage = page);
+                _loadData();
+              },
+              onEdit: (promo) => _openFormDialog(promotion: promo),
+              onToggleStatus: (id) {
+                _adminBloc.add(TogglePromotionStatus(
+                  id: id,
+                  pageIndex: _currentPage,
+                  pageSize: _pageSize,
+                  searchKeyword: _searchQuery.isNotEmpty ? _searchQuery : null,
+                ));
+              },
+            );
+          } else {
+            stateView = const SizedBox.shrink();
           }
-          return const SizedBox.shrink();
+
+          return AdminListScaffold(
+            embedInShell: widget.embedInShell,
+            stickyHeader: AdminStickyHeader(
+              breadcrumb: 'Khuyến mãi',
+              onRefresh: _loadData,
+            ),
+            header: AdminPageHeader(
+              icon: Icons.local_offer_rounded,
+              title: 'Quản lý Khuyến mãi',
+              subtitle:
+                  'Quản lý các chương trình ưu đãi, mã giảm giá và voucher',
+              addButtonText: 'Thêm Khuyến mãi',
+              onAddPressed: () => _openFormDialog(),
+            ),
+            filterBar: PromotionFilterBar(
+              searchController: _searchController,
+              onSearchChanged: (val) {
+                setState(() {
+                  _searchQuery = val.trim();
+                  _currentPage = 1;
+                });
+                _loadData();
+              },
+              selectedStatus: _selectedStatus,
+              onStatusChanged: (val) {
+                setState(() {
+                  _selectedStatus = val;
+                  _currentPage = 1;
+                });
+              },
+              selectedDiscountType: _selectedDiscountType,
+              onDiscountTypeChanged: (val) {
+                setState(() {
+                  _selectedDiscountType = val;
+                  _currentPage = 1;
+                });
+              },
+              onReset: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                  _selectedStatus = null;
+                  _selectedDiscountType = null;
+                  _currentPage = 1;
+                });
+                _loadData();
+              },
+            ),
+            kpiCards: kpis,
+            table: table,
+            stateView: stateView,
+          );
         },
       ),
-    );
-
-    if (widget.embedInShell) {
-      return bodyContent;
-    }
-
-    return Scaffold(
-      backgroundColor: ColorPalette.webBgAdmin,
-      body: SafeArea(child: bodyContent),
-    );
-  }
-
-  Widget _buildPageTitleBar(BuildContext context) {
-    return AdminPageHeader(
-      icon: Icons.local_offer_rounded,
-      title: 'Quản lý Khuyến mãi',
-      subtitle: 'Quản lý các chương trình ưu đãi, mã giảm giá và voucher',
-      addButtonText: 'Thêm Khuyến mãi',
-      onAddPressed: () => _openFormDialog(),
     );
   }
 }
