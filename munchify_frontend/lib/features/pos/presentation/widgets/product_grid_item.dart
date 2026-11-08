@@ -86,7 +86,7 @@ class ProductGridItem extends StatelessWidget {
                               BlendMode.multiply,
                             ),
                       child: Container(
-                        height: 105,
+                        height: 98,
                         width: double.infinity,
                         color: Colors.grey.shade200,
                         child: imageUrl.isNotEmpty
@@ -196,7 +196,7 @@ class ProductGridItem extends StatelessWidget {
 
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -220,7 +220,7 @@ class ProductGridItem extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           // Stock badge
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -259,20 +259,24 @@ class ProductGridItem extends StatelessWidget {
                                             : Colors.green.shade700),
                                 ),
                                 const SizedBox(width: 3),
-                                Text(
-                                  isOutOfStock
-                                      ? 'Hết hàng (0)'
-                                      : (isLowStock
-                                            ? 'Sắp hết: $stockQuantity'
-                                            : 'Còn $stockQuantity'),
-                                  style: TextStyle(
-                                    color: isOutOfStock
-                                        ? Colors.red.shade700
+                                Flexible(
+                                  child: Text(
+                                    isOutOfStock
+                                        ? 'Hết hàng (0)'
                                         : (isLowStock
-                                              ? Colors.orange.shade700
-                                              : Colors.green.shade700),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                              ? 'Sắp hết: $stockQuantity'
+                                              : 'Còn $stockQuantity'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: isOutOfStock
+                                          ? Colors.red.shade700
+                                          : (isLowStock
+                                                ? Colors.orange.shade700
+                                                : Colors.green.shade700),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -293,35 +297,32 @@ class ProductGridItem extends StatelessWidget {
                                     ? Colors.grey
                                     : const Color(0xFFC62828),
                                 fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                                fontSize: 14.5,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Container(
-                            decoration: BoxDecoration(
+                          const SizedBox(width: 4),
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: Material(
                               color: isOutOfStock
                                   ? Colors.grey.shade300
-                                  : const Color(
-                                      0xFFBF360C,
-                                    ), // Deep Orange/Brown
+                                  : const Color(0xFFBF360C),
                               borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                isOutOfStock ? Icons.block : Icons.add,
-                                color: isOutOfStock
-                                    ? Colors.grey.shade500
-                                    : Colors.white,
-                                size: 18,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: isOutOfStock ? null : onAddToCart,
+                                child: Icon(
+                                  isOutOfStock ? Icons.block : Icons.add,
+                                  color: isOutOfStock
+                                      ? Colors.grey.shade500
+                                      : Colors.white,
+                                  size: 18,
+                                ),
                               ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
-                              ),
-                              onPressed: isOutOfStock ? null : onAddToCart,
                             ),
                           ),
                         ],

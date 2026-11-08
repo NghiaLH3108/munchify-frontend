@@ -9,10 +9,15 @@ import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
 
-/// Compact loyalty card shown on POS Home when a customer is selected.
+/// Compact loyalty card shown when a customer is selected.
 /// Displays customer info, loyalty points, and redemption toggle.
 class CustomerLoyaltyCard extends StatelessWidget {
-  const CustomerLoyaltyCard({super.key});
+  final EdgeInsetsGeometry margin;
+
+  const CustomerLoyaltyCard({
+    super.key,
+    this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +34,7 @@ class CustomerLoyaltyCard extends StatelessWidget {
             NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: margin,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,

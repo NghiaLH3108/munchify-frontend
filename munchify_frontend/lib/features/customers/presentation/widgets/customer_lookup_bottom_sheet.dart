@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/AppConstants.dart';
 import '../../../../core/theme/ColorPalette.dart';
-import '../../../../core/utils/Validators.dart';
+import '../../domain/entities/customer_entity.dart';
 import '../bloc/customer_bloc.dart';
 import '../bloc/customer_event.dart';
 import '../bloc/customer_state.dart';
@@ -39,27 +39,32 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
   Timer? _debounce;
 
   void _onPhoneChanged(String value) {
+    setState(() {});
     _debounce?.cancel();
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      context.read<CustomerBloc>().add(const SuggestCustomersByPhoneEvent(''));
+      return;
+    }
     _debounce = Timer(
       Duration(milliseconds: AppConstants.searchDebounceMs),
       () {
-        if (value.trim().length >= 10) {
-          context.read<CustomerBloc>().add(
-            SearchCustomerByPhoneEvent(value.trim()),
-          );
-        }
+        if (!mounted) return;
+        context.read<CustomerBloc>().add(
+          SuggestCustomersByPhoneEvent(trimmed),
+        );
       },
     );
   }
 
   void _onSearch() {
+    _debounce?.cancel();
     final phone = _phoneController.text.trim();
-    final error = Validators.validatePhoneNumber(phone);
-    if (error != null) {
-      AppToast.error(error, context: context);
+    if (phone.isEmpty) {
+      AppToast.warning('Vui lòng nhập số điện thoại để tìm kiếm', context: context);
       return;
     }
-    context.read<CustomerBloc>().add(SearchCustomerByPhoneEvent(phone));
+    context.read<CustomerBloc>().add(SuggestCustomersByPhoneEvent(phone));
   }
 
   @override
@@ -129,6 +134,7 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                 Expanded(
                   child: TextField(
                     controller: _phoneController,
+                    autofocus: true,
                     onChanged: _onPhoneChanged,
                     keyboardType: TextInputType.phone,
                     inputFormatters: [
@@ -136,7 +142,7 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                       LengthLimitingTextInputFormatter(10),
                     ],
                     decoration: InputDecoration(
-                      hintText: 'Nhập số điện thoại (VD: 0912345678)',
+                      hintText: 'Nhập số điện thoại (VD: 0912...)',
                       hintStyle: TextStyle(
                         color: Colors.grey.shade400,
                         fontSize: 14,
@@ -145,6 +151,15 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                         Icons.phone,
                         color: ColorPalette.appetizingOrange,
                       ),
+                      suffixIcon: _phoneController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _phoneController.clear();
+                                _onPhoneChanged('');
+                              },
+                            )
+                          : null,
                       filled: true,
                       fillColor: Colors.grey.shade50,
                       border: OutlineInputBorder(
@@ -185,7 +200,7 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Search result
+            // Search result / suggestions
             BlocConsumer<CustomerBloc, CustomerState>(
               listener: (context, state) {
                 if (state is CustomerSelected || state is CustomerCreated) {
@@ -200,6 +215,10 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                       color: ColorPalette.appetizingOrange,
                     ),
                   );
+                }
+
+                if (state is CustomerSuggestionsLoaded) {
+                  return _buildSuggestionsList(state.customers);
                 }
 
                 if (state is CustomerFound) {
@@ -233,7 +252,7 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Nhập số điện thoại để tra cứu thông tin khách hàng',
+                        'Nhập số điện thoại để hiển thị gợi ý khách hàng',
                         style: TextStyle(
                           color: Colors.grey.shade500,
                           fontSize: 13,
@@ -248,6 +267,138 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSuggestionsList(List<CustomerEntity> customers) {
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            'Đề xuất khách hàng (${customers.length}):',
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: ColorPalette.textSecondary,
+            ),
+          ),
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 260),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: customers.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final customer = customers[index];
+              final pointsValue =
+                  customer.loyaltyPoints * AppConstants.pointsToVndRate;
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  context
+                      .read<CustomerBloc>()
+                      .add(SelectCustomerEvent(customer));
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: ColorPalette.success.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: ColorPalette.success.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor:
+                            ColorPalette.success.withValues(alpha: 0.15),
+                        child: const Icon(
+                          Icons.person,
+                          color: ColorPalette.success,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              customer.customerName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14.5,
+                                color: ColorPalette.warmDarkGrey,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${customer.phone} • Quy đổi: ${currencyFormat.format(pointsValue)}',
+                              style: const TextStyle(
+                                color: ColorPalette.textSecondary,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: ColorPalette.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: ColorPalette.amber,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${customer.loyaltyPoints} đ',
+                              style: const TextStyle(
+                                color: ColorPalette.warmDarkGrey,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: ColorPalette.success,
+                        size: 22,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -368,7 +519,7 @@ class _CustomerLookupBottomSheetState extends State<CustomerLookupBottomSheet> {
           const Icon(Icons.person_off, color: ColorPalette.amber, size: 40),
           const SizedBox(height: 8),
           Text(
-            'Không tìm thấy khách hàng với SĐT "$phone"',
+            'Không tìm thấy khách hàng khớp với "$phone"',
             style: const TextStyle(
               color: ColorPalette.warmDarkGrey,
               fontSize: 14,

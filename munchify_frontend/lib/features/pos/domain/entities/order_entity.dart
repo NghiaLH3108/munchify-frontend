@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'order_detail_entity.dart';
 import 'payment_info_entity.dart';
 
-/// Đơn hàng đã được tạo thành công – trả về từ POST /api/orders.
+/// Đơn hàng đã được tạo thành công – trả về từ POST /api/orders hoặc GET /api/orders.
 class OrderEntity extends Equatable {
   final int orderId;
   final String orderCode;
@@ -14,6 +14,7 @@ class OrderEntity extends Equatable {
   final String orderStatus; // PENDING | COMPLETED | CANCELLED
   final PaymentInfoEntity payment;
   final List<OrderDetailEntity> orderDetails;
+  final int itemCount;
   final DateTime createdAt;
   final String? customerName;
 
@@ -28,9 +29,13 @@ class OrderEntity extends Equatable {
     required this.orderStatus,
     required this.payment,
     required this.orderDetails,
+    this.itemCount = 0,
     required this.createdAt,
     this.customerName,
   });
+
+  int get effectiveItemCount =>
+      orderDetails.isNotEmpty ? orderDetails.length : itemCount;
 
   @override
   List<Object?> get props => [
@@ -44,6 +49,7 @@ class OrderEntity extends Equatable {
         orderStatus,
         payment,
         orderDetails,
+        itemCount,
         createdAt,
         customerName,
       ];

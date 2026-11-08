@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,11 +64,15 @@ void main() {
   }
 
   group('PosAppBar Role-Based Admin Console Access Tests', () {
-    testWidgets('displays "Trang Quản trị Admin" menu item when authenticated user is Admin', (tester) async {
+    testWidgets('displays "Trang Quản trị Admin" menu item when authenticated user is Admin on desktop platform', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
       ignoreRenderFlexOverflows(tester);
       tester.view.physicalSize = const Size(1920, 1080);
       tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        debugDefaultTargetPlatformOverride = null;
+      });
 
       await tester.pumpWidget(createPosAppBarTestWidget(
         authState: const Authenticated(user: adminUser, token: 'mock_token'),
@@ -81,11 +86,37 @@ void main() {
       await tester.tap(popupMenuFinder);
       await tester.pumpAndSettle();
 
-      // Verify Admin Console navigation option is visible
+      // Verify Admin Console navigation option is visible on desktop
       expect(find.text('Trang Quản trị Admin'), findsOneWidget);
       expect(find.text('Đăng xuất ca làm'), findsOneWidget);
       expect(find.text('Hoàng Minh'), findsNWidgets(2)); // avatar button + popup item
       expect(find.text('Quản trị viên'), findsOneWidget);
+    });
+
+    testWidgets('hides "Trang Quản trị Admin" menu item when authenticated user is Admin on Android', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      ignoreRenderFlexOverflows(tester);
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        debugDefaultTargetPlatformOverride = null;
+      });
+
+      await tester.pumpWidget(createPosAppBarTestWidget(
+        authState: const Authenticated(user: adminUser, token: 'mock_token'),
+      ));
+      await tester.pumpAndSettle();
+
+      final popupMenuFinder = find.byType(PopupMenuButton<String>);
+      expect(popupMenuFinder, findsOneWidget);
+
+      await tester.tap(popupMenuFinder);
+      await tester.pumpAndSettle();
+
+      // Admin Console navigation must be blocked on Android
+      expect(find.text('Trang Quản trị Admin'), findsNothing);
+      expect(find.text('Đăng xuất ca làm'), findsOneWidget);
     });
 
     testWidgets('hides "Trang Quản trị Admin" menu item when authenticated user is Staff', (tester) async {

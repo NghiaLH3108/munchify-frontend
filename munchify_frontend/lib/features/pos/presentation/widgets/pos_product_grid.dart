@@ -33,7 +33,7 @@ class PosProductGrid extends StatelessWidget {
     final crossAxisCount = screenWidth >= 1200
         ? 5
         : (screenWidth >= 800 ? 4 : (screenWidth >= 600 ? 3 : 2));
-    final childAspectRatio = screenWidth < 600 ? 0.85 : 0.9;
+    final childAspectRatio = screenWidth < 600 ? 0.78 : 0.9;
 
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

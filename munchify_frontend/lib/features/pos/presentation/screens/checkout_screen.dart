@@ -15,6 +15,8 @@ import '../bloc/cart_state.dart';
 import '../bloc/order_bloc.dart';
 import '../bloc/order_event.dart';
 import '../bloc/order_state.dart';
+import '../bloc/pos_catalog_bloc.dart';
+import '../bloc/pos_catalog_event.dart';
 import '../widgets/payment_method_selector.dart';
 import '../../../../core/widgets/app_toast.dart';
 
@@ -58,9 +60,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       listener: (context, state) {
         if (state is OrderCreated) {
           context.read<CartCubit>().clearCart();
-          context.read<CustomerBloc>().add(ClearSelectedCustomerEvent());
+          context.read<CustomerBloc>().add(const ClearSelectedCustomerEvent());
+          context.read<PosCatalogBloc>().add(LoadCatalogEvent());
 
-          Navigator.pop(context);
+          Navigator.of(context).popUntil((route) => route.isFirst);
           AppToast.success('Thanh toán thành công!', context: context);
         } else if (state is OrderError) {
           AppToast.error(state.message, context: context);

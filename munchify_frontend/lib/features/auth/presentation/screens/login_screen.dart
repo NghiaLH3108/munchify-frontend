@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/utils/platform_helper.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../admin/presentation/pages/admin_shell_screen.dart';
 import '../../../main/presentation/screens/main_app_screen.dart';
@@ -51,7 +52,16 @@ class _LoginScreenState extends State<LoginScreen> {
           if (state is AuthFailureState) {
             AppToast.error(state.message, context: context);
           } else if (state is Authenticated) {
-            if (state.user.isAdmin) {
+            AppToast.success('Đăng nhập thành công!', context: context);
+            if (PlatformHelper.isStaffPlatform) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MainAppScreen(),
+                ),
+                (route) => false,
+              );
+            } else if (state.user.isAdmin) {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(

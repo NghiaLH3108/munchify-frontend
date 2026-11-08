@@ -67,9 +67,40 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       } else if (data is Map && data.containsKey('items')) {
         items = data['items'] as List;
       }
-      return items
+      final orders = items
           .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      // Nếu backend đang chạy bản chưa kèm orderDetails trong danh sách summary,
+      // tự động gọi GET /api/orders/{id} song song để lấy đầy đủ danh sách sản phẩm
+      final needDetailFetch = orders.any(
+        (o) => o.orderDetails.isEmpty && o.itemCount > 0 && o.orderId > 0,
+      );
+      if (needDetailFetch) {
+        final hydrated = await Future.wait(
+          orders.map((order) async {
+            if (order.orderDetails.isNotEmpty || order.orderId <= 0) {
+              return order;
+            }
+            try {
+              final detailRes = await dioClient.dio.get(
+                '${ApiEndpoints.orders}/${order.orderId}',
+              );
+              if (detailRes.data != null && detailRes.data['success'] == true) {
+                return OrderModel.fromJson(
+                  detailRes.data['data'] as Map<String, dynamic>,
+                );
+              }
+            } catch (_) {
+              // Giữ nguyên order summary nếu lấy chi tiết lỗi
+            }
+            return order;
+          }),
+        );
+        return hydrated;
+      }
+
+      return orders;
     } else {
       throw Exception(
           response.data?['message'] ?? 'Không thể tải lịch sử đơn hàng');

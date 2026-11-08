@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/ColorPalette.dart';
+import '../../../../core/utils/platform_helper.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -70,46 +71,56 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: ColorPalette.surface,
       elevation: 0,
+      titleSpacing: 12,
       title: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: ColorPalette.appetizingOrange,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.restaurant, color: ColorPalette.onPrimary),
+            child: const Icon(Icons.restaurant, color: ColorPalette.onPrimary, size: 20),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Munchify POS',
-                style: TextStyle(
-                  color: ColorPalette.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Munchify POS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: ColorPalette.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: ColorPalette.success,
-                      shape: BoxShape.circle,
+                Row(
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: ColorPalette.success,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Trực tuyến • Quầy thu ngân #01',
-                    style: TextStyle(color: ColorPalette.textHint, fontSize: 12),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 4),
+                    const Expanded(
+                      child: Text(
+                        'Trực tuyến • Quầy thu ngân #01',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: ColorPalette.textHint, fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -117,6 +128,8 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
         // Nút truy cập giao diện App Staff Báo cáo hàng hỏng / hư / hết hạn
         IconButton(
           tooltip: 'Báo cáo hàng hỏng / hết hạn',
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           icon: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
@@ -127,7 +140,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: const Icon(
               Icons.report_problem_outlined,
               color: ColorPalette.appetizingOrange,
-              size: 20,
+              size: 18,
             ),
           ),
           onPressed: () {
@@ -160,7 +173,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
               offset: const Offset(0, 48),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onSelected: (value) {
-                if (value == 'admin_console') {
+                if (value == 'admin_console' && PlatformHelper.isAdminPlatform) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -197,7 +210,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
                 const PopupMenuDivider(),
-                if (state is Authenticated && state.user.isAdmin) ...[
+                if (state is Authenticated && state.user.isAdmin && PlatformHelper.isAdminPlatform) ...[
                   const PopupMenuItem<String>(
                     value: 'admin_console',
                     child: Row(
@@ -240,16 +253,17 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
               child: Container(
-                margin: const EdgeInsets.only(left: 4, right: 16, top: 10, bottom: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                margin: const EdgeInsets.only(left: 4, right: 12, top: 10, bottom: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     CircleAvatar(
-                      radius: 12,
+                      radius: 11,
                       backgroundColor: ColorPalette.appetizingOrange,
                       child: Text(
                         initials,
@@ -261,15 +275,20 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      displayName,
-                      style: const TextStyle(
-                        color: ColorPalette.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 110),
+                      child: Text(
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: ColorPalette.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                        ),
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down, color: ColorPalette.textPrimary),
+                    const Icon(Icons.arrow_drop_down, color: ColorPalette.textPrimary, size: 18),
                   ],
                 ),
               ),

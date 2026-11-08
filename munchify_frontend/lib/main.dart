@@ -160,15 +160,19 @@ class _AuthGateState extends State<AuthGate> {
       listener: _onAuthChanged,
       child: BlocBuilder<AuthBloc, AuthState>(
         buildWhen: (prev, curr) =>
-            curr is AuthLoading ||
+            curr is AuthInitial ||
             curr is Authenticated ||
             curr is Unauthenticated ||
             curr is AuthFailureState,
         builder: (context, state) {
           if (state is Authenticated) {
-            // App mobile: giao diện Staff (ADMIN cũng được phép vì có toàn quyền).
+            // App mobile: chỉ STAFF được vào giao diện POS bán hàng.
             if (PlatformHelper.isStaffPlatform) {
-              return const MainAppScreen();
+              return const RoleGuard(
+                allowedRoles: ['STAFF'],
+                fallback: LoginScreen(),
+                child: MainAppScreen(),
+              );
             }
             // Web/Windows: chỉ ADMIN được vào giao diện quản trị.
             return const RoleGuard(
@@ -178,7 +182,7 @@ class _AuthGateState extends State<AuthGate> {
             );
           }
 
-          if (state is AuthLoading) {
+          if (state is AuthInitial) {
             return const Scaffold(
               backgroundColor: ColorPalette.background,
               body: Center(

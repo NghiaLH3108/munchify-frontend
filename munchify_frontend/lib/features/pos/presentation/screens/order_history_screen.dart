@@ -10,7 +10,7 @@ import '../bloc/order_state.dart';
 
 /// Màn hình lịch sử đơn hàng – hiển thị danh sách đơn của ngày hôm nay.
 class OrderHistoryScreen extends StatefulWidget {
-  const OrderHistoryScreen({Key? key}) : super(key: key);
+  const OrderHistoryScreen({super.key});
 
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
@@ -36,12 +36,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   void _filter(String query) {
     setState(() {
       _filtered = _all
-          .where((o) =>
-              o.orderCode.toLowerCase().contains(query.toLowerCase()) ||
-              (o.customerName
-                      ?.toLowerCase()
-                      .contains(query.toLowerCase()) ??
-                  false))
+          .where(
+            (o) =>
+                o.orderCode.toLowerCase().contains(query.toLowerCase()) ||
+                (o.customerName?.toLowerCase().contains(query.toLowerCase()) ??
+                    false),
+          )
           .toList();
     });
   }
@@ -56,7 +56,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         elevation: 0,
         title: const Text(
           'Lịch sử đơn hàng',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: ColorPalette.textPrimary,
+          ),
         ),
         actions: [
           IconButton(
@@ -77,26 +81,30 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               onChanged: _filter,
               decoration: InputDecoration(
                 hintText: 'Tìm theo mã đơn, tên khách...',
-                prefixIcon: const Icon(Icons.search,
-                    color: ColorPalette.appetizingOrange),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: ColorPalette.appetizingOrange,
+                ),
                 filled: true,
                 fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: ColorPalette.border),
+                  borderSide: const BorderSide(color: ColorPalette.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: ColorPalette.border),
+                  borderSide: const BorderSide(color: ColorPalette.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
-                      color: ColorPalette.appetizingOrange, width: 2),
+                    color: ColorPalette.appetizingOrange,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -120,15 +128,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 if (state is OrderLoading) {
                   return const Center(
                     child: CircularProgressIndicator(
-                        color: ColorPalette.appetizingOrange),
+                      color: ColorPalette.appetizingOrange,
+                    ),
                   );
                 }
                 if (state is OrderError) {
                   return _ErrorView(
                     message: state.message,
-                    onRetry: () => context
-                        .read<OrderBloc>()
-                        .add(const LoadOrdersEvent()),
+                    onRetry: () =>
+                        context.read<OrderBloc>().add(const LoadOrdersEvent()),
                   );
                 }
                 if (_filtered.isEmpty) {
@@ -170,7 +178,7 @@ class _OrderCard extends StatelessWidget {
         border: Border.all(color: ColorPalette.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -184,8 +192,11 @@ class _OrderCard extends StatelessWidget {
             // ── Header row ────────────────────────────────────────────────
             Row(
               children: [
-                const Icon(Icons.receipt_long,
-                    size: 16, color: ColorPalette.appetizingOrange),
+                const Icon(
+                  Icons.receipt_long,
+                  size: 16,
+                  color: ColorPalette.appetizingOrange,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   order.orderCode,
@@ -205,23 +216,23 @@ class _OrderCard extends StatelessWidget {
             // ── Date + customer ───────────────────────────────────────────
             Row(
               children: [
-                Icon(Icons.access_time,
-                    size: 13, color: Colors.grey.shade400),
+                Icon(Icons.access_time, size: 13, color: Colors.grey.shade400),
                 const SizedBox(width: 4),
                 Text(
                   '${timeFormat.format(order.createdAt)}  ${dateFormat.format(order.createdAt)}',
-                  style: TextStyle(
-                      color: Colors.grey.shade500, fontSize: 12),
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                 ),
                 if (order.customerName != null) ...[
                   const SizedBox(width: 12),
-                  Icon(Icons.person_outline,
-                      size: 13, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.person_outline,
+                    size: 13,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     order.customerName!,
-                    style: TextStyle(
-                        color: Colors.grey.shade500, fontSize: 12),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                   ),
                 ],
               ],
@@ -233,10 +244,14 @@ class _OrderCard extends StatelessWidget {
 
             // ── Items summary ─────────────────────────────────────────────
             Text(
-              '${order.orderDetails.length} sản phẩm: ${order.orderDetails.map((d) => d.productName).join(', ')}',
+              order.orderDetails.isNotEmpty
+                  ? '${order.orderDetails.length} sản phẩm: ${order.orderDetails.map((d) => '${d.productName} (x${d.quantity})').join(', ')}'
+                  : '${order.effectiveItemCount} sản phẩm',
               style: const TextStyle(
-                  color: ColorPalette.textSecondary, fontSize: 12),
-              maxLines: 1,
+                color: ColorPalette.textSecondary,
+                fontSize: 12,
+              ),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
 
@@ -264,9 +279,10 @@ class _OrderCard extends StatelessWidget {
                       Text(
                         '+${order.pointsEarned}',
                         style: const TextStyle(
-                            color: Colors.amber,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13),
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -310,9 +326,10 @@ class _StatusBadge extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: fg, fontSize: 11, fontWeight: FontWeight.bold)),
+      child: Text(
+        label,
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
@@ -349,15 +366,19 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 72, color: Colors.grey.shade300),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 72,
+            color: Colors.grey.shade300,
+          ),
           const SizedBox(height: 16),
           Text(
             'Chưa có đơn hàng nào',
             style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade500),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade500,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -384,9 +405,11 @@ class _ErrorView extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_off, size: 60, color: Colors.grey),
           const SizedBox(height: 12),
-          Text(message,
-              style: const TextStyle(color: ColorPalette.textSecondary),
-              textAlign: TextAlign.center),
+          Text(
+            message,
+            style: const TextStyle(color: ColorPalette.textSecondary),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onRetry,

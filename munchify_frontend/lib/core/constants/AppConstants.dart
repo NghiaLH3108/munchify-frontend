@@ -14,9 +14,15 @@ class AppConstants {
   /// Change to your real staging/production URL before deploying.
   /// Web / Windows Desktop: https://localhost:<port_backend>
   /// Android Emulator: https://10.0.2.2:<port_backend>
+  // Đọc từ --dart-define=API_URL=... lúc build/run (phải dùng const để trình biên dịch Dart nhận diện)
+  static const String _envApiUrl = String.fromEnvironment('API_URL');
   static String get baseUrl {
+    // 1. Nếu có truyền --dart-define=API_URL=... thì ưu tiên dùng ngay
+    if (_envApiUrl.isNotEmpty) return _envApiUrl;
+    // 2. Mặc định khi không truyền:
     if (kIsWeb) return 'http://localhost:5194';
-    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:5194';
+    if (defaultTargetPlatform == TargetPlatform.android)
+      return 'http://10.0.2.2:5194';
     return 'http://localhost:5194';
   }
 

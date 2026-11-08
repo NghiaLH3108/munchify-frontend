@@ -184,7 +184,8 @@ Future<void> init() async {
     () => CustomerBloc(
       searchCustomer: sl(),
       createCustomer: sl(),
-      ),
+      getCustomers: sl(),
+    ),
   );
   sl.registerFactory(
     () => AiExpiryBloc(

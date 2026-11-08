@@ -16,6 +16,15 @@ class SearchCustomerByPhoneEvent extends CustomerEvent {
   List<Object?> get props => [phone];
 }
 
+class SuggestCustomersByPhoneEvent extends CustomerEvent {
+  final String query;
+
+  const SuggestCustomersByPhoneEvent(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}
+
 class CreateCustomerEvent extends CustomerEvent {
   final String customerName;
   final String phone;

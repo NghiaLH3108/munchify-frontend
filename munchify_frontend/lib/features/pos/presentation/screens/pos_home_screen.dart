@@ -12,7 +12,6 @@ import '../widgets/catalog_info_row.dart';
 import '../widgets/category_tabs.dart';
 import '../widgets/combo_carousel.dart';
 import '../widgets/combo_section_header.dart';
-import '../widgets/customer_quick_row.dart';
 import '../widgets/pos_app_bar.dart';
 import '../widgets/pos_product_grid.dart';
 import '../widgets/pos_search_bar.dart';
@@ -100,7 +99,6 @@ class _PosCatalogContent extends StatelessWidget {
         CustomScrollView(
           slivers: [
             const SliverToBoxAdapter(child: PosSearchBar()),
-            const SliverToBoxAdapter(child: CustomerQuickRow()),
             SliverToBoxAdapter(child: CategoryTabs(state: state)),
             SliverToBoxAdapter(child: CatalogInfoRow(state: state)),
             if (combos.isNotEmpty) ...[

@@ -10,7 +10,12 @@ import '../../../customers/presentation/widgets/customer_loyalty_card.dart';
 
 /// Hàng tra cứu nhanh khách hàng (SĐT tích điểm) + nút thêm khách mới.
 class CustomerQuickRow extends StatelessWidget {
-  const CustomerQuickRow({super.key});
+  final EdgeInsetsGeometry padding;
+
+  const CustomerQuickRow({
+    super.key,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +26,11 @@ class CustomerQuickRow extends StatelessWidget {
           curr is CustomerCreated,
       builder: (context, state) {
         if (state is CustomerSelected) {
-          return const CustomerLoyaltyCard();
+          return CustomerLoyaltyCard(margin: padding);
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: padding,
           child: Row(
             children: [
               Expanded(
@@ -79,4 +84,3 @@ class CustomerQuickRow extends StatelessWidget {
     );
   }
 }
-

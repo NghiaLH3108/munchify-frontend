@@ -6,10 +6,10 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../customers/presentation/bloc/customer_bloc.dart';
 import '../../../customers/presentation/bloc/customer_event.dart';
 import '../../../customers/presentation/bloc/customer_state.dart';
-import '../../../customers/presentation/widgets/customer_lookup_bottom_sheet.dart';
 import '../bloc/cart_cubit.dart';
 import '../bloc/cart_state.dart';
 import '../widgets/cart_item_tile.dart';
+import '../widgets/customer_quick_row.dart';
 import '../widgets/promotion_input_row.dart';
 import 'checkout_screen.dart';
 
@@ -17,7 +17,7 @@ import 'checkout_screen.dart';
 ///
 /// Layout dọc:
 ///   - Trên: danh sách [CartItemTile] (scrollable)
-///   - Dưới: khối nổi tổng hợp (promotion, điểm, subtotal → total, CTA)
+///   - Dưới: khối nổi tổng hợp (khách hàng, promotion, điểm, subtotal → total, CTA)
 class CartScreen extends StatelessWidget {
   const CartScreen({Key? key}) : super(key: key);
 
@@ -93,7 +93,7 @@ class CartScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               context.read<CartCubit>().clearCart();
-              context.read<CustomerBloc>().add(ClearSelectedCustomerEvent());
+              context.read<CustomerBloc>().add(const ClearSelectedCustomerEvent());
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -182,7 +182,7 @@ class _SummaryPanel extends StatelessWidget {
                 child: Container(
                   width: 36,
                   height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(2),
@@ -190,8 +190,10 @@ class _SummaryPanel extends StatelessWidget {
                 ),
               ),
 
-              // ── Customer quick select ─────────────────────────────────
-              _CustomerRow(),
+              // ── Customer quick select & Loyalty redemption ────────────
+              const CustomerQuickRow(
+                padding: EdgeInsets.zero,
+              ),
 
               const SizedBox(height: 12),
 
@@ -293,80 +295,6 @@ class _SummaryPanel extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CustomerRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<CustomerBloc, CustomerState>(
-      builder: (context, state) {
-        if (state is CustomerSelected) {
-          return Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.verified_user_outlined,
-                    size: 16, color: Colors.green),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        state.customer.customerName,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                      Text(
-                        '${state.customer.loyaltyPoints} điểm tích lũy',
-                        style: TextStyle(
-                            color: Colors.green.shade700, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => context
-                      .read<CustomerBloc>()
-                      .add(ClearSelectedCustomerEvent()),
-                  style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      padding: EdgeInsets.zero),
-                  child: const Text('Gỡ', style: TextStyle(fontSize: 12)),
-                ),
-              ],
-            ),
-          );
-        }
-        return OutlinedButton.icon(
-          onPressed: () => showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            showDragHandle: false,
-            backgroundColor: Colors.transparent,
-            builder: (_) => BlocProvider.value(
-              value: context.read<CustomerBloc>(),
-              child: const CustomerLookupBottomSheet(),
-            ),
-          ),
-          icon: const Icon(Icons.person_search_outlined, size: 18),
-          label: const Text('Tìm khách hàng (tùy chọn)'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: ColorPalette.appetizingOrange,
-            side: const BorderSide(color: ColorPalette.appetizingOrange),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      },
     );
   }
 }

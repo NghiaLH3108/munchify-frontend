@@ -3,18 +3,22 @@ import '../../../../core/constants/AppConstants.dart';
 import '../../domain/entities/customer_entity.dart';
 import '../../domain/usecases/search_customer_usecase.dart';
 import '../../domain/usecases/create_customer_usecase.dart';
+import '../../domain/usecases/get_customers_usecase.dart';
 import 'customer_event.dart';
 import 'customer_state.dart';
 
 class CustomerBloc extends Bloc<CustomerEvent, CustomerState> {
   final SearchCustomerUseCase searchCustomer;
   final CreateCustomerUseCase createCustomer;
+  final GetCustomersUseCase? getCustomers;
 
   CustomerBloc({
     required this.searchCustomer,
     required this.createCustomer,
+    this.getCustomers,
   }) : super(CustomerInitial()) {
     on<SearchCustomerByPhoneEvent>(_onSearchByPhone);
+    on<SuggestCustomersByPhoneEvent>(_onSuggestByPhone);
     on<CreateCustomerEvent>(_onCreateCustomer);
     on<SelectCustomerEvent>(_onSelectCustomer);
     on<ClearSelectedCustomerEvent>(_onClearCustomer);
@@ -32,6 +36,50 @@ class CustomerBloc extends Bloc<CustomerEvent, CustomerState> {
       (failure) => emit(CustomerNotFound(event.phone)),
       (customer) => emit(CustomerFound(customer)),
     );
+  }
+
+  Future<void> _onSuggestByPhone(
+    SuggestCustomersByPhoneEvent event,
+    Emitter<CustomerState> emit,
+  ) async {
+    final trimmed = event.query.trim();
+    if (trimmed.isEmpty) {
+      emit(CustomerInitial());
+      return;
+    }
+
+    emit(CustomerSearching());
+
+    if (getCustomers != null) {
+      final result = await getCustomers!(
+        pageIndex: 1,
+        pageSize: 10,
+        searchKeyword: trimmed,
+      );
+      result.fold(
+        (failure) => emit(CustomerError(failure.message)),
+        (pagedResult) {
+          if (pagedResult.items.isEmpty) {
+            emit(CustomerNotFound(trimmed));
+          } else {
+            emit(CustomerSuggestionsLoaded(
+              customers: pagedResult.items,
+              query: trimmed,
+            ));
+          }
+        },
+      );
+    } else {
+      // Fallback nếu không có getCustomers
+      final result = await searchCustomer(trimmed);
+      result.fold(
+        (failure) => emit(CustomerNotFound(trimmed)),
+        (customer) => emit(CustomerSuggestionsLoaded(
+          customers: [customer],
+          query: trimmed,
+        )),
+      );
+    }
   }
 
   Future<void> _onCreateCustomer(

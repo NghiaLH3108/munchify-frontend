@@ -13,10 +13,13 @@ import '../../domain/entities/user_entity.dart';
 const String _kStaffOnAdminPlatformMsg =
     'Tài khoản nhân viên không có quyền truy cập trang quản trị. Vui lòng sử dụng ứng dụng di động.';
 
-/// Web/Windows chỉ dành cho ADMIN. App mobile cho phép cả STAFF và ADMIN (admin có toàn quyền).
+const String _kAdminOnStaffPlatformMsg =
+    'Tài khoản quản trị viên không được phép đăng nhập trên ứng dụng di động. Vui lòng sử dụng trình duyệt Web hoặc ứng dụng Desktop.';
+
+/// Web/Windows chỉ dành cho ADMIN. App mobile (Android/iOS) chỉ dành cho STAFF.
 bool _isRoleAllowedOnPlatform(UserEntity user) {
   if (PlatformHelper.isAdminPlatform) return user.isAdmin;
-  return user.isAdmin || user.isStaff;
+  return user.isStaff;
 }
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -89,7 +92,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (authResult) async {
         if (!_isRoleAllowedOnPlatform(authResult.user)) {
           await localDataSource.clearAuthData();
-          emit(const AuthFailureState(_kStaffOnAdminPlatformMsg));
+          emit(
+            AuthFailureState(
+              PlatformHelper.isStaffPlatform
+                  ? _kAdminOnStaffPlatformMsg
+                  : _kStaffOnAdminPlatformMsg,
+            ),
+          );
           return;
         }
         emit(

@@ -21,6 +21,19 @@ class CustomerFound extends CustomerState {
   List<Object?> get props => [customer];
 }
 
+class CustomerSuggestionsLoaded extends CustomerState {
+  final List<CustomerEntity> customers;
+  final String query;
+
+  const CustomerSuggestionsLoaded({
+    required this.customers,
+    required this.query,
+  });
+
+  @override
+  List<Object?> get props => [customers, query];
+}
+
 class CustomerNotFound extends CustomerState {
   final String phone;
 

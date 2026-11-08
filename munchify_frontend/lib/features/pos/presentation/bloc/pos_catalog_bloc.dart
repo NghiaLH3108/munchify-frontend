@@ -26,11 +26,17 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
     LoadCatalogEvent event,
     Emitter<PosCatalogState> emit,
   ) async {
-    emit(PosCatalogLoading());
+    final previousLoaded = state is PosCatalogLoaded ? state as PosCatalogLoaded : null;
+    if (previousLoaded == null) {
+      emit(PosCatalogLoading());
+    }
 
     // Khởi chạy song song categories, products đơn và combos (giữ nguyên kiểu từng Either)
     final categoriesFuture = repository.getCategories();
-    final productsFuture = getProductsUseCase.execute();
+    final productsFuture = getProductsUseCase.execute(
+      searchTerm: previousLoaded?.searchQuery,
+      categoryId: previousLoaded?.selectedCategoryId,
+    );
     final combosFuture = getCombosUseCase.execute();
 
     final categoriesResult = await categoriesFuture;
@@ -48,6 +54,10 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
               products: products,
               // Combo lỗi không làm crash POS — chỉ hiển thị rỗng
               combos: combosResult.getOrElse(() => []),
+              selectedCategoryId: previousLoaded?.selectedCategoryId,
+              searchQuery: previousLoaded?.searchQuery,
+              selectedUnitName: previousLoaded?.selectedUnitName,
+              isLowStockFilter: previousLoaded?.isLowStockFilter ?? false,
             ));
           },
         );
