@@ -1,3 +1,4 @@
+import '../../../../core/constants/AppConstants.dart';
 import '../../domain/entities/product_entity.dart';
 
 class ProductModel extends ProductEntity {
@@ -31,7 +32,7 @@ class ProductModel extends ProductEntity {
       name: (json['name'] ?? json['productName'] ?? '').toString(),
 
       // Hình ảnh
-      imageUrl: json['imageUrl'] as String?,
+      imageUrl: AppConstants.resolveImageUrl(json['imageUrl'] as String?),
 
       // Danh mục
       categoryId: (json['categoryId'] ?? json['category']?['id'] ?? '').toString(),

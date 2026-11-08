@@ -110,6 +110,10 @@ class LoggingInterceptor extends Interceptor {
         '[Munchify] ERROR ${err.response?.statusCode}: '
         '${err.requestOptions.uri} — ${err.message}',
       );
+      if (err.response?.data != null) {
+        // ignore: avoid_print
+        print('[Munchify] ERROR Response: ${err.response?.data}');
+      }
       return true;
     }());
     handler.next(err);

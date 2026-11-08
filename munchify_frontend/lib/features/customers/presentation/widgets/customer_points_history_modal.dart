@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -237,7 +237,7 @@ class _CustomerPointsHistoryModalState extends State<CustomerPointsHistoryModal>
             ),
             child: Row(
               children: const [
-                Expanded(flex: 3, child: Text('MÃ ĐƠN HÀNG', style: AppTypography.tableHeader)),
+                Expanded(flex: 4, child: Text('MÃ ĐƠN HÀNG', style: AppTypography.tableHeader)),
                 Expanded(flex: 3, child: Text('THỜI GIAN', style: AppTypography.tableHeader)),
                 Expanded(flex: 3, child: Text('TỔNG TIỀN', style: AppTypography.tableHeader)),
                 Expanded(flex: 2, child: Text('ĐIỂM TÍCH', style: AppTypography.tableHeader)),
@@ -257,21 +257,30 @@ class _CustomerPointsHistoryModalState extends State<CustomerPointsHistoryModal>
               child: Row(
                 children: [
                   Expanded(
-                    flex: 3,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.receipt_outlined, size: 14, color: ColorPalette.textMuted),
-                        const SizedBox(width: 6),
-                        Text(
-                          history.orderCode,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: ColorPalette.textPrimary,
+                    flex: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.receipt_outlined, size: 14, color: ColorPalette.textMuted),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Tooltip(
+                              message: history.orderCode,
+                              child: Text(
+                                history.orderCode,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorPalette.textPrimary,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   Expanded(
@@ -295,27 +304,30 @@ class _CustomerPointsHistoryModalState extends State<CustomerPointsHistoryModal>
                   Expanded(
                     flex: 2,
                     child: history.pointsEarned > 0
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: ColorPalette.success.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.add_circle_outline_rounded,
-                                    size: 12, color: ColorPalette.success),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '+${history.pointsEarned}',
-                                  style: const TextStyle(
-                                    color: ColorPalette.success,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
+                        ? Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: ColorPalette.success.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.add_circle_outline_rounded,
+                                      size: 12, color: ColorPalette.success),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '+${history.pointsEarned}',
+                                    style: const TextStyle(
+                                      color: ColorPalette.success,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           )
                         : const Text('0', style: TextStyle(color: ColorPalette.textMuted, fontSize: 12)),
@@ -323,27 +335,30 @@ class _CustomerPointsHistoryModalState extends State<CustomerPointsHistoryModal>
                   Expanded(
                     flex: 2,
                     child: history.pointsRedeemed > 0
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: ColorPalette.error.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.remove_circle_outline_rounded,
-                                    size: 12, color: ColorPalette.error),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '-${history.pointsRedeemed}',
-                                  style: const TextStyle(
-                                    color: ColorPalette.error,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
+                        ? Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: ColorPalette.error.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.remove_circle_outline_rounded,
+                                      size: 12, color: ColorPalette.error),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '-${history.pointsRedeemed}',
+                                    style: const TextStyle(
+                                      color: ColorPalette.error,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           )
                         : const Text('0', style: TextStyle(color: ColorPalette.textMuted, fontSize: 12)),

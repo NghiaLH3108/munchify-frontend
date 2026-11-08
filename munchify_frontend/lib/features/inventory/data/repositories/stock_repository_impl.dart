@@ -15,13 +15,39 @@ class StockRepositoryImpl implements StockRepository {
 
   StockRepositoryImpl({required this.remoteDataSource});
 
+  String _extractDioErrorMessage(DioException e, {String fallback = 'Server error occurred'}) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final msg = data['message']?.toString();
+      final errors = data['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final detail = errors.map((x) => x.toString()).join('; ');
+        if (msg != null && msg.isNotEmpty && !msg.contains(detail)) {
+          return '$msg ($detail)';
+        }
+        return detail;
+      }
+      if (errors is Map && errors.isNotEmpty) {
+        final detail = errors.values
+            .expand((v) => v is Iterable ? v : [v])
+            .map((x) => x.toString())
+            .join('; ');
+        if (detail.isNotEmpty) return detail;
+      }
+      if (msg != null && msg.isNotEmpty) {
+        return msg;
+      }
+    }
+    return e.message ?? fallback;
+  }
+
   @override
   Future<Either<Failure, List<StockImportEntity>>> getStockImports() async {
     try {
       final imports = await remoteDataSource.getStockImports();
       return Right(imports);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -33,7 +59,7 @@ class StockRepositoryImpl implements StockRepository {
       final importDetail = await remoteDataSource.getStockImportById(id);
       return Right(importDetail);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -45,7 +71,7 @@ class StockRepositoryImpl implements StockRepository {
       final id = await remoteDataSource.createDraftImport(supplierId, notes, items);
       return Right(id);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e, fallback: 'Không thể tạo phiếu nhập nháp')));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -57,7 +83,7 @@ class StockRepositoryImpl implements StockRepository {
       final success = await remoteDataSource.completeImport(id);
       return Right(success);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -69,7 +95,7 @@ class StockRepositoryImpl implements StockRepository {
       final success = await remoteDataSource.cancelImport(id);
       return Right(success);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -82,7 +108,7 @@ class StockRepositoryImpl implements StockRepository {
       final List<DamagedExpiredRecordEntity> entities = records.cast<DamagedExpiredRecordEntity>();
       return Right(entities);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -94,7 +120,7 @@ class StockRepositoryImpl implements StockRepository {
       final summary = await remoteDataSource.getAiExpirySummaryMetrics();
       return Right(summary);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -106,7 +132,7 @@ class StockRepositoryImpl implements StockRepository {
       final success = await remoteDataSource.approveDamagedExpiredRecord(id);
       return Right(success);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -145,7 +171,7 @@ class StockRepositoryImpl implements StockRepository {
       final List<ForecastItemEntity> entities = forecast.cast<ForecastItemEntity>();
       return Right(entities);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -170,7 +196,7 @@ class StockRepositoryImpl implements StockRepository {
       final success = await remoteDataSource.generateDraftImportsFromForecast(models);
       return Right(success);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import '../../../../core/constants/AppConstants.dart';
 import '../../domain/entities/combo_entity.dart';
 
 part 'combo_model.g.dart';
@@ -105,7 +106,7 @@ class ComboModel {
         categoryName: categoryName,
         unitId: unitId,
         unitName: unitName,
-        imageUrl: imageUrl,
+        imageUrl: AppConstants.resolveImageUrl(imageUrl),
         isActive: isActive,
         items: comboItems.map((e) => e.toEntity()).toList(),
         createdAt: createdAt,

@@ -1,3 +1,4 @@
+import '../../../../core/constants/AppConstants.dart';
 import '../../domain/entities/product_entity.dart';
 import 'combo_item_model.dart';
 
@@ -38,7 +39,7 @@ class ProductModel extends ProductEntity {
       unitName: (json['unitName'] != null && json['unitName'].toString().isNotEmpty)
           ? json['unitName']
           : ((json['isCombo'] ?? false) ? 'Combo' : 'Phần'),
-      imageUrl: json['imageUrl'],
+      imageUrl: AppConstants.resolveImageUrl(json['imageUrl'] as String?),
       isCombo: json['isCombo'] ?? false,
       comboItems: rawComboItems
           .map((item) => ComboItemModel.fromJson(item as Map<String, dynamic>))

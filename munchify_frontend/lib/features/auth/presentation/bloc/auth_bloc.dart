@@ -18,7 +18,7 @@ const String _kAdminOnStaffPlatformMsg =
 
 /// Web/Windows chỉ dành cho ADMIN. App mobile (Android/iOS) chỉ dành cho STAFF.
 bool _isRoleAllowedOnPlatform(UserEntity user) {
-  if (PlatformHelper.isAdminPlatform) return user.isAdmin;
+  if (PlatformHelper.isAdminPlatform) return user.isAdmin || user.isStaff;
   return user.isStaff;
 }
 

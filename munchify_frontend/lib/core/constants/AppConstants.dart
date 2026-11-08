@@ -27,6 +27,32 @@ class AppConstants {
   }
 
   // ─── HTTP Timeouts (milliseconds) ─────────────────────────────────────────
+  /// Chuẩn hóa đường dẫn ảnh để hoạt động trên cả Web/Windows và Android Emulator (`10.0.2.2`).
+  static String? resolveImageUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return rawUrl;
+    final trimmed = rawUrl.trim();
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      final path = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+      return '$baseUrl$path';
+    }
+    try {
+      final uri = Uri.parse(trimmed);
+      if (uri.host == 'localhost' ||
+          uri.host == '127.0.0.1' ||
+          uri.host == '10.0.2.2') {
+        final baseUri = Uri.parse(baseUrl);
+        return uri
+            .replace(
+              scheme: baseUri.scheme,
+              host: baseUri.host,
+              port: baseUri.hasPort ? baseUri.port : uri.port,
+            )
+            .toString();
+      }
+    } catch (_) {}
+    return trimmed;
+  }
+
   static const int connectTimeoutMs = 15000;
   static const int receiveTimeoutMs = 15000;
   static const int sendTimeoutMs = 15000;

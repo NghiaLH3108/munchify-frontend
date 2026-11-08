@@ -7,6 +7,8 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../../core/constants/ApiEndpoints.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../../injection_container.dart' as di;
+import '../../../suppliers/domain/entities/supplier_entity.dart';
+import '../../../suppliers/presentation/widgets/supplier_form_dialog.dart';
 import 'package:dio/dio.dart';
 
 class CreateImportModal extends StatefulWidget {
@@ -19,6 +21,8 @@ class CreateImportModal extends StatefulWidget {
 class _CreateImportModalState extends State<CreateImportModal> {
   int? _selectedSupplierId;
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _productSearchController = TextEditingController();
+  String _searchQuery = '';
   bool _isLoading = true;
   
   List<Map<String, dynamic>> _availableProducts = [];
@@ -30,6 +34,13 @@ class _CreateImportModalState extends State<CreateImportModal> {
   void initState() {
     super.initState();
     _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _productSearchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchData() async {
@@ -61,15 +72,109 @@ class _CreateImportModalState extends State<CreateImportModal> {
       setState(() => _isLoading = true);
       final dio = di.sl<Dio>();
       final productsRes = await dio.get('${ApiEndpoints.productsForStock}?supplierId=$supplierId');
-      
-      setState(() {
-        _availableProducts = List<Map<String, dynamic>>.from(productsRes.data['data'] ?? []);
-        _isLoading = false;
-      });
+      List<Map<String, dynamic>> list =
+          List<Map<String, dynamic>>.from(productsRes.data['data'] ?? []);
+
+      // Fallback: nếu nhà cung cấp chưa được gán danh mục sản phẩm (trả về rỗng),
+      // tải toàn bộ danh sách sản phẩm đơn để người dùng vẫn có thể chọn nhập kho
+      if (list.isEmpty) {
+        final allRes = await dio.get(ApiEndpoints.productsForStock);
+        list = List<Map<String, dynamic>>.from(allRes.data['data'] ?? []);
+      }
+
+      // Loại bỏ các gói Combo (nếu có) khỏi danh sách nhập kho nguyên vật liệu/sản phẩm đơn
+      list = list.where((p) {
+        final isCombo = p['isCombo'] == true;
+        final sku = (p['sku'] ?? p['productCode'] ?? '').toString().toUpperCase();
+        return !isCombo && !sku.startsWith('CB');
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _availableProducts = list;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       debugPrint('Error fetching products: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  void _openAddSupplierDialog() {
+    final existingEntities = _availableSuppliers.map((s) {
+      return SupplierEntity(
+        supplierId: (s['supplierId'] ?? s['id'] ?? 0) as int,
+        supplierName: (s['supplierName'] ?? s['name'] ?? '').toString(),
+        contactName: s['contactName']?.toString(),
+        phone: s['phone']?.toString(),
+        address: s['address']?.toString(),
+        isActive: (s['isActive'] as bool?) ?? true,
+        createdAt: DateTime.now(),
+      );
+    }).toList();
+
+    showDialog(
+      context: context,
+      builder: (_) => SupplierFormDialog(
+        existingSuppliers: existingEntities,
+        onSave: ({
+          required String supplierName,
+          String? contactName,
+          String? phone,
+          String? address,
+          bool? isActive,
+          List<int>? categoryIds,
+        }) async {
+          try {
+            final dio = di.sl<Dio>();
+            final res = await dio.post(
+              ApiEndpoints.suppliers,
+              data: {
+                'supplierName': supplierName,
+                'contactName': contactName,
+                'phone': phone,
+                'address': address,
+                'isActive': isActive ?? true,
+                'categoryIds': categoryIds,
+              },
+            );
+
+            final createdData = res.data is Map ? res.data['data'] : null;
+            final int? newSupplierId = createdData != null
+                ? (createdData['supplierId'] ?? createdData['id']) as int?
+                : null;
+
+            final suppliersRes = await dio.get(ApiEndpoints.suppliers);
+            final updatedSuppliers =
+                List<Map<String, dynamic>>.from(suppliersRes.data['data'] ?? []);
+
+            if (!mounted) return;
+            setState(() {
+              _availableSuppliers = updatedSuppliers;
+              if (newSupplierId != null) {
+                _selectedSupplierId = newSupplierId;
+              } else if (_availableSuppliers.isNotEmpty) {
+                _selectedSupplierId =
+                    _availableSuppliers.first['supplierId'] ?? _availableSuppliers.first['id'];
+              }
+              _selectedItems.clear();
+            });
+
+            AppToast.success('Thêm nhà cung cấp mới thành công!', context: context);
+
+            if (_selectedSupplierId != null) {
+              await _fetchProductsForSupplier(_selectedSupplierId!);
+            }
+          } catch (e) {
+            if (!mounted) return;
+            AppToast.error('Không thể thêm nhà cung cấp: $e', context: context);
+          }
+        },
+      ),
+    );
   }
 
   void _addItem(Map<String, dynamic> product) {
@@ -82,7 +187,7 @@ class _CreateImportModalState extends State<CreateImportModal> {
         _selectedItems.add({
           'productId': pId,
           'productName': product['productName'] ?? product['name'],
-          'sku': product['sku'] ?? 'N/A',
+          'sku': product['sku'] ?? product['productCode'] ?? 'N/A',
           'unitName': product['unitName'] ?? product['unit'] ?? 'Item',
           'quantity': 1,
           'importPrice': product['costPrice'] ?? product['price'] ?? 0,
@@ -98,145 +203,197 @@ class _CreateImportModalState extends State<CreateImportModal> {
     });
   }
 
+  List<Map<String, dynamic>> get _filteredByInlineSearch {
+    final q = _searchQuery.trim().toLowerCase();
+    if (q.isEmpty) return [];
+    return _availableProducts.where((p) {
+      final name = (p['productName'] ?? p['name'] ?? '').toString().toLowerCase();
+      final sku = (p['sku'] ?? p['productCode'] ?? '').toString().toLowerCase();
+      return name.contains(q) || sku.contains(q);
+    }).toList();
+  }
+
   void _showProductSelection() {
+    String dialogQuery = '';
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          backgroundColor: Colors.white,
-          child: SizedBox(
-            width: 600,
-            height: 550,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final q = dialogQuery.trim().toLowerCase();
+            final filteredProducts = q.isEmpty
+                ? _availableProducts
+                : _availableProducts.where((p) {
+                    final name = (p['productName'] ?? p['name'] ?? '').toString().toLowerCase();
+                    final sku = (p['sku'] ?? p['productCode'] ?? '').toString().toLowerCase();
+                    return name.contains(q) || sku.contains(q);
+                  }).toList();
+
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: Colors.white,
+              child: SizedBox(
+                width: 600,
+                height: 600,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Chọn sản phẩm',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text('Nhấn vào sản phẩm để thêm vào phiếu nhập', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.black87),
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: IconButton.styleFrom(backgroundColor: Colors.grey.shade100),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(height: 1, color: Colors.grey.shade200),
-                
-                // Body List
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(24),
-                    itemCount: _availableProducts.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final p = _availableProducts[index];
-                      final pName = p['productName'] ?? p['name'] ?? 'Sản phẩm chưa có tên';
-                      final pSku = p['sku'] ?? 'N/A';
-                      final pPrice = p['costPrice'] ?? p['price'] ?? 0;
-                      
-                      return InkWell(
-                        onTap: () {
-                          _addItem(p);
-                          Navigator.of(context).pop();
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: Colors.grey.shade200),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x08000000),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              )
-                            ]
-                          ),
-                          child: Row(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Product Icon/Image placeholder
-                              Container(
-                                width: 52,
-                                height: 52,
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(Icons.inventory_2_rounded, color: ColorPalette.appetizingOrange, size: 28),
+                              const Text(
+                                'Chọn sản phẩm',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                               ),
-                              const SizedBox(width: 16),
-                              
-                              // Info
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      pName,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade100,
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Text(
-                                            'SKU: $pSku',
-                                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0).format(pPrice),
-                                          style: const TextStyle(fontWeight: FontWeight.w700, color: ColorPalette.appetizingOrange, fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Nhấn vào sản phẩm để thêm vào phiếu nhập',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                               ),
-                              
-                              // Add button
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.all(8),
-                                child: const Icon(Icons.add_shopping_cart, color: ColorPalette.appetizingOrange, size: 20),
-                              )
                             ],
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.black87),
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            style: IconButton.styleFrom(backgroundColor: Colors.grey.shade100),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                      child: TextField(
+                        onChanged: (val) => setDialogState(() => dialogQuery = val),
+                        decoration: InputDecoration(
+                          hintText: 'Tìm theo tên sản phẩm hoặc mã SKU...',
+                          hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey.shade500, size: 20),
+                          filled: true,
+                          fillColor: const Color(0xFFF3F4F6),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                    Divider(height: 1, color: Colors.grey.shade200),
+                    
+                    // Body List
+                    Expanded(
+                      child: filteredProducts.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Không tìm thấy sản phẩm phù hợp',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.all(24),
+                              itemCount: filteredProducts.length,
+                              separatorBuilder: (context, index) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final p = filteredProducts[index];
+                                final pName = p['productName'] ?? p['name'] ?? 'Sản phẩm chưa có tên';
+                                final pSku = p['sku'] ?? p['productCode'] ?? 'N/A';
+                                final pPrice = p['costPrice'] ?? p['price'] ?? 0;
+                                
+                                return InkWell(
+                                  onTap: () {
+                                    _addItem(p);
+                                    Navigator.of(dialogContext).pop();
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(color: Colors.grey.shade200),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x08000000),
+                                          blurRadius: 8,
+                                          offset: Offset(0, 2),
+                                        )
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Product Icon/Image placeholder
+                                        Container(
+                                          width: 52,
+                                          height: 52,
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.shade50,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(Icons.inventory_2_rounded, color: ColorPalette.appetizingOrange, size: 28),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        
+                                        // Info
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                pName,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey.shade100,
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      'SKU: $pSku',
+                                                      style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w600),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Text(
+                                                    NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0).format(pPrice),
+                                                    style: const TextStyle(fontWeight: FontWeight.w700, color: ColorPalette.appetizingOrange, fontSize: 14),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        
+                                        // Add button
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.shade50,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          padding: const EdgeInsets.all(8),
+                                          child: const Icon(Icons.add_shopping_cart, color: ColorPalette.appetizingOrange, size: 20),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -270,11 +427,11 @@ class _CreateImportModalState extends State<CreateImportModal> {
     context.read<StockImportBloc>().add(
       CreateDraftImportEvent(
         supplierId: _selectedSupplierId!,
-        notes: _notesController.text,
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         items: _selectedItems.map((item) => {
-          'productId': item['productId'],
-          'quantity': item['quantity'],
-          'importPrice': item['importPrice'],
+          'productId': (item['productId'] as num).toInt(),
+          'quantity': (item['quantity'] as num).toInt(),
+          'importPrice': (item['importPrice'] as num).toDouble(),
           'expiryDate': (item['expiryDate'] as DateTime).toIso8601String(),
         }).toList(),
       ),
@@ -284,10 +441,12 @@ class _CreateImportModalState extends State<CreateImportModal> {
 
   @override
   Widget build(BuildContext context) {
+    final searchSuggestions = _filteredByInlineSearch;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: Colors.white,
-      child: Container(
+      child: SizedBox(
         width: 1000,
         height: 850,
         child: Column(
@@ -328,16 +487,16 @@ class _CreateImportModalState extends State<CreateImportModal> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         RichText(
-                          text: TextSpan(
+                          text: const TextSpan(
                             text: 'Nhà Cung Cấp ',
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.black),
-                            children: const [
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.black),
+                            children: [
                               TextSpan(text: '*', style: TextStyle(color: Colors.red)),
                             ],
                           ),
                         ),
                         TextButton.icon(
-                          onPressed: () {},
+                          onPressed: _openAddSupplierDialog,
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('Thêm nhà cung cấp mới'),
                           style: TextButton.styleFrom(foregroundColor: Colors.blue.shade700),
@@ -377,7 +536,7 @@ class _CreateImportModalState extends State<CreateImportModal> {
                                       color: Colors.orange.shade50,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Icon(Icons.storefront, color: ColorPalette.appetizingOrange),
+                                  child: const Icon(Icons.storefront, color: ColorPalette.appetizingOrange),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -428,6 +587,15 @@ class _CreateImportModalState extends State<CreateImportModal> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: TextField(
+                                  controller: _productSearchController,
+                                  onChanged: (val) => setState(() => _searchQuery = val),
+                                  onSubmitted: (_) {
+                                    if (searchSuggestions.isNotEmpty) {
+                                      _addItem(searchSuggestions.first);
+                                      _productSearchController.clear();
+                                      setState(() => _searchQuery = '');
+                                    }
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Tìm & thêm sản phẩm theo tên hoặc mã SKU...',
                                     hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
@@ -435,6 +603,17 @@ class _CreateImportModalState extends State<CreateImportModal> {
                                   ),
                                 ),
                               ),
+                              if (_searchQuery.isNotEmpty)
+                                InkWell(
+                                  onTap: () {
+                                    _productSearchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: Icon(Icons.close, size: 16, color: Colors.grey.shade600),
+                                  ),
+                                ),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4)),
@@ -445,6 +624,67 @@ class _CreateImportModalState extends State<CreateImportModal> {
                         ),
                       ],
                     ),
+
+                    // Inline search suggestions
+                    if (_searchQuery.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          width: 400,
+                          constraints: const BoxConstraints(maxHeight: 220),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x14000000),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: searchSuggestions.isEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.all(14),
+                                  child: Text(
+                                    'Không tìm thấy sản phẩm khớp với "$_searchQuery"',
+                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                  ),
+                                )
+                              : ListView.separated(
+                                  shrinkWrap: true,
+                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                  itemCount: searchSuggestions.length,
+                                  separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
+                                  itemBuilder: (context, idx) {
+                                    final p = searchSuggestions[idx];
+                                    final pName = p['productName'] ?? p['name'] ?? '';
+                                    final pSku = p['sku'] ?? p['productCode'] ?? 'N/A';
+                                    final pPrice = p['costPrice'] ?? p['price'] ?? 0;
+                                    return ListTile(
+                                      dense: true,
+                                      leading: const Icon(Icons.add_circle_outline, color: ColorPalette.appetizingOrange, size: 20),
+                                      title: Text(
+                                        pName.toString(),
+                                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      ),
+                                      subtitle: Text(
+                                        'SKU: $pSku • ${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0).format(pPrice)}',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                      ),
+                                      onTap: () {
+                                        _addItem(p);
+                                        _productSearchController.clear();
+                                        setState(() => _searchQuery = '');
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     
                     // Table items
@@ -470,7 +710,7 @@ class _CreateImportModalState extends State<CreateImportModal> {
                                 Expanded(flex: 2, child: Center(child: Text('Đơn vị', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                                 Expanded(flex: 2, child: Center(child: Text('Số lượng', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                                 Expanded(flex: 3, child: Align(alignment: Alignment.centerRight, child: Text('Giá nhập (đ)', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
-                                Expanded(flex: 2, child: Align(alignment: Alignment.center, child: Text('HSD', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13)))),
+                                const Expanded(flex: 2, child: Align(alignment: Alignment.center, child: Text('HSD', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13)))),
                                 Expanded(flex: 3, child: Align(alignment: Alignment.centerRight, child: Text('Thành tiền (đ)', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                                 Expanded(flex: 1, child: Align(alignment: Alignment.center, child: Text('Xóa', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700, fontSize: 13)))),
                               ],
@@ -642,7 +882,7 @@ class _CreateImportModalState extends State<CreateImportModal> {
                                 ],
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     ),

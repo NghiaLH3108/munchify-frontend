@@ -6,6 +6,9 @@ import '../../../../core/theme/ColorPalette.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../auth/presentation/screens/login_screen.dart';
+import '../../../pos/presentation/bloc/cart_cubit.dart';
+import '../../../../core/services/signalr_service.dart';
 import '../../../pos/presentation/screens/order_history_screen.dart';
 import '../../../pos/presentation/screens/pos_home_screen.dart';
 
@@ -90,7 +93,14 @@ class _AccountScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
+              signalRService.stop();
+              context.read<CartCubit>().clearCart();
               context.read<AuthBloc>().add(const LogoutRequestedEvent());
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorPalette.error,

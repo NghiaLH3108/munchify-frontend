@@ -167,7 +167,7 @@ class _AuthGateState extends State<AuthGate> {
         builder: (context, state) {
           if (state is Authenticated) {
             // App mobile: chỉ STAFF được vào giao diện POS bán hàng.
-            if (PlatformHelper.isStaffPlatform) {
+            if (PlatformHelper.isStaffPlatform || state.user.isStaff) {
               return const RoleGuard(
                 allowedRoles: ['STAFF'],
                 fallback: LoginScreen(),

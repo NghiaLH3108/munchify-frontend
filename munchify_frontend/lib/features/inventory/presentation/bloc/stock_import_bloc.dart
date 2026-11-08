@@ -40,7 +40,10 @@ class StockImportBloc extends Bloc<StockImportEvent, StockImportState> {
     emit(StockImportLoading());
     final result = await createDraftImportUseCase(event.supplierId, event.notes, event.items);
     result.fold(
-      (failure) => emit(StockImportError(failure.message)),
+      (failure) {
+        emit(StockImportError(failure.message));
+        add(FetchStockImportsEvent());
+      },
       (id) {
         emit(const StockImportActionSuccess("Tạo phiếu nhập nháp thành công"));
         add(FetchStockImportsEvent()); // Reload list after success
@@ -55,7 +58,10 @@ class StockImportBloc extends Bloc<StockImportEvent, StockImportState> {
     emit(StockImportLoading());
     final result = await completeImportUseCase(event.id);
     result.fold(
-      (failure) => emit(StockImportError(failure.message)),
+      (failure) {
+        emit(StockImportError(failure.message));
+        add(FetchStockImportsEvent());
+      },
       (success) {
         emit(const StockImportActionSuccess("Hoàn thành phiếu nhập thành công"));
         add(FetchStockImportsEvent());
@@ -70,7 +76,10 @@ class StockImportBloc extends Bloc<StockImportEvent, StockImportState> {
     emit(StockImportLoading());
     final result = await cancelImportUseCase(event.id);
     result.fold(
-      (failure) => emit(StockImportError(failure.message)),
+      (failure) {
+        emit(StockImportError(failure.message));
+        add(FetchStockImportsEvent());
+      },
       (success) {
         emit(const StockImportActionSuccess("Huỷ phiếu nhập thành công"));
         add(FetchStockImportsEvent());
