@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/Failures.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/pos_repository.dart';
@@ -31,6 +31,16 @@ class PosRepositoryImpl implements PosRepository {
         categoryId: categoryId,
       );
       return Right(products);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ProductEntity>>> getCombos() async {
+    try {
+      final combos = await remoteDataSource.getCombos();
+      return Right(combos);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

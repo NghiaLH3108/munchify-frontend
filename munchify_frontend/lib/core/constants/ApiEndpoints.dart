@@ -9,12 +9,20 @@ class ApiEndpoints {
   static const String login = '/api/auth/login';
   static const String me = '/api/auth/me';
   static const String users = '/api/users';
+  static const String forgotPassword = '/api/auth/forgot-password';
+  static const String resetPassword = '/api/auth/reset-password';
 
   // ─── Catalog ───────────────────────────────────────────────────────────────
   static const String categories = '/api/categories';
   static const String products = '/api/products';
   static const String productsForStock = '/api/products/for-stock';
   static const String units = '/api/units';
+  static const String combos = '/api/combos';
+
+  // ─── Reports (Admin) ──────────────────────────────────────────────────────
+  static const String reportsRevenue = '/api/reports/revenue';
+  static const String reportsTopSelling = '/api/reports/top-selling';
+  static const String reportsExport = '/api/reports/export';
 
   // ─── Orders & POS ─────────────────────────────────────────────────────────
   static const String orders = '/api/orders';
@@ -24,6 +32,7 @@ class ApiEndpoints {
 
   // ─── Promotions ───────────────────────────────────────────────────────────
   static const String promotions = '/api/promotions';
+  static const String applyPromotion = '/api/promotions/apply';
 
   // ─── Inventory & Stock ────────────────────────────────────────────────────
   static const String stockImports = '/api/stock-imports';
@@ -40,6 +49,18 @@ class ApiEndpoints {
 
   // ─── Reports / Analytics ──────────────────────────────────────────────────
   static const String reports = '/api/reports';
+
+
+
+
+  // ─── AI Expiry Insights ───────────────────────────────────────────────────
+  static const String damagedExpiredRecords = '/api/DamagedExpiredRecords';
+  static String damagedExpiredPending() => '$damagedExpiredRecords/pending';
+  static String damagedExpiredSummaryMetrics() => '$damagedExpiredRecords/summary-metrics';
+  static String damagedExpiredApprove(dynamic id) => '$damagedExpiredRecords/$id/approve';
+  static String damagedExpiredReject(dynamic id) => '$damagedExpiredRecords/$id/reject';
+  static String damagedExpiredAnalyze(dynamic id) => '$damagedExpiredRecords/$id/analyze';
+  static String damagedExpiredReport = '$damagedExpiredRecords/report';
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   /// Build a parameterised path, e.g. stockImportById(3) → '/api/stock-imports/3'

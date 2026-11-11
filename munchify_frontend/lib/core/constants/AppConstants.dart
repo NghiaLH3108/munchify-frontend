@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// App-wide configuration constants for Munchify POS.
 /// Add all magic values and hard-coded config here — never inline them elsewhere.
 class AppConstants {
@@ -12,11 +14,45 @@ class AppConstants {
   /// Change to your real staging/production URL before deploying.
   /// Web / Windows Desktop: https://localhost:<port_backend>
   /// Android Emulator: https://10.0.2.2:<port_backend>
-
-  // static const String baseUrl = 'http://10.0.2.2:7173';
-  static const String baseUrl = 'http://localhost:5194';
+  // Đọc từ --dart-define=API_URL=... lúc build/run (phải dùng const để trình biên dịch Dart nhận diện)
+  static const String _envApiUrl = String.fromEnvironment('API_URL');
+  static String get baseUrl {
+    // 1. Nếu có truyền --dart-define=API_URL=... thì ưu tiên dùng ngay
+    if (_envApiUrl.isNotEmpty) return _envApiUrl;
+    // 2. Mặc định khi không truyền:
+    if (kIsWeb) return 'http://localhost:5194';
+    if (defaultTargetPlatform == TargetPlatform.android)
+      return 'http://10.0.2.2:5194';
+    return 'http://localhost:5194';
+  }
 
   // ─── HTTP Timeouts (milliseconds) ─────────────────────────────────────────
+  /// Chuẩn hóa đường dẫn ảnh để hoạt động trên cả Web/Windows và Android Emulator (`10.0.2.2`).
+  static String? resolveImageUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return rawUrl;
+    final trimmed = rawUrl.trim();
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      final path = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+      return '$baseUrl$path';
+    }
+    try {
+      final uri = Uri.parse(trimmed);
+      if (uri.host == 'localhost' ||
+          uri.host == '127.0.0.1' ||
+          uri.host == '10.0.2.2') {
+        final baseUri = Uri.parse(baseUrl);
+        return uri
+            .replace(
+              scheme: baseUri.scheme,
+              host: baseUri.host,
+              port: baseUri.hasPort ? baseUri.port : uri.port,
+            )
+            .toString();
+      }
+    } catch (_) {}
+    return trimmed;
+  }
+
   static const int connectTimeoutMs = 15000;
   static const int receiveTimeoutMs = 15000;
   static const int sendTimeoutMs = 15000;
@@ -29,8 +65,11 @@ class AppConstants {
   static const String roleStaff = 'STAFF';
 
   // ─── Loyalty Points ────────────────────────────────────────────────────────
-  /// Exchange rate: 1 loyalty point = 1,000 VNĐ discount.
-  static const int pointsToVndRate = 1000;
+  /// Exchange rate: 10 loyalty points = 1,000 VNĐ discount (1 loyalty point = 100 VNĐ discount).
+  static const int pointsToVndRate = 100;
+
+  /// Earning rate: 10,000 VNĐ spent = 1 loyalty point earned.
+  static const int vndPerPointEarned = 10000;
 
   // ─── POS UX ────────────────────────────────────────────────────────────────
   /// Debounce delay for customer search input (ms).

@@ -19,6 +19,19 @@ class ColorPalette {
   static const Color warmDarkGrey = Color(0xFF212121);
   static const Color lightWarmCream = Color(0xFFFFFDF9);
 
+  // ─── POS / Combo accents ──────────────────────────────────────────────────
+  /// Deep orange for combo code badge & add-to-cart button (#BF360C).
+  static const Color deepOrange = Color(0xFFBF360C);
+
+  /// Amber dark, end color of combo saving gradient (#FF8F00).
+  static const Color amberDark = Color(0xFFFF8F00);
+
+  /// Amber button color for "Thêm khách" (#FFA000).
+  static const Color amberButton = Color(0xFFFFA000);
+
+  /// Very light amber tint for quantity badges (#FFF3E0).
+  static const Color amberTint = Color(0xFFFFF3E0);
+
   // ─── Semantic / Status ────────────────────────────────────────────────────
   static const Color success = Color(0xFF2E7D32);
   static const Color warning = Color(0xFFF57C00);

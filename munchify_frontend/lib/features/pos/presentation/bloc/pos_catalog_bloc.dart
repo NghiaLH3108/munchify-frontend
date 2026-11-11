@@ -1,34 +1,47 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/pos_repository.dart';
 import '../../domain/usecases/get_products_usecase.dart';
+import '../../domain/usecases/get_combos_usecase.dart';
 import 'pos_catalog_event.dart';
 import 'pos_catalog_state.dart';
 
 class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
   final GetProductsUseCase getProductsUseCase;
-  final PosRepository repository; // Needed for getCategories, or create GetCategoriesUseCase
+  final GetCombosUseCase getCombosUseCase;
+  final PosRepository repository;
 
   PosCatalogBloc({
     required this.getProductsUseCase,
+    required this.getCombosUseCase,
     required this.repository,
   }) : super(PosCatalogInitial()) {
     on<LoadCatalogEvent>(_onLoadCatalog);
     on<SearchProductEvent>(_onSearchProduct);
     on<FilterByCategoryEvent>(_onFilterByCategory);
     on<FilterByUnitEvent>(_onFilterByUnit);
+    on<ToggleLowStockFilterEvent>(_onToggleLowStockFilter);
   }
 
   Future<void> _onLoadCatalog(
     LoadCatalogEvent event,
     Emitter<PosCatalogState> emit,
   ) async {
-    emit(PosCatalogLoading());
+    final previousLoaded = state is PosCatalogLoaded ? state as PosCatalogLoaded : null;
+    if (previousLoaded == null) {
+      emit(PosCatalogLoading());
+    }
 
-    // Fetch Categories
-    final categoriesResult = await repository.getCategories();
-    
-    // Fetch Initial Products
-    final productsResult = await getProductsUseCase.execute();
+    // Khởi chạy song song categories, products đơn và combos (giữ nguyên kiểu từng Either)
+    final categoriesFuture = repository.getCategories();
+    final productsFuture = getProductsUseCase.execute(
+      searchTerm: previousLoaded?.searchQuery,
+      categoryId: previousLoaded?.selectedCategoryId,
+    );
+    final combosFuture = getCombosUseCase.execute();
+
+    final categoriesResult = await categoriesFuture;
+    final productsResult = await productsFuture;
+    final combosResult = await combosFuture;
 
     categoriesResult.fold(
       (failure) => emit(PosCatalogError(message: failure.message)),
@@ -39,6 +52,12 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
             emit(PosCatalogLoaded(
               categories: categories,
               products: products,
+              // Combo lỗi không làm crash POS — chỉ hiển thị rỗng
+              combos: combosResult.getOrElse(() => []),
+              selectedCategoryId: previousLoaded?.selectedCategoryId,
+              searchQuery: previousLoaded?.searchQuery,
+              selectedUnitName: previousLoaded?.selectedUnitName,
+              isLowStockFilter: previousLoaded?.isLowStockFilter ?? false,
             ));
           },
         );
@@ -52,7 +71,6 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
   ) async {
     if (state is PosCatalogLoaded) {
       final currentState = state as PosCatalogLoaded;
-      // Removed emit(PosCatalogLoading()) so the search bar doesn't lose focus
 
       final productsResult = await getProductsUseCase.execute(
         searchTerm: event.query,
@@ -77,7 +95,6 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
   ) async {
     if (state is PosCatalogLoaded) {
       final currentState = state as PosCatalogLoaded;
-      // Removed emit(PosCatalogLoading()) to avoid screen flashing
 
       final productsResult = await getProductsUseCase.execute(
         searchTerm: currentState.searchQuery,
@@ -91,7 +108,7 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
             products: products,
             selectedCategoryId: event.categoryId,
             clearCategoryFilter: event.categoryId == null,
-            clearUnitFilter: true, // Reset unit filter when category changes
+            clearUnitFilter: true,
           ));
         },
       );
@@ -109,6 +126,18 @@ class PosCatalogBloc extends Bloc<PosCatalogEvent, PosCatalogState> {
       } else {
         emit(currentState.copyWith(selectedUnitName: event.unitName));
       }
+    }
+  }
+
+  void _onToggleLowStockFilter(
+    ToggleLowStockFilterEvent event,
+    Emitter<PosCatalogState> emit,
+  ) {
+    if (state is PosCatalogLoaded) {
+      final currentState = state as PosCatalogLoaded;
+      emit(currentState.copyWith(
+        isLowStockFilter: !currentState.isLowStockFilter,
+      ));
     }
   }
 }

@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:munchify_frontend/features/inventory/domain/entities/stock_movement_entity.dart';
+import '../../domain/entities/stock_movement_entity.dart';
 
 part 'stock_movement_model.g.dart';
 

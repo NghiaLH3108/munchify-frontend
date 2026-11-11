@@ -2,13 +2,44 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/errors/Failures.dart';
 import '../../domain/entities/stock_import_entity.dart';
+import '../../domain/entities/damaged_expired_record_entity.dart';
 import '../../domain/repositories/stock_repository.dart';
 import '../datasources/stock_remote_data_source.dart';
+
+import '../../domain/entities/ai_expiry_summary_entity.dart';
+import '../../domain/entities/forecast_item_entity.dart';
+import '../models/forecast_item_model.dart';
 
 class StockRepositoryImpl implements StockRepository {
   final StockRemoteDataSource remoteDataSource;
 
   StockRepositoryImpl({required this.remoteDataSource});
+
+  String _extractDioErrorMessage(DioException e, {String fallback = 'Server error occurred'}) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final msg = data['message']?.toString();
+      final errors = data['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final detail = errors.map((x) => x.toString()).join('; ');
+        if (msg != null && msg.isNotEmpty && !msg.contains(detail)) {
+          return '$msg ($detail)';
+        }
+        return detail;
+      }
+      if (errors is Map && errors.isNotEmpty) {
+        final detail = errors.values
+            .expand((v) => v is Iterable ? v : [v])
+            .map((x) => x.toString())
+            .join('; ');
+        if (detail.isNotEmpty) return detail;
+      }
+      if (msg != null && msg.isNotEmpty) {
+        return msg;
+      }
+    }
+    return e.message ?? fallback;
+  }
 
   @override
   Future<Either<Failure, List<StockImportEntity>>> getStockImports() async {
@@ -16,7 +47,7 @@ class StockRepositoryImpl implements StockRepository {
       final imports = await remoteDataSource.getStockImports();
       return Right(imports);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -28,7 +59,7 @@ class StockRepositoryImpl implements StockRepository {
       final importDetail = await remoteDataSource.getStockImportById(id);
       return Right(importDetail);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -40,7 +71,7 @@ class StockRepositoryImpl implements StockRepository {
       final id = await remoteDataSource.createDraftImport(supplierId, notes, items);
       return Right(id);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e, fallback: 'Không thể tạo phiếu nhập nháp')));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -52,7 +83,7 @@ class StockRepositoryImpl implements StockRepository {
       final success = await remoteDataSource.completeImport(id);
       return Right(success);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -64,7 +95,108 @@ class StockRepositoryImpl implements StockRepository {
       final success = await remoteDataSource.cancelImport(id);
       return Right(success);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'Server error occurred'));
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<DamagedExpiredRecordEntity>>> getPendingDamagedExpiredRecords() async {
+    try {
+      final records = await remoteDataSource.getPendingDamagedExpiredRecords();
+      final List<DamagedExpiredRecordEntity> entities = records.cast<DamagedExpiredRecordEntity>();
+      return Right(entities);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AiExpirySummaryEntity>> getAiExpirySummaryMetrics() async {
+    try {
+      final summary = await remoteDataSource.getAiExpirySummaryMetrics();
+      return Right(summary);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> approveDamagedExpiredRecord(int id) async {
+    try {
+      final success = await remoteDataSource.approveDamagedExpiredRecord(id);
+      return Right(success);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, DamagedExpiredRecordEntity>> analyzeDamagedExpiredRecord(int id) async {
+    try {
+      final result = await remoteDataSource.analyzeDamagedExpiredRecord(id);
+      return Right(result);
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Lỗi khi phân tích AI';
+      return Left(ServerFailure(message: msg.toString()));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, DamagedExpiredRecordEntity>> createStaffDamageReport(int productId, int quantity, String reportType, String reason) async {
+    try {
+      final result = await remoteDataSource.createStaffDamageReport(productId, quantity, reportType, reason);
+      return Right(result);
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? e.message ?? 'Lỗi khi gửi báo cáo sự cố hàng hóa';
+      return Left(ServerFailure(message: msg.toString()));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ForecastItemEntity>>> getForecasting({int daysHistory = 30}) async {
+    try {
+      final forecast = await remoteDataSource.getForecasting(daysHistory: daysHistory);
+      final List<ForecastItemEntity> entities = forecast.cast<ForecastItemEntity>();
+      return Right(entities);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> generateDraftImportsFromForecast(List<ForecastItemEntity> items) async {
+    try {
+      final models = items.map((e) => ForecastItemModel(
+        productId: e.productId,
+        productName: e.productName,
+        unitName: e.unitName,
+        stockQuantity: e.stockQuantity,
+        minStockLevel: e.minStockLevel,
+        avgDailyUsage: e.avgDailyUsage,
+        daysRemaining: e.daysRemaining,
+        riskLevel: e.riskLevel,
+        suggestedImportQty: e.suggestedImportQty,
+        defaultSupplierId: e.defaultSupplierId,
+        defaultSupplierName: e.defaultSupplierName,
+      )).toList();
+      final success = await remoteDataSource.generateDraftImportsFromForecast(models);
+      return Right(success);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: _extractDioErrorMessage(e)));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

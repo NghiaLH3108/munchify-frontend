@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-import 'package:munchify_frontend/core/errors/Failures.dart';
-import 'package:munchify_frontend/core/utils/PagedResult.dart';
-import 'package:munchify_frontend/features/inventory/domain/entities/stock_movement_entity.dart';
+import '../../../../core/errors/Failures.dart';
+import '../../../../core/utils/PagedResult.dart';
+import '../entities/stock_movement_entity.dart';
 
 abstract class InventoryRepository {
   Future<Either<Failure, PagedResult<StockMovementEntity>>> getStockMovements({

@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../features/auth/data/datasources/auth_local_data_source.dart';
 import '../constants/StorageKeys.dart';
+import 'session_events.dart';
 
 // ─── Auth Interceptor ────────────────────────────────────────────────────────
 
@@ -11,17 +13,25 @@ import '../constants/StorageKeys.dart';
 /// the user back to the Login screen. The [AuthBloc] listens for this event
 /// via a stream and triggers the navigation side-effect.
 class AuthInterceptor extends Interceptor {
-  final FlutterSecureStorage _secureStorage;
+  final FlutterSecureStorage secureStorage;
 
-  const AuthInterceptor({required FlutterSecureStorage secureStorage})
-      : _secureStorage = secureStorage;
+  const AuthInterceptor({required this.secureStorage});
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _secureStorage.read(key: StorageKeys.accessToken);
+    String? token;
+    try {
+      token = await secureStorage.read(key: StorageKeys.accessToken);
+    } catch (_) {
+      token = AuthLocalDataSourceImpl.cachedAccessToken;
+      try {
+        await secureStorage.deleteAll();
+      } catch (_) {}
+    }
+    token ??= AuthLocalDataSourceImpl.cachedAccessToken;
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -34,14 +44,28 @@ class AuthInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     if (err.response?.statusCode == 401) {
-      // Session expired — purge all authentication data.
-      await Future.wait([
-        _secureStorage.delete(key: StorageKeys.accessToken),
-        _secureStorage.delete(key: StorageKeys.refreshToken),
-        _secureStorage.delete(key: StorageKeys.userRole),
-        _secureStorage.delete(key: StorageKeys.userId),
-        _secureStorage.delete(key: StorageKeys.userName),
-      ]);
+      AuthLocalDataSourceImpl.cachedAccessToken = null;
+      try {
+        await secureStorage.delete(key: StorageKeys.accessToken);
+      } catch (_) {}
+      try {
+        await secureStorage.delete(key: StorageKeys.refreshToken);
+      } catch (_) {}
+      try {
+        await secureStorage.delete(key: StorageKeys.userRole);
+      } catch (_) {}
+      try {
+        await secureStorage.delete(key: StorageKeys.userId);
+      } catch (_) {}
+      try {
+        await secureStorage.delete(key: StorageKeys.userName);
+      } catch (_) {}
+      // Không phát sự kiện nếu lỗi đến từ chính request đăng nhập
+      if (!err.requestOptions.path.contains('/auth/login')) {
+        SessionEvents.notifyUnauthorized();
+      }
+    } else if (err.response?.statusCode == 403) {
+      SessionEvents.notifyForbidden();
     }
     return handler.next(err);
   }
@@ -86,6 +110,10 @@ class LoggingInterceptor extends Interceptor {
         '[Munchify] ERROR ${err.response?.statusCode}: '
         '${err.requestOptions.uri} — ${err.message}',
       );
+      if (err.response?.data != null) {
+        // ignore: avoid_print
+        print('[Munchify] ERROR Response: ${err.response?.data}');
+      }
       return true;
     }());
     handler.next(err);

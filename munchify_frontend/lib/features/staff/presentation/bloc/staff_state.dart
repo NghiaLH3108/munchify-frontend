@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../data/models/paged_staff_result.dart';
+import '../../domain/entities/staff_entity.dart';
 
 abstract class StaffState extends Equatable {
   const StaffState();
@@ -14,11 +15,31 @@ class StaffLoading extends StaffState {}
 
 class StaffListLoaded extends StaffState {
   final PagedStaffResult result;
+  final List<StaffEntity>? kpiStaffList;
+  final bool isRefreshing;
 
-  const StaffListLoaded(this.result);
+  const StaffListLoaded(
+    this.result, {
+    this.kpiStaffList,
+    this.isRefreshing = false,
+  });
+
+  List<StaffEntity> get kpiItems => kpiStaffList ?? result.items;
+
+  StaffListLoaded copyWith({
+    PagedStaffResult? result,
+    List<StaffEntity>? kpiStaffList,
+    bool? isRefreshing,
+  }) {
+    return StaffListLoaded(
+      result ?? this.result,
+      kpiStaffList: kpiStaffList ?? this.kpiStaffList,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+    );
+  }
 
   @override
-  List<Object?> get props => [result];
+  List<Object?> get props => [result, kpiStaffList, isRefreshing];
 }
 
 class StaffActionSuccess extends StaffState {

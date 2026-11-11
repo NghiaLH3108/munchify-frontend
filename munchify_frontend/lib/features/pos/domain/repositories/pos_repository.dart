@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/Failures.dart';
 import '../entities/category_entity.dart';
 import '../entities/product_entity.dart';
 
@@ -9,4 +9,5 @@ abstract class PosRepository {
     String? searchTerm,
     int? categoryId,
   });
+  Future<Either<Failure, List<ProductEntity>>> getCombos();
 }
